@@ -1,13 +1,19 @@
 <template>
-  <div class="about">
-    <h1>About Our Library</h1>
-    <p>Welcome to our digital library! We're dedicated to providing a vast collection of books and resources to our community.</p>
+  <div>
+    <section class="hero-wrapper">
+      <NavBar />
+      <HeroSection />
+    </section>
   </div>
 </template>
 
 <script setup>
-// No script needed for now
+import HeroSection from '@/components/HeroSection.vue'
+import NavBar from "../components/NavBar.vue"
 </script>
 
-<style>
+<style scoped>
+.hero-wrapper {
+  position: relative;
+}
 </style>

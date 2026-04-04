@@ -4,9 +4,20 @@ import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
-  <NavBar />
-  <RouterView />
+  <div class="app-wrapper">
+    <NavBar />
+    <RouterView />
+  </div>
 </template>
 
-<style scoped>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.app-wrapper {
+  min-height: 100vh;
+}
 </style>

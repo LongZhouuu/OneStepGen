@@ -1,7 +1,7 @@
 <template>
   <div class="container py-5">
-    <h1>About Us</h1>
-    <p>About us content goes here.</p>
+    <h1>Support</h1>
+    <p>Support tool content goes here.</p>
   </div>
 </template>
 
