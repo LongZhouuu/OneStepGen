@@ -27,14 +27,7 @@
                 </section>
 
                 <section v-else class="checkin-panel">
-                    <div class="timer-card">
-                        <div class="time">20:00</div>
-                        <div class="label">SESSION TIMER</div>
-
-                        <button class="reminder-btn">
-                            🔔 Set Reminder
-                        </button>
-                    </div>
+                    <SwipingTimer />
                 </section>
             </section>
         </div>
@@ -43,6 +36,7 @@
 
 <script setup>
 import TaskCard from '@/components/TaskCard.vue'
+import SwipingTimer from '@/components/SwipingTimer.vue'
 import { ref } from 'vue'
 
 const activeTab = ref('checkin')
@@ -240,39 +234,5 @@ const tasks = ref([
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.timer-card {
-    width: 100%;
-    background: #f4f4f4;
-    border-radius: 20px;
-    padding: 14px 20px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.time {
-    font-size: 48px;
-    font-weight: 800;
-    color: #2f2f2f;
-}
-
-.label {
-    margin-top: 6px;
-    font-size: 12px;
-    letter-spacing: 2px;
-    color: #8a8a8a;
-}
-
-.reminder-btn {
-    margin-top: 24px;
-    border: none;
-    border-radius: 999px;
-    padding: 12px 24px;
-    background: #7fb3c9;
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
 }
 </style>
