@@ -3,8 +3,16 @@
         <h1 class="title">Swiping Planner</h1>
 
         <div class="task-board">
-            <div class="task-note">
-                <span>Update C2 project<br />progress with Ted</span>
+            <div
+                class="task-note"
+                :style="cardStyle"
+                @pointerdown="startDrag"
+                @pointermove="onDrag"
+                @pointerup="endDrag"
+                @pointerleave="endDrag"
+                @pointercancel="endDrag"
+            >
+                <span>{{ currentTask }}</span>
                 <div class="note-corner"></div>
             </div>
         </div>
@@ -15,7 +23,80 @@
         </div>
     </section>
 </template>
-<style>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+const tasks = ref([
+    'Update C2 project\nprogress with Ted',
+    'Finish website performance report',
+    'Call purchasing team for hardware details'
+])
+
+const currentIndex = ref(0)
+const currentTask = computed(() => tasks.value[currentIndex.value] || 'No more tasks')
+
+const isDragging = ref(false)
+const startX = ref(0)
+const offsetX = ref(0)
+
+const rotateY = computed(() => {
+    return Math.max(-28, Math.min(28, offsetX.value / 8))
+})
+
+const rotateZ = computed(() => {
+    return Math.max(-8, Math.min(8, offsetX.value / 25))
+})
+
+const cardStyle = computed(() => ({
+    transform: `
+        translateX(${offsetX.value}px)
+        rotateY(${rotateY.value}deg)
+        rotateZ(${rotateZ.value}deg)
+    `,
+    transition: isDragging.value ? 'none' : 'transform 0.28s ease',
+    boxShadow: `${Math.abs(offsetX.value) / 8}px 10px 24px rgba(0, 0, 0, 0.14)`,
+    cursor: isDragging.value ? 'grabbing' : 'grab'
+}))
+
+function startDrag(e) {
+    isDragging.value = true
+    startX.value = e.clientX
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+}
+
+function onDrag(e) {
+    if (!isDragging.value) return
+    offsetX.value = e.clientX - startX.value
+}
+
+function endDrag() {
+    if (!isDragging.value) return
+
+    const threshold = 120
+
+    if (offsetX.value > threshold) {
+        console.log('right')
+    } else if (offsetX.value < -threshold) {
+        console.log('left')
+    }
+
+    if (Math.abs(offsetX.value) > threshold) {
+        offsetX.value = offsetX.value > 0 ? 400 : -400
+
+        setTimeout(() => {
+            currentIndex.value = (currentIndex.value + 1) % tasks.value.length
+            offsetX.value = 0
+        }, 220)
+    } else {
+        offsetX.value = 0
+    }
+
+    isDragging.value = false
+}
+</script>
+
+<style scoped>
 .planner-card {
     background: #f8f8f8;
     border-radius: 18px;
@@ -33,7 +114,11 @@
 .task-board {
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 28px 0 22px;
+    perspective: 1000px;
+    overflow: hidden;
+    min-height: 220px;
 }
 
 .task-note {
@@ -49,6 +134,14 @@
     font-weight: 700;
     line-height: 1.35;
     color: #343434;
+    user-select: none;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.task-note span {
+    white-space: pre-line;
+    backface-visibility: hidden;
 }
 
 .note-corner {
