@@ -3,23 +3,27 @@
         <h1 class="title">Swiping Planner</h1>
 
         <div class="task-board">
-            <div
-                class="task-note"
-                :style="cardStyle"
-                @pointerdown="startDrag"
-                @pointermove="onDrag"
-                @pointerup="endDrag"
-                @pointerleave="endDrag"
-                @pointercancel="endDrag"
-            >
-                <span>{{ currentTask }}</span>
+            <div class="task-note" :class="{ disabled: !currentTaskItem }" :style="cardStyle"
+                @pointerdown="currentTaskItem && startDrag($event)" @pointermove="currentTaskItem && onDrag($event)"
+                @pointerup="currentTaskItem && endDrag()" @pointerleave="currentTaskItem && endDrag()"
+                @pointercancel="currentTaskItem && endDrag()">
+                <div class="task-badge">
+                    {{ currentTaskOrder }}
+                </div>
+
+                <span class="task-text">{{ currentTaskText }}</span>
                 <div class="note-corner"></div>
             </div>
         </div>
 
         <div class="swipe-hints">
-            <span>← Swipe left to complete a task</span>
-            <span>Swipe right to skip a task →</span>
+            <button class="hint-btn" @click="swipeByClick('left')" :disabled="!currentTaskItem || isDragging">
+                ← Swipe left to complete a task
+            </button>
+
+            <button class="hint-btn" @click="swipeByClick('right')" :disabled="!currentTaskItem || isDragging">
+                Swipe right to skip a task →
+            </button>
         </div>
     </section>
 </template>
@@ -35,11 +39,18 @@ const props = defineProps({
 })
 
 const currentIndex = ref(0)
-const currentTask = computed(() => {
-    return props.tasks[currentIndex.value]?.text || 'No more tasks'
-})
-console.log(props.tasks);
 
+const currentTaskItem = computed(() => {
+    return props.tasks[currentIndex.value] || null
+})
+
+const currentTaskText = computed(() => {
+    return currentTaskItem.value?.text || 'No more tasks!'
+})
+
+const currentTaskOrder = computed(() => {
+    return currentTaskItem.value?.order || '🥳'
+})
 
 const isDragging = ref(false)
 const startX = ref(0)
@@ -61,60 +72,88 @@ const cardStyle = computed(() => ({
     `,
     transition: isDragging.value ? 'none' : 'transform 0.28s ease',
     boxShadow: `${Math.abs(offsetX.value) / 8}px 10px 24px rgba(0, 0, 0, 0.14)`,
-    cursor: isDragging.value ? 'grabbing' : 'grab'
+    cursor: currentTaskItem.value ? (isDragging.value ? 'grabbing' : 'grab') : 'default'
 }))
 
 function startDrag(e) {
+    if (!currentTaskItem.value) return
     isDragging.value = true
     startX.value = e.clientX
     e.currentTarget.setPointerCapture?.(e.pointerId)
 }
 
 function onDrag(e) {
-    if (!isDragging.value) return
+    if (!isDragging.value || !currentTaskItem.value) return
     offsetX.value = e.clientX - startX.value
 }
 
 function endDrag() {
-    if (!isDragging.value) return
+    if (!isDragging.value || !currentTaskItem.value) return
 
     const threshold = 120
 
+    // the user behaviour ended
     if (offsetX.value > threshold) {
-        console.log('right')
+        swipeOut('right')
     } else if (offsetX.value < -threshold) {
-        console.log('left')
-    }
-
-    if (Math.abs(offsetX.value) > threshold) {
-        offsetX.value = offsetX.value > 0 ? 400 : -400
-
-        setTimeout(() => {
-            // Allow loops
-            currentIndex.value = (currentIndex.value + 1) % props.tasks.length
-            offsetX.value = 0
-        }, 220)
+        swipeOut('left')
     } else {
         offsetX.value = 0
     }
 
     isDragging.value = false
 }
+
+// when user click instead of swipe
+function swipeByClick(direction) {
+    if (!currentTaskItem.value || isDragging.value) return
+    swipeOut(direction)
+}
+
+
+function swipeOut(direction) {
+    if (!currentTaskItem.value) return
+
+    if (direction === 'right') {
+        skipTask()
+        offsetX.value = 400
+    } else if (direction === 'left') {
+        completeTask()
+        offsetX.value = -400
+    }
+
+    setTimeout(() => {
+        currentIndex.value += 1
+        offsetX.value = 0   
+        isDragging.value = false
+    }, 220)
+}
+
+function skipTask() {
+    props.tasks[currentIndex.value].status = 'skipped'
+    console.log(props.tasks[currentIndex.value].status)
+}
+
+function completeTask() {
+    props.tasks[currentIndex.value].status = 'completed'
+    console.log(props.tasks[currentIndex.value].status)
+}
 </script>
 
 <style scoped>
 .planner-card {
     background: #f8f8f8;
-    border-radius: 18px;
-    padding: 28px 11px 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border-radius: 28px;
+    padding: 28px 14px 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
 .title {
     margin: 0;
     text-align: center;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 800;
+    color: #242424;
 }
 
 .task-board {
@@ -124,7 +163,7 @@ function endDrag() {
     padding: 28px 0 22px;
     perspective: 1000px;
     overflow: hidden;
-    min-height: 220px;
+    min-height: 240px;
 }
 
 .task-note {
@@ -132,22 +171,47 @@ function endDrag() {
     width: 230px;
     height: 230px;
     background: #efd3bd;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 18px;
+    padding: 26px 20px 20px;
     font-weight: 700;
     line-height: 1.35;
     color: #343434;
     user-select: none;
     transform-style: preserve-3d;
     will-change: transform;
+    /* border: 3px solid #2f2f2f; */
 }
 
-.task-note span {
+.task-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #ffcf5a;
+    color: #2b2b2b;
+    /* border: 3px solid #2f2f2f; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.task-text {
     white-space: pre-line;
     backface-visibility: hidden;
+    font-size: 17px;
+    font-weight: 800;
+    max-width: 170px;
 }
 
 .note-corner {
@@ -156,15 +220,42 @@ function endDrag() {
     bottom: 0;
     width: 0;
     height: 0;
-    border-left: 16px solid transparent;
-    border-top: 16px solid rgba(255, 255, 255, 0.6);
+    border-left: 18px solid transparent;
+    border-top: 18px solid rgba(255, 255, 255, 0.72);
 }
 
 .swipe-hints {
     display: flex;
     justify-content: space-between;
     gap: 12px;
+}
+
+.hint-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
     font-size: 11px;
     color: #b8b8b8;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.hint-btn:hover:not(:disabled) {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.hint-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.task-note {
+    cursor: grab;
+}
+
+.task-note.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 </style>
