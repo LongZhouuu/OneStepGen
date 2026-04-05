@@ -5,42 +5,24 @@
         </div>
 
         <div v-else class="timeEditor">
-            <input
-                ref="minuteInput"
-                v-model="draftMinutes"
-                class="timeInput"
-                type="text"
-                maxlength="3"
-                inputmode="numeric"
-                @input="handleMinuteInput"
-                @keyup.enter="finishEdit"
-                @blur="handleBlur"
-            />
+            <input ref="minuteInput" v-model="draftMinutes" class="timeInput" type="text" maxlength="3"
+                inputmode="numeric" @input="handleMinuteInput" @keyup.enter="finishEdit" @blur="handleBlur" />
             <span class="colon">:</span>
-            <input
-                ref="secondInput"
-                v-model="draftSeconds"
-                class="timeInput"
-                type="text"
-                maxlength="2"
-                inputmode="numeric"
-                @input="handleSecondInput"
-                @keyup.enter="finishEdit"
-                @blur="handleBlur"
-            />
+            <input ref="secondInput" v-model="draftSeconds" class="timeInput" type="text" maxlength="2"
+                inputmode="numeric" @input="handleSecondInput" @keyup.enter="finishEdit" @blur="handleBlur" />
         </div>
 
         <div class="label">SESSION TIMER</div>
         <div class="sublabel">Modify Timer by Double-Click</div>
 
-        <button class="checkIn">
-            Check-In
+        <button class="checkIn" @click="startCountdown" :disabled="isRunning">
+            {{ isRunning ? 'Checked-In' : 'Check-In' }}
         </button>
     </section>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onBeforeUnmount } from 'vue'
 
 const defaultMin = ref('20')
 const defaultSec = ref('00')
@@ -52,7 +34,13 @@ const isEditing = ref(false)
 const minuteInput = ref(null)
 const secondInput = ref(null)
 
+const isRunning = ref(false)
+const totalSeconds = ref(20 * 60)
+let timerId = null
+
 function startEdit() {
+    if (isRunning.value) return
+
     draftMinutes.value = defaultMin.value
     draftSeconds.value = defaultSec.value
     isEditing.value = true
@@ -64,8 +52,6 @@ function startEdit() {
 }
 
 function handleMinuteInput(e) {
-    // Only numbers are allowed
-    // support three-digit input
     let value = e.target.value.replace(/\D/g, '').slice(0, 3)
     draftMinutes.value = value
 
@@ -76,8 +62,6 @@ function handleMinuteInput(e) {
 }
 
 function handleSecondInput(e) {
-    // Only numbers are allowed
-    // support two-digit input
     let value = e.target.value.replace(/\D/g, '').slice(0, 2)
     draftSeconds.value = value
 }
@@ -95,22 +79,60 @@ function handleBlur() {
 }
 
 function finishEdit() {
-    // If the number is less than two digits, fill in the blanks with zeros.
     const mm = draftMinutes.value.padStart(2, '0')
     const ss = draftSeconds.value.padStart(2, '0')
 
+    const minuteNumber = Number(mm)
     const secondNumber = Number(ss)
 
-    // If the second is not between 0 and 59 then considered invalid, no changes
-    if (Number.isNaN(secondNumber) || secondNumber < 0 || secondNumber > 59) {
+    if (
+        Number.isNaN(minuteNumber) ||
+        Number.isNaN(secondNumber) ||
+        secondNumber < 0 ||
+        secondNumber > 59
+    ) {
         isEditing.value = false
         return
     }
 
     defaultMin.value = mm
     defaultSec.value = ss
+    totalSeconds.value = minuteNumber * 60 + secondNumber
     isEditing.value = false
 }
+
+function updateDisplay() {
+    const minutes = Math.floor(totalSeconds.value / 60)
+    const seconds = totalSeconds.value % 60
+
+    defaultMin.value = String(minutes).padStart(2, '0')
+    defaultSec.value = String(seconds).padStart(2, '0')
+}
+
+function startCountdown() {
+    if (isEditing.value) finishEdit()
+    if (isRunning.value || totalSeconds.value <= 0) return
+
+    isRunning.value = true
+
+    timerId = setInterval(() => {
+        if (totalSeconds.value > 0) {
+            totalSeconds.value -= 1
+            updateDisplay()
+        }
+
+        if (totalSeconds.value <= 0) {
+            clearInterval(timerId)
+            timerId = null
+            isRunning.value = false
+            alert('yayyy')
+        }
+    }, 1000)
+}
+
+onBeforeUnmount(() => {
+    if (timerId) clearInterval(timerId)
+})
 </script>
 
 <style scoped>
@@ -174,12 +196,17 @@ function finishEdit() {
 .checkIn {
     margin-top: 8px;
     border: none;
-    border-radius: 999px;
-    padding: 12px 24px;
+    border-radius: 99px;
+    padding: 8px 24px;
     background: #7fb3c9;
     color: white;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.checkIn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 </style>
