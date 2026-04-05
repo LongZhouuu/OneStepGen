@@ -47,12 +47,48 @@ import { ref } from 'vue'
 
 const activeTab = ref('checkin')
 
+// mock data
 const tasks = ref([
-    { id: 1, text: 'Buy headphone for meeting', status: "pending" },
-    { id: 2, text: 'Finish website performance report', status: "pending" },
-    { id: 3, text: 'Call purchasing team for hardware details', status: "pending" },
-    { id: 4, text: 'Call purchasing team for hardware details', status: "skipped" },
-    { id: 5, text: 'Call purchasing team for hardware details', status: "pending" }
+    {
+        id: crypto.randomUUID(),
+        text: "Buy headphone for meeting",
+        status: "pending",
+        order: 1,
+        createdAt: Date.now() - 100000,
+        updatedAt: Date.now() - 100000
+    },
+    {
+        id: crypto.randomUUID(),
+        text: "Finish website performance report",
+        status: "doing",
+        order: 2,
+        createdAt: Date.now() - 90000,
+        updatedAt: Date.now() - 50000
+    },
+    {
+        id: crypto.randomUUID(),
+        text: "Call purchasing team for hardware details",
+        status: "pending",
+        order: 3,
+        createdAt: Date.now() - 80000,
+        updatedAt: Date.now() - 80000
+    },
+    {
+        id: crypto.randomUUID(),
+        text: "Prepare slides for weekly meeting",
+        status: "completed",
+        order: 4,
+        createdAt: Date.now() - 120000,
+        updatedAt: Date.now() - 60000
+    },
+    {
+        id: crypto.randomUUID(),
+        text: "Review UX feedback from team",
+        status: "pending",
+        order: 5,
+        createdAt: Date.now() - 70000,
+        updatedAt: Date.now() - 30000
+    }
 ])
 
 </script>
@@ -169,7 +205,7 @@ const tasks = ref([
 
 .clear-btn {
     margin-top: 16px;
-    align-self:last baseline;
+    align-self: last baseline;
     border: none;
     border-radius: 999px;
     padding: 10px 20px;
