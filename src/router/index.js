@@ -6,6 +6,7 @@ import PlannerView from '../views/tools/PlannerView.vue'
 import PrioritizerView from '../views/tools/PrioritizerView.vue'
 import SupportView from '../views/tools/SupportView.vue'
 import TipsView from '../views/tools/TipsAndTemplatesView.vue'
+import TaskSwipper from '@/views/TaskSwipper.vue'
 
 const routes = [
   {
@@ -22,6 +23,11 @@ const routes = [
     path: '/tools/planner',
     name: 'Planner',
     component: PlannerView
+  },
+  {
+    path: '/tools/planner/swipper',
+    name: 'TaskSwipper',
+    component: TaskSwipper
   },
   {
     path: '/tools/prioritizer',
