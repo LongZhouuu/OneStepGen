@@ -27,14 +27,19 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-const tasks = ref([
-    'Update C2 project\nprogress with Ted',
-    'Finish website performance report',
-    'Call purchasing team for hardware details'
-])
+const props = defineProps({
+    tasks: {
+        type: Array,
+        required: true
+    }
+})
 
 const currentIndex = ref(0)
-const currentTask = computed(() => tasks.value[currentIndex.value] || 'No more tasks')
+const currentTask = computed(() => {
+    return props.tasks[currentIndex.value]?.text || 'No more tasks'
+})
+console.log(props.tasks);
+
 
 const isDragging = ref(false)
 const startX = ref(0)
@@ -85,7 +90,8 @@ function endDrag() {
         offsetX.value = offsetX.value > 0 ? 400 : -400
 
         setTimeout(() => {
-            currentIndex.value = (currentIndex.value + 1) % tasks.value.length
+            // Allow loops
+            currentIndex.value = (currentIndex.value + 1) % props.tasks.length
             offsetX.value = 0
         }, 220)
     } else {
@@ -100,7 +106,7 @@ function endDrag() {
 .planner-card {
     background: #f8f8f8;
     border-radius: 18px;
-    padding: 28px 18px 18px;
+    padding: 28px 11px 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -123,8 +129,8 @@ function endDrag() {
 
 .task-note {
     position: relative;
-    width: 150px;
-    height: 190px;
+    width: 230px;
+    height: 230px;
     background: #efd3bd;
     display: flex;
     align-items: center;
@@ -158,7 +164,7 @@ function endDrag() {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 9px;
+    font-size: 11px;
     color: #b8b8b8;
 }
 </style>

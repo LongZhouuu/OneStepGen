@@ -1,7 +1,7 @@
 <template>
     <div class="page">
         <div class="phone-frame">
-            <TaskCard />
+            <TaskCard :tasks="tasks" />
 
             <section class="status">
                 <nav class="tabs">
@@ -15,13 +15,14 @@
 
                 <section v-if="activeTab === 'tasks'" class="task-list-section">
                     <div class="task-items-wrapper">
-                        <div v-for="task in tasks" :key="task.id" class="task-item">
+                        <div v-for="task in tasks" :key="task.id" class="task-item"
+                            :class="{ skipped: task.status === 'skipped' }"
+                            :title="task.status === 'skipped' ? 'This task has been skipped' : ''">
                             {{ task.text }}
                         </div>
                     </div>
-
-                    <button class="hide-btn" @click="hideTasks">
-                        Hide Tasks
+                    <button class="clear-btn" @click="clear">
+                        Clear All
                     </button>
                 </section>
 
@@ -44,19 +45,16 @@
 import TaskCard from '@/components/TaskCard.vue'
 import { ref } from 'vue'
 
-const activeTab = ref('tasks')
+const activeTab = ref('checkin')
 
 const tasks = ref([
-    { id: 1, text: 'Buy headphone for meeting' },
-    { id: 2, text: 'Finish website performance report' },
-    { id: 3, text: 'Call purchasing team for hardware details' },
-    { id: 4, text: 'Call purchasing team for hardware details' },
-    { id: 5, text: 'Call purchasing team for hardware details' }
+    { id: 1, text: 'Buy headphone for meeting', status: "pending" },
+    { id: 2, text: 'Finish website performance report', status: "pending" },
+    { id: 3, text: 'Call purchasing team for hardware details', status: "pending" },
+    { id: 4, text: 'Call purchasing team for hardware details', status: "skipped" },
+    { id: 5, text: 'Call purchasing team for hardware details', status: "pending" }
 ])
 
-function hideTasks() {
-    activeTab.value = 'checkin'
-}
 </script>
 
 <style scoped>
@@ -68,7 +66,7 @@ function hideTasks() {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 28px 16px 40px;
+    padding: 40px 0px 0px 0px;
     font-family: Arial, Helvetica, sans-serif;
     color: #2d2d2d;
 }
@@ -130,7 +128,7 @@ function hideTasks() {
 }
 
 .task-items-wrapper {
-    height: 170px;
+    height: 150px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -152,8 +150,8 @@ function hideTasks() {
     width: 100%;
     background: #fafafa;
     border-radius: 12px;
-    min-height: 30px;
-    padding: 14px 16px;
+    min-height: 20px;
+    padding: 10px 16px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     font-size: 14px;
     font-weight: 500;
@@ -162,9 +160,16 @@ function hideTasks() {
     flex-shrink: 0;
 }
 
-.hide-btn {
+.task-item.skipped {
+    text-decoration: line-through;
+    color: #aaa;
+    opacity: 0.6;
+    transform: scale(0.98);
+}
+
+.clear-btn {
     margin-top: 16px;
-    align-self: center;
+    align-self:last baseline;
     border: none;
     border-radius: 999px;
     padding: 10px 20px;
@@ -176,6 +181,7 @@ function hideTasks() {
     /* border: 1px solid black; */
     flex-shrink: 0;
 }
+
 /* 
 .checkin-panel {
     flex: 1;
@@ -204,7 +210,7 @@ function hideTasks() {
     width: 100%;
     background: #f4f4f4;
     border-radius: 20px;
-    padding: 32px 20px;
+    padding: 14px 20px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
