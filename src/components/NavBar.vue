@@ -81,7 +81,7 @@ import { RouterLink } from 'vue-router'
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 998;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

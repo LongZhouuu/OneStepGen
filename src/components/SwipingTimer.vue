@@ -19,10 +19,12 @@
             {{ isRunning ? 'Checked-In' : 'Check-In' }}
         </button>
     </section>
+    <CountdownPop v-if="showPopup" @close="showPopup = false" />
 </template>
 
 <script setup>
 import { ref, nextTick, onBeforeUnmount } from 'vue'
+import CountdownPop from './CountdownPop.vue'
 
 const defaultMin = ref('20')
 const defaultSec = ref('00')
@@ -37,6 +39,8 @@ const secondInput = ref(null)
 const isRunning = ref(false)
 const totalSeconds = ref(20 * 60)
 let timerId = null
+
+const showPopup = ref(false)
 
 function startEdit() {
     if (isRunning.value) return
@@ -125,7 +129,8 @@ function startCountdown() {
             clearInterval(timerId)
             timerId = null
             isRunning.value = false
-            alert('yayyy')
+            // alert('yayyy')
+            showPopup.value = true
         }
     }, 1000)
 }
