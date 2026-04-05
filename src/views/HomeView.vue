@@ -16,37 +16,37 @@
           </div>
           
           <div class="tools-list">
-            <div class="tool-item">
+            <RouterLink to="/tools/planner" class="tool-item tool-item-link">
               <h3 class="tool-name">Planner</h3>
               <p class="tool-description">
                 Map out your day with calm and intention, no pressure, just one gentle step at a time.
               </p>
               <div class="tool-divider"></div>
-            </div>
+            </RouterLink>
             
-            <div class="tool-item">
+            <RouterLink to="/tools/prioritizer" class="tool-item tool-item-link">
               <h3 class="tool-name">Prioritizer</h3>
               <p class="tool-description">
                 Cut through the overwhelm and spot what truly needs your attention right now, so you can move forward with clarity.
               </p>
               <div class="tool-divider"></div>
-            </div>
+            </RouterLink>
             
-            <div class="tool-item">
+            <RouterLink to="/tools/support" class="tool-item tool-item-link">
               <h3 class="tool-name">Support</h3>
               <p class="tool-description">
                 A judgment-free space to check in with how you're feeling and take care of your mental well-being, anytime you need it.
               </p>
               <div class="tool-divider"></div>
-            </div>
+            </RouterLink>
             
-            <div class="tool-item">
+            <RouterLink to="/tools/tips" class="tool-item tool-item-link">
               <h3 class="tool-name">Tips & Template</h3>
               <p class="tool-description">
                 Ready-to-use templates and daily tips to help you stay on track and keep moving, even on the harder days.
               </p>
               <div class="tool-divider"></div>
-            </div>
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -69,6 +69,7 @@
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router'
 import HeroSection from '@/components/HeroSection.vue'
 import NavBar from "../components/NavBar.vue"
 </script>
@@ -124,6 +125,12 @@ import NavBar from "../components/NavBar.vue"
 .tool-item {
   padding-right: 20px;
   position: relative;
+}
+
+.tool-item-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .tool-item::before {
