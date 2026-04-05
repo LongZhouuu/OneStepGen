@@ -56,6 +56,9 @@ import { RouterLink } from 'vue-router'
               <li>
                 <RouterLink class="dropdown-item" to="/tools/tips">Tips</RouterLink>
               </li>
+              <li>
+                <RouterLink class="dropdown-item" to="/tools/planner/swipper">Swipe</RouterLink>
+              </li>
             </ul>
           </li>
 
