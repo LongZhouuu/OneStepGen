@@ -1,7 +1,7 @@
 <template>
     <div class="page">
         <div class="phone-frame">
-            <TaskCard :tasks="tasks" />
+            <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" />
 
             <section class="status">
                 <nav class="tabs">
@@ -27,7 +27,7 @@
                 </section>
 
                 <section v-else class="checkin-panel">
-                    <SwipingTimer />
+                    <SwipingTimer @countingState="isTimerRunning = $event" />
                 </section>
             </section>
         </div>
@@ -40,6 +40,7 @@ import SwipingTimer from '@/components/SwipingTimer.vue'
 import { ref } from 'vue'
 
 const activeTab = ref('checkin')
+const isTimerRunning = ref(false)
 
 // mock data
 const tasks = ref([
