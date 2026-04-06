@@ -16,9 +16,14 @@
                 <section v-show="activeTab === 'tasks'" class="taskList">
                     <div class="taskItemContainer">
                         <div v-for="task in tasks" :key="task.id" class="taskItem"
-                            :class="{ skipped: task.status === 'skipped' }"
-                            :title="task.status === 'skipped' ? 'This task has been skipped' : ''">
-                            {{ task.text }}
+                            :class="{ skipped: task.status === 'skipped' }">
+                            <span class="taskText">
+                                {{ task.text }}
+                            </span>
+
+                            <span class="taskStatus" :class="task.status">
+                                {{ task.status }}
+                            </span>
                         </div>
                     </div>
                     <button class="clearBtn" @click="clear">
@@ -63,7 +68,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Call purchasing team for hardware details",
-        status: "pending",
+        status: "completed",
         order: 3,
         createdAt: Date.now() - 80000,
         updatedAt: Date.now() - 80000
@@ -71,7 +76,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Prepare slides for weekly meeting",
-        status: "completed",
+        status: "skipped",
         order: 4,
         createdAt: Date.now() - 120000,
         updatedAt: Date.now() - 60000
@@ -191,11 +196,32 @@ const tasks = ref([
     flex-shrink: 0;
 }
 
-.taskItem.skipped {
+.taskItem.skipped .taskText {
     text-decoration: line-through;
     color: #aaa;
-    opacity: 0.6;
-    transform: scale(0.98);
+}
+
+.taskStatus {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.taskStatus.pending {
+    color: #4da3ff;
+}
+
+.taskStatus.doing {
+    color: #f4b400;
+}
+
+.taskStatus.completed {
+    color: #4caf50;
+}
+
+.taskStatus.skipped {
+    color: #e74c3c;
 }
 
 .clearBtn {
