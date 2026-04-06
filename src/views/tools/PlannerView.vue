@@ -21,23 +21,38 @@
       </div>
 
       <!-- Active Tasks -->
-      <div class="task-list">
-        <div
-          v-for="task in activeTasks"
-          :key="task.id"
-          class="task-row"
-        >
-          <span class="task-dot" :class="task.status"></span>
-          <div class="task-info">
-            <span class="task-text">{{ task.text }}</span>
-            <span class="task-status">{{ task.status }}</span>
+      <draggable
+        v-model="activeTasks"
+        item-key="id"
+        class="task-list"
+        handle=".task-dot"
+        @end="onDragEnd"
+      >
+        <template #item="{ element: task }">
+          <div class="task-row">
+            <span class="task-dot" :class="task.status" title="Drag to reorder"></span>
+            <div class="task-info">
+              <template v-if="editingId === task.id">
+                <input
+                  v-model="editingText"
+                  class="task-edit-input"
+                  @keyup.enter="confirmEdit(task)"
+                  @blur="confirmEdit(task)"
+                  @keyup.escape="cancelEdit"
+                />
+              </template>
+              <template v-else>
+                <span class="task-text">{{ task.text }}</span>
+                <span class="task-status">{{ task.status }}</span>
+              </template>
+            </div>
+            <div class="task-actions">
+              <span class="action-edit" @click="startEdit(task)">Edit</span>
+              <span class="action-delete" @click="deleteTask(task.id)">Delete</span>
+            </div>
           </div>
-          <div class="task-actions">
-            <span class="action-edit">Edit</span>
-            <span class="action-delete">Delete</span>
-          </div>
-        </div>
-      </div>
+        </template>
+      </draggable>
 
       <!-- Skipped Tasks -->
       <div v-if="skippedTasks.length > 0" class="skipped-section">
@@ -53,15 +68,20 @@
             <span class="task-status">{{ task.status }}</span>
           </div>
           <div class="task-actions">
-            <span class="action-edit">Move back</span>
+            <span class="action-edit" @click="moveBack(task.id)">Move back</span>
           </div>
         </div>
       </div>
 
       <!-- Create Planner Button -->
       <div class="create-planner-wrapper">
-        <button class="create-planner-btn">
-           Create Planner
+        <button
+          class="create-planner-btn"
+          :disabled="activeTasks.length === 0"
+          :class="{ 'btn-disabled': activeTasks.length === 0 }"
+          @click="createPlanner"
+        >
+          &#x1F4C5; Create Planner
         </button>
       </div>
     </div>
@@ -70,30 +90,130 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import draggable from 'vuedraggable'
 
+const router = useRouter()
+
+// ── UI state ──────────────────────────────────────────────────────────────────
 const newTaskText = ref('')
 const inputFocused = ref(false)
+const editingId = ref(null)
+const editingText = ref('')
 
-const activeTasks = ref([
-  { id: '1', text: 'Complete the brand design audit', status: 'doing', order: 0 },
-  { id: '2', text: 'Schedule client kick-off meeting', status: 'pending', order: 1 },
-  { id: '3', text: 'Refactor navigation components', status: 'pending', order: 2 }
-])
+// ── Task lists ────────────────────────────────────────────────────────────────
+const activeTasks = ref([])
+const skippedTasks = ref([])
+const completedTasks = ref([])
 
-const skippedTasks = ref([
-  { id: '4', text: 'Update documentation for API', status: 'skipped', order: null }
-])
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function reorderTasks() {
+  activeTasks.value.forEach((t, i) => { t.order = i })
+  skippedTasks.value.forEach(t => { t.order = null })
+  completedTasks.value.forEach(t => { t.order = null })
 
+  console.log('=== reorderTasks ===')
+  console.log('activeTasks:', activeTasks.value.map(t => ({ text: t.text, status: t.status, order: t.order })))
+  console.log('skippedTasks:', skippedTasks.value.map(t => ({ text: t.text, status: t.status, order: t.order })))
+}
+
+function saveTasks() {
+  const allTasks = [...activeTasks.value, ...skippedTasks.value, ...completedTasks.value]
+  localStorage.setItem('tasks', JSON.stringify(allTasks))
+}
+
+// ── Load from localStorage ────────────────────────────────────────────────────
+function loadTasks() {
+  const raw = localStorage.getItem('tasks')
+  if (!raw) return
+
+  const all = JSON.parse(raw)
+  activeTasks.value = all
+    .filter(t => t.status === 'pending' || t.status === 'doing')
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  skippedTasks.value = all.filter(t => t.status === 'skipped')
+  completedTasks.value = all.filter(t => t.status === 'completed')
+}
+
+loadTasks()
+reorderTasks()
+saveTasks()
+
+// ── Add task ──────────────────────────────────────────────────────────────────
 function addTask() {
   const text = newTaskText.value.trim()
   if (!text) return
+
   activeTasks.value.push({
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     text,
     status: 'pending',
-    order: activeTasks.value.length
+    order: activeTasks.value.length,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
   })
   newTaskText.value = ''
+  reorderTasks()
+  saveTasks()
+}
+
+// ── Edit task ─────────────────────────────────────────────────────────────────
+function startEdit(task) {
+  editingId.value = task.id
+  editingText.value = task.text
+}
+
+function confirmEdit(task) {
+  if (editingId.value !== task.id) return
+  const text = editingText.value.trim()
+  if (text && text !== task.text) {
+    task.text = text
+    task.updatedAt = Date.now()
+    saveTasks()
+  }
+  cancelEdit()
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editingText.value = ''
+}
+
+// ── Delete task ───────────────────────────────────────────────────────────────
+function deleteTask(id) {
+  activeTasks.value = activeTasks.value.filter(t => t.id !== id)
+  reorderTasks()
+  saveTasks()
+}
+
+// ── Drag end ──────────────────────────────────────────────────────────────────
+function onDragEnd() {
+  reorderTasks()
+  saveTasks()
+}
+
+// ── Move back ─────────────────────────────────────────────────────────────────
+function moveBack(id) {
+  const idx = skippedTasks.value.findIndex(t => t.id === id)
+  if (idx === -1) return
+  const [task] = skippedTasks.value.splice(idx, 1)
+  task.status = 'pending'
+  task.updatedAt = Date.now()
+  activeTasks.value.push(task)
+  reorderTasks()
+  saveTasks()
+}
+
+// ── Create Planner ────────────────────────────────────────────────────────────
+function createPlanner() {
+  if (activeTasks.value.length === 0) return
+  const now = Date.now()
+  activeTasks.value.forEach(t => {
+    t.status = 'pending'
+    t.updatedAt = now
+  })
+  saveTasks()
+  router.push({ name: 'TaskSwipper' })
 }
 </script>
 
@@ -300,9 +420,35 @@ function addTask() {
   transition: opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
-.create-planner-btn:hover {
+.create-planner-btn:hover:not(:disabled) {
   opacity: 0.85;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.create-planner-btn.btn-disabled {
+  background: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Inline edit input inside task row */
+.task-edit-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1.5px solid #c8e1f5;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  outline: none;
+  padding: 2px 0;
+}
+
+/* Drag handle cursor on dot */
+.task-dot {
+  cursor: grab;
+}
+.task-dot:active {
+  cursor: grabbing;
+}
 </style>
