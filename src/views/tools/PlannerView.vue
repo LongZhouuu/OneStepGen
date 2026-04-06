@@ -61,7 +61,7 @@
       <!-- Create Planner Button -->
       <div class="create-planner-wrapper">
         <button class="create-planner-btn">
-          <span class="btn-icon">&#x1F4C5;</span> Create Planner
+           Create Planner
         </button>
       </div>
     </div>
@@ -305,7 +305,4 @@ function addTask() {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.btn-icon {
-  font-size: 1.1rem;
-}
 </style>
