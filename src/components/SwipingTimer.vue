@@ -5,29 +5,11 @@
         </div>
 
         <div v-else class="timerEditor">
-            <input
-                ref="minuteInput"
-                v-model="editMin"
-                class="timerInput"
-                type="text"
-                maxlength="3"
-                inputmode="numeric"
-                @input="handleMinInput"
-                @keyup.enter="finishEdit"
-                @blur="handleBlur"
-            />
+            <input ref="minuteInput" v-model="editMin" class="timerInput" type="text" maxlength="3" inputmode="numeric"
+                @input="handleMinInput" @keyup.enter="finishEdit" @blur="handleBlur" />
             <span class="timerColon">:</span>
-            <input
-                ref="secondInput"
-                v-model="editSec"
-                class="timerInput"
-                type="text"
-                maxlength="2"
-                inputmode="numeric"
-                @input="handleSecInput"
-                @keyup.enter="finishEdit"
-                @blur="handleBlur"
-            />
+            <input ref="secondInput" v-model="editSec" class="timerInput" type="text" maxlength="2" inputmode="numeric"
+                @input="handleSecInput" @keyup.enter="finishEdit" @blur="handleBlur" />
         </div>
 
         <div class="timerLabel">SESSION TIMER</div>
@@ -40,17 +22,15 @@
                 {{ isRunning ? 'Checked-In' : 'Check-In' }}
             </button>
 
-            <button
-                v-if="isRunning || !isDefaultTime"
-                class="timerButton"
-                @click="handleSecondButton"
-            >
+            <button v-if="isRunning || !isDefaultTime" class="timerButton" @click="handleSecondButton">
                 {{ isRunning ? 'Pause' : 'Restore Default' }}
             </button>
         </div>
     </section>
 
-    <CountdownPop v-if="isPopupVisible" @close="handlePopupClose" />
+    <Teleport to="body">
+        <CountdownPop v-if="isPopupVisible" @close="handlePopupClose" />
+    </Teleport>
 </template>
 
 <script setup>
