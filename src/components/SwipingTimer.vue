@@ -1,76 +1,122 @@
 <template>
-    <section class="timer-card">
-        <div v-if="!isEditing" class="time" @dblclick="startEdit">
-            {{ displayMin }}:{{ displaySec }}
+    <section class="timerCard">
+        <div v-if="!isEditing" class="timerText" @dblclick="startEdit">
+            {{ currentMin }}:{{ currentSec }}
         </div>
 
-        <div v-else class="timeEditor">
-            <input ref="minuteInput" v-model="draftMinutes" class="timeInput" type="text" maxlength="3"
-                inputmode="numeric" @input="handleMinuteInput" @keyup.enter="finishEdit" @blur="handleBlur" />
-            <span class="colon">:</span>
-            <input ref="secondInput" v-model="draftSeconds" class="timeInput" type="text" maxlength="2"
-                inputmode="numeric" @input="handleSecondInput" @keyup.enter="finishEdit" @blur="handleBlur" />
+        <div v-else class="timerEditor">
+            <input
+                ref="minuteInput"
+                v-model="editMin"
+                class="timerInput"
+                type="text"
+                maxlength="3"
+                inputmode="numeric"
+                @input="handleMinInput"
+                @keyup.enter="finishEdit"
+                @blur="handleBlur"
+            />
+            <span class="timerColon">:</span>
+            <input
+                ref="secondInput"
+                v-model="editSec"
+                class="timerInput"
+                type="text"
+                maxlength="2"
+                inputmode="numeric"
+                @input="handleSecInput"
+                @keyup.enter="finishEdit"
+                @blur="handleBlur"
+            />
         </div>
 
-        <div class="label">SESSION TIMER</div>
-        <div class="sublabel" :style="{ display: isCounting ? 'none' : 'block' }">Modify Timer by Double-Click</div>
+        <div class="timerLabel">SESSION TIMER</div>
+        <div v-show="!isRunning" class="timerSubLabel">
+            Modify Timer by Double-Click
+        </div>
 
-        <div class="btnContainer">
-            <button class="checkIn" @click="startCountdown" :disabled="isCounting">
-                {{ isCounting ? 'Checked-In' : 'Check-In' }}
+        <div class="timerButtonGroup">
+            <button class="timerButton" @click="startTimer" :disabled="isRunning">
+                {{ isRunning ? 'Checked-In' : 'Check-In' }}
             </button>
-            <!-- If user changes the default time (20:00), display "Restore Default".
-                 If user starts a countdown, display "Pause".
-                 If neither condition is met, no message is displayed. -->
-            <button v-if="isCounting || isModified" class="checkIn" @click="handleWhenCounting">
-                {{ isCounting ? 'Pause' : 'Restore Default' }}
+
+            <button
+                v-if="isRunning || !isDefaultTime"
+                class="timerButton"
+                @click="handleSecondButton"
+            >
+                {{ isRunning ? 'Pause' : 'Restore Default' }}
             </button>
         </div>
-
     </section>
-    <CountdownPop v-if="showPopup" @close="handlePopupClose" />
+
+    <CountdownPop v-if="isPopupVisible" @close="handlePopupClose" />
 </template>
 
 <script setup>
-import { ref, nextTick, onBeforeUnmount, computed } from 'vue'
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import CountdownPop from './CountdownPop.vue'
 
 const emit = defineEmits(['countingState'])
 
-const setMin = ref('20')
-const setSec = ref('00')
+const defaultMin = '20'
+const defaultSec = '00'
 
-const defaultSessionMin = '20'
-const defaultSessionSec = '00'
+const savedMin = ref(defaultMin)
+const savedSec = ref(defaultSec)
 
-const displayMin = ref('20')
-const displaySec = ref('00')
+const currentMin = ref(defaultMin)
+const currentSec = ref(defaultSec)
 
-const draftMinutes = ref('')
-const draftSeconds = ref('')
+const editMin = ref('')
+const editSec = ref('')
 
 const isEditing = ref(false)
+const isRunning = ref(false)
+const isPopupVisible = ref(false)
+
 const minuteInput = ref(null)
 const secondInput = ref(null)
 
-const isCounting = ref(false)
 const totalSeconds = ref(20 * 60)
 let timerId = null
 
-const isModified = computed(() => {
-    return (
-        setMin.value !== defaultSessionMin ||
-        setSec.value !== defaultSessionSec
-    )
+const isDefaultTime = computed(() => {
+    return savedMin.value === defaultMin && savedSec.value === defaultSec
 })
 
-const showPopup = ref(false)
+function updateCurrentTime() {
+    const min = Math.floor(totalSeconds.value / 60)
+    const sec = totalSeconds.value % 60
 
-function startEdit() {
-    if (isCounting.value) return
+    currentMin.value = String(min).padStart(2, '0')
+    currentSec.value = String(sec).padStart(2, '0')
+}
 
-    draftMinutes.value = setMin.value
-    draftSeconds.value = setSec.value
+function stopTimer() {
+    if (timerId) {
+        clearInterval(timerId)
+        timerId = null
+    }
+
+    isRunning.value = false
+    emit('countingState', false)
+}
+
+function loadSavedTime() {
+    totalSeconds.value = Number(savedMin.value) * 60 + Number(savedSec.value)
+    updateCurrentTime()
+}
+
+function loadDefaultTime() {
+    savedMin.value = defaultMin
+    savedSec.value = defaultSec
+    loadSavedTime()
+}
+
+function openEditor(min, sec) {
+    editMin.value = min
+    editSec.value = sec
     isEditing.value = true
 
     nextTick(() => {
@@ -79,9 +125,14 @@ function startEdit() {
     })
 }
 
-function handleMinuteInput(e) {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 3)
-    draftMinutes.value = value
+function startEdit() {
+    if (isRunning.value) return
+    openEditor(savedMin.value, savedSec.value)
+}
+
+function handleMinInput(e) {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 3)
+    editMin.value = value
 
     if (value.length === 3) {
         secondInput.value?.focus()
@@ -89,134 +140,97 @@ function handleMinuteInput(e) {
     }
 }
 
-function handleSecondInput(e) {
-    let value = e.target.value.replace(/\D/g, '').slice(0, 2)
-    draftSeconds.value = value
+function handleSecInput(e) {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 2)
+    editSec.value = value
 }
 
 function handleBlur() {
     setTimeout(() => {
         const active = document.activeElement
-        if (
-            active !== minuteInput.value &&
-            active !== secondInput.value
-        ) {
+
+        if (active !== minuteInput.value && active !== secondInput.value) {
             finishEdit()
         }
     }, 0)
 }
 
 function finishEdit() {
-    const mm = draftMinutes.value.padStart(2, '0')
-    const ss = draftSeconds.value.padStart(2, '0')
+    const minText = editMin.value.padStart(2, '0')
+    const secText = editSec.value.padStart(2, '0')
 
-    const minuteNumber = Number(mm)
-    const secondNumber = Number(ss)
+    const minNumber = Number(minText)
+    const secNumber = Number(secText)
 
-    if (
-        Number.isNaN(minuteNumber) ||
-        Number.isNaN(secondNumber) ||
-        secondNumber < 0 ||
-        secondNumber > 59
-    ) {
+    const isInvalid =
+        Number.isNaN(minNumber) ||
+        Number.isNaN(secNumber) ||
+        secNumber < 0 ||
+        secNumber > 59
+
+    if (isInvalid) {
         isEditing.value = false
         return
     }
 
-    setMin.value = mm
-    setSec.value = ss
+    savedMin.value = minText
+    savedSec.value = secText
 
-    totalSeconds.value = minuteNumber * 60 + secondNumber
-    updateDisplay()
-
+    loadSavedTime()
     isEditing.value = false
 }
 
-function updateDisplay() {
-    const minutes = Math.floor(totalSeconds.value / 60)
-    const seconds = totalSeconds.value % 60
-
-    displayMin.value = String(minutes).padStart(2, '0')
-    displaySec.value = String(seconds).padStart(2, '0')
-}
-
-function resetTimer() {
-    if (timerId) {
-        clearInterval(timerId)
-        timerId = null
+function startTimer() {
+    if (isEditing.value) {
+        finishEdit()
     }
 
-    isCounting.value = false
-    emit('countingState', false)
+    if (isRunning.value || totalSeconds.value <= 0) return
 
-    totalSeconds.value = Number(setMin.value) * 60 + Number(setSec.value)
-    updateDisplay()
-}
-
-function startCountdown() {
-    if (isEditing.value) finishEdit()
-    if (isCounting.value || totalSeconds.value <= 0) return
-
-    isCounting.value = true
+    isRunning.value = true
     emit('countingState', true)
 
     timerId = setInterval(() => {
         if (totalSeconds.value > 0) {
             totalSeconds.value -= 1
-            updateDisplay()
+            updateCurrentTime()
         }
 
         if (totalSeconds.value <= 0) {
-            clearInterval(timerId)
-            timerId = null
-            isCounting.value = false
-            emit('countingState', false)
-            showPopup.value = true
+            stopTimer()
+            isPopupVisible.value = true
         }
     }, 1000)
 }
 
-function handlePopupClose() {
-    showPopup.value = false
-    resetTimer()
-    startCountdown()
+function pauseTimer() {
+    stopTimer()
+    openEditor(currentMin.value, currentSec.value)
 }
 
-function handleWhenCounting() {
-    if (!isCounting.value) {
-        setMin.value = defaultSessionMin
-        setSec.value = defaultSessionSec
-
-        totalSeconds.value = Number(defaultSessionMin) * 60 + Number(defaultSessionSec)
-        updateDisplay()
-        return
+function handleSecondButton() {
+    if (isRunning.value) {
+        pauseTimer()
+    } else {
+        loadDefaultTime()
     }
+}
 
-    if (timerId) {
-        clearInterval(timerId)
-        timerId = null
-    }
-
-    isCounting.value = false
-    emit('countingState', false)
-
-    draftMinutes.value = displayMin.value
-    draftSeconds.value = displaySec.value
-    isEditing.value = true
-
-    nextTick(() => {
-        minuteInput.value?.focus()
-        minuteInput.value?.select()
-    })
+function handlePopupClose() {
+    isPopupVisible.value = false
+    loadSavedTime()
+    startTimer()
 }
 
 onBeforeUnmount(() => {
-    if (timerId) clearInterval(timerId)
+    if (timerId) {
+        clearInterval(timerId)
+    }
 })
 </script>
 
 <style scoped>
-.timer-card {
+.timerCard {
     width: 100%;
     background: #f4f4f4;
     border-radius: 20px;
@@ -225,21 +239,19 @@ onBeforeUnmount(() => {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.time {
+.timerText {
     font-size: 48px;
     font-weight: 800;
     color: #2f2f2f;
-    /* cursor: pointer; */
 }
 
-.timeEditor {
+.timerEditor {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* gap: 6px; */
 }
 
-.timeInput {
+.timerInput {
     width: 24%;
     border: none;
     outline: none;
@@ -252,36 +264,35 @@ onBeforeUnmount(() => {
     padding: 0;
 }
 
-.colon {
+.timerColon {
     font-size: 48px;
     font-weight: 800;
     color: #2f2f2f;
     line-height: 1;
 }
 
-.label {
+.timerLabel {
     margin-top: 6px;
     font-size: 12px;
     letter-spacing: 2px;
     color: #8a8a8a;
 }
 
-.sublabel {
+.timerSubLabel {
     margin-top: 4px;
     font-size: 10px;
     letter-spacing: 2px;
     color: #8a8a8a;
 }
 
-.btnContainer {
+.timerButtonGroup {
     display: flex;
-    flex-direction: row;
     justify-content: center;
     align-items: center;
     gap: 20px;
 }
 
-.checkIn {
+.timerButton {
     margin-top: 8px;
     border: none;
     border-radius: 99px;
@@ -293,7 +304,7 @@ onBeforeUnmount(() => {
     cursor: pointer;
 }
 
-.checkIn:disabled {
+.timerButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
