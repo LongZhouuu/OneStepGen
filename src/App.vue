@@ -1,15 +1,24 @@
-<script setup>
-import { RouterView } from 'vue-router'
-import NavBar from './components/NavBar.vue'
-</script>
-
 <template>
   <div class="app-wrapper">
     <NavBar />
     <RouterView />
+    <!-- The footer is only displayed on non-Homepage screens; 
+          otherwise will appear two scrollbars -->
+    <SiteFooter v-if="!isHomePage" />
   </div>
-
 </template>
+
+<script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
+import NavBar from './components/NavBar.vue'
+import SiteFooter from './components/SiteFooter.vue'
+
+const route = useRoute()
+
+const isHomePage = computed(() => route.path === '/')
+</script>
 
 <style>
 html, body {
