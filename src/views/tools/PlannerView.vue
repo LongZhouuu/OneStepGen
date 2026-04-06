@@ -7,17 +7,25 @@
 
     <div class="content-area">
       <!-- Input Area -->
-      <div class="search-box" :class="{ focused: inputFocused }">
-        <input
-          v-model="newTaskText"
-          class="task-input"
-          type="text"
-          placeholder="Please enter a task"
-          @focus="inputFocused = true"
-          @blur="inputFocused = false"
-          @keyup.enter="addTask"
-        />
-        <button class="add-btn" @click="addTask">Add Task</button>
+      <div class="input-wrapper">
+        <div class="search-box" :class="{ focused: inputFocused }">
+          <input
+            v-model="newTaskText"
+            class="task-input"
+            type="text"
+            placeholder="Please enter a task"
+            @focus="inputFocused = true"
+            @blur="inputFocused = false"
+            @keyup.enter="addTask"
+          />
+          <button
+            class="add-btn"
+            :disabled="newTaskOverLimit"
+            :class="{ 'btn-disabled': newTaskOverLimit }"
+            @click="addTask"
+          >Add Task</button>
+        </div>
+        <p v-if="newTaskOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
       </div>
 
       <!-- Active Tasks -->
@@ -40,6 +48,7 @@
                   @blur="confirmEdit(task)"
                   @keyup.escape="cancelEdit"
                 />
+                <p v-if="editOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
               </template>
               <template v-else>
                 <span class="task-text">{{ task.text }}</span>
@@ -53,6 +62,9 @@
           </div>
         </template>
       </draggable>
+
+      <!-- Drag hint -->
+      <p v-if="activeTasks.length > 0" class="drag-hint">· Hold and drag to reorder</p>
 
       <!-- Skipped Tasks -->
       <div v-if="skippedTasks.length > 0" class="skipped-section">
@@ -73,7 +85,7 @@
         </div>
       </div>
 
-      <!-- Create Planner Button -->
+      <!-- Create Planner + Clear All -->
       <div class="create-planner-wrapper">
         <button
           class="create-planner-btn"
@@ -81,15 +93,20 @@
           :class="{ 'btn-disabled': activeTasks.length === 0 }"
           @click="createPlanner"
         >
-          &#x1F4C5; Create Planner
+          Create Planner
         </button>
+        <button
+          v-if="activeTasks.length > 0"
+          class="clear-all-btn"
+          @click="clearAll"
+        >Clear All</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
 
@@ -100,6 +117,10 @@ const newTaskText = ref('')
 const inputFocused = ref(false)
 const editingId = ref(null)
 const editingText = ref('')
+
+const TASK_MAX_LEN = 50
+const newTaskOverLimit = computed(() => newTaskText.value.length > TASK_MAX_LEN)
+const editOverLimit = computed(() => editingText.value.length > TASK_MAX_LEN)
 
 // ── Task lists ────────────────────────────────────────────────────────────────
 const activeTasks = ref([])
@@ -142,7 +163,7 @@ saveTasks()
 // ── Add task ──────────────────────────────────────────────────────────────────
 function addTask() {
   const text = newTaskText.value.trim()
-  if (!text) return
+  if (!text || newTaskOverLimit.value) return
 
   activeTasks.value.push({
     id: crypto.randomUUID(),
@@ -165,6 +186,7 @@ function startEdit(task) {
 
 function confirmEdit(task) {
   if (editingId.value !== task.id) return
+  if (editOverLimit.value) return
   const text = editingText.value.trim()
   if (text && text !== task.text) {
     task.text = text
@@ -202,6 +224,15 @@ function moveBack(id) {
   activeTasks.value.push(task)
   reorderTasks()
   saveTasks()
+}
+
+// ── Clear All ─────────────────────────────────────────────────────────────────
+function clearAll() {
+  activeTasks.value = []
+  skippedTasks.value = []
+  completedTasks.value = []
+  saveTasks()
+  console.log('=== After Clear All ===', localStorage.getItem('tasks'))
 }
 
 // ── Create Planner ────────────────────────────────────────────────────────────
@@ -398,9 +429,32 @@ function createPlanner() {
   margin: 0 0 4px 4px;
 }
 
+/* Character limit error */
+.char-limit-error {
+  font-size: 0.78rem;
+  color: #e57373;
+  margin: 4px 4px 0;
+}
+
+/* Input wrapper (allows error text below search-box) */
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Drag hint */
+.drag-hint {
+  font-size: 0.78rem;
+  color: #666;
+  text-align: center;
+  margin: 0;
+}
+
 /* Create Planner button */
 .create-planner-wrapper {
+  position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
   margin-top: 32px;
 }
@@ -429,6 +483,37 @@ function createPlanner() {
   background: #e0e0e0;
   color: #aaa;
   cursor: not-allowed;
+}
+
+/* Clear All button */
+.clear-all-btn {
+  position: absolute;
+  right: 16px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  background: #ffcccc;
+  color: #2f2f2f;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  opacity: 0.85;
+}
+
+/* disabled style for add-btn */
+.add-btn.btn-disabled {
+  background: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.add-btn.btn-disabled:hover {
+  opacity: 1;
 }
 
 /* Inline edit input inside task row */
