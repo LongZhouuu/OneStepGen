@@ -69,7 +69,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Finish website performance report",
-        status: "doing",
+        status: "pending",
         order: 2,
         createdAt: Date.now() - 90000,
         updatedAt: Date.now() - 50000
@@ -77,7 +77,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Call purchasing team for hardware details",
-        status: "completed",
+        status: "pending",
         order: 3,
         createdAt: Date.now() - 80000,
         updatedAt: Date.now() - 80000

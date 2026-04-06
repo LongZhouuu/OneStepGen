@@ -7,7 +7,7 @@ import { RouterLink } from 'vue-router'
     <div class="container">
       <!-- Logo -->
       <RouterLink class="navbar-brand d-flex align-items-center" to="/">
-        <img src="@/assets/osg.svg" alt="OneStepGen" height="32" class="me-2" />
+        <img src="@/assets/logo.svg" alt="OneStepGen" height="32" class="me-2" />
         <!-- <span class="brand-text">OneStepGen</span> -->
       </RouterLink>
 

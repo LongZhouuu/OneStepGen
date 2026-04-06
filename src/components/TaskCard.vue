@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
     tasks: {
@@ -51,6 +51,14 @@ const currentIndex = ref(0)
 
 const currentTaskItem = computed(() => {
     return props.tasks[currentIndex.value] || null
+})
+
+watch(currentTaskItem, (newTask) => {
+    if (!newTask) return
+
+    if (newTask.status !== 'completed' && newTask.status !== 'skipped') {
+        newTask.status = 'doing'
+    }
 })
 
 const currentTaskText = computed(() => {
@@ -125,6 +133,19 @@ function swipeByClick(direction) {
     swipeOut(direction)
 }
 
+function moveToNextValidTask() {
+    let nextIndex = currentIndex.value + 1
+
+    while (
+        props.tasks[nextIndex] &&
+        (props.tasks[nextIndex].status === 'completed' ||
+         props.tasks[nextIndex].status === 'skipped')
+    ) {
+        nextIndex++
+    }
+
+    currentIndex.value = nextIndex
+}
 
 function swipeOut(direction) {
     if (!currentTaskItem.value) return
@@ -138,7 +159,7 @@ function swipeOut(direction) {
     }
 
     setTimeout(() => {
-        currentIndex.value += 1
+        moveToNextValidTask()
         offsetX.value = 0
         isDragging.value = false
     }, 220)
