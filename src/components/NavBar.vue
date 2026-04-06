@@ -108,7 +108,7 @@ import { RouterLink } from 'vue-router'
 
 .dropdown-menu {
   border: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -122,7 +122,7 @@ import { RouterLink } from 'vue-router'
 }
 
 .dropdown-item:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.94);
   color: #333;
 }
 </style>
