@@ -35,6 +35,8 @@
 import { ref, nextTick, onBeforeUnmount, computed } from 'vue'
 import CountdownPop from './CountdownPop.vue'
 
+const emit = defineEmits(['countingState'])
+
 const setMin = ref('20')
 const setSec = ref('00')
 
@@ -145,6 +147,7 @@ function resetTimer() {
     }
 
     isCounting.value = false
+    emit('countingState', false)
 
     totalSeconds.value = Number(setMin.value) * 60 + Number(setSec.value)
     updateDisplay()
@@ -155,6 +158,7 @@ function startCountdown() {
     if (isCounting.value || totalSeconds.value <= 0) return
 
     isCounting.value = true
+    emit('countingState', true)
 
     timerId = setInterval(() => {
         if (totalSeconds.value > 0) {
@@ -166,6 +170,7 @@ function startCountdown() {
             clearInterval(timerId)
             timerId = null
             isCounting.value = false
+            emit('countingState', false)
             showPopup.value = true
         }
     }, 1000)
@@ -193,6 +198,7 @@ function handleWhenCounting() {
     }
 
     isCounting.value = false
+    emit('countingState', false)
 
     draftMinutes.value = displayMin.value
     draftSeconds.value = displaySec.value
