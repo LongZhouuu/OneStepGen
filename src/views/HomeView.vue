@@ -106,7 +106,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
 
 /* Core Tools Section */
 .core-tools-section {
-  padding: 80px 24px;
+  padding: 140px 24px 80px;
   max-width: 1200px;
   height: 100vh;
   margin: 0 auto;
