@@ -9,12 +9,12 @@
     <section class="core-tools-section">
       <div class="core-tools-container">
         <h2 class="section-title">Explore Our Core Tools</h2>
-        
+
         <div class="core-tools-content">
           <div class="tools-illustration">
             <img src="/tools-illustration.png" alt="Core Tools Illustration" />
           </div>
-          
+
           <div class="tools-list">
             <RouterLink to="/tools/planner" class="tool-item tool-item-link">
               <h3 class="tool-name">Planner</h3>
@@ -23,27 +23,30 @@
               </p>
               <div class="tool-divider"></div>
             </RouterLink>
-            
+
             <RouterLink to="/tools/prioritizer" class="tool-item tool-item-link">
               <h3 class="tool-name">Prioritizer</h3>
               <p class="tool-description">
-                Cut through the overwhelm and spot what truly needs your attention right now, so you can move forward with clarity.
+                Cut through the overwhelm and spot what truly needs your attention right now, so you can move forward
+                with clarity.
               </p>
               <div class="tool-divider"></div>
             </RouterLink>
-            
+
             <RouterLink to="/tools/support" class="tool-item tool-item-link">
               <h3 class="tool-name">Support</h3>
               <p class="tool-description">
-                A judgment-free space to check in with how you're feeling and take care of your mental well-being, anytime you need it.
+                A judgment-free space to check in with how you're feeling and take care of your mental well-being,
+                anytime you need it.
               </p>
               <div class="tool-divider"></div>
             </RouterLink>
-            
+
             <RouterLink to="/tools/tips" class="tool-item tool-item-link">
               <h3 class="tool-name">Tips & Template</h3>
               <p class="tool-description">
-                Ready-to-use templates and daily tips to help you stay on track and keep moving, even on the harder days.
+                Ready-to-use templates and daily tips to help you stay on track and keep moving, even on the harder
+                days.
               </p>
               <div class="tool-divider"></div>
             </RouterLink>
@@ -64,19 +67,37 @@
           </div>
         </div>
       </div>
+
+    </section>
+    <section class="footer-snap" style="scroll-snap-align: start; scroll-snap-stop: always;">
+      <SiteFooter />
     </section>
   </div>
+
 </template>
 
 <script setup>
 import { RouterLink } from 'vue-router'
 import HeroSection from '@/components/HeroSection.vue'
 import NavBar from "../components/NavBar.vue"
+import SiteFooter from '@/components/SiteFooter.vue';
 </script>
 
 <style scoped>
 .home-page {
   width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.hero-wrapper,
+.core-tools-section,
+.security-section {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .hero-wrapper {
@@ -87,6 +108,7 @@ import NavBar from "../components/NavBar.vue"
 .core-tools-section {
   padding: 80px 24px;
   max-width: 1200px;
+  height: 100vh;
   margin: 0 auto;
 }
 
@@ -94,7 +116,7 @@ import NavBar from "../components/NavBar.vue"
   font-size: 3rem;
   font-weight: 500;
   color: #333;
-  margin-bottom: 60px;
+  margin-bottom: 20px;
 }
 
 .core-tools-content {
@@ -141,12 +163,10 @@ import NavBar from "../components/NavBar.vue"
   right: -24px;
   bottom: -20px;
   border-radius: 12px;
-  background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(233, 146, 54, 0.6) 0%,
-    rgba(240, 226, 210, 0.43) 40%,
-    rgba(255, 255, 255, 0) 70%
-  );
+  background: radial-gradient(ellipse at 50% 50%,
+      rgba(233, 146, 54, 0.6) 0%,
+      rgba(240, 226, 210, 0.43) 40%,
+      rgba(255, 255, 255, 0) 70%);
   opacity: 0;
   transition: opacity 300ms ease-out;
   z-index: -1;
@@ -178,7 +198,7 @@ import NavBar from "../components/NavBar.vue"
 /* Security Section */
 .security-section {
   padding: 140px 24px 180px;
-  max-width: 1000px;
+  max-width: 100vh;
   margin: 0 auto;
 }
 
@@ -223,16 +243,16 @@ import NavBar from "../components/NavBar.vue"
   .core-tools-content {
     flex-direction: column;
   }
-  
+
   .tools-illustration {
     max-width: 100%;
     order: -1;
   }
-  
+
   .section-title {
     font-size: 2rem;
   }
-  
+
   .security-text {
     font-size: 1.2rem;
   }

@@ -1,6 +1,13 @@
 <template>
     <div class="page">
+
         <div class="phone-frame">
+            <button class="back-btn" @click="router.back()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+                Back to Task Planner
+            </button>
             <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" />
 
             <section class="status">
@@ -43,9 +50,11 @@
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
+const router = useRouter()
 
 // mock data
 const tasks = ref([
@@ -261,5 +270,27 @@ const tasks = ref([
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #4a6d8c;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 32px;
+    position: absolute;
+    left: 110px;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #2a4d6c;
 }
 </style>
