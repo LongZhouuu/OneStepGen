@@ -13,20 +13,20 @@
                     </button>
                 </nav>
 
-                <section v-if="activeTab === 'tasks'" class="task-list-section">
-                    <div class="task-items-wrapper">
-                        <div v-for="task in tasks" :key="task.id" class="task-item"
+                <section v-show="activeTab === 'tasks'" class="taskList">
+                    <div class="taskItemContainer">
+                        <div v-for="task in tasks" :key="task.id" class="taskItem"
                             :class="{ skipped: task.status === 'skipped' }"
                             :title="task.status === 'skipped' ? 'This task has been skipped' : ''">
                             {{ task.text }}
                         </div>
                     </div>
-                    <button class="clear-btn" @click="clear">
+                    <button class="clearBtn" @click="clear">
                         Clear All
                     </button>
                 </section>
 
-                <section v-else class="checkin-panel">
+                <section v-show="activeTab === 'checkin'" class="checkIn">
                     <SwipingTimer @countingState="isTimerRunning = $event" />
                 </section>
             </section>
@@ -150,7 +150,7 @@ const tasks = ref([
     background: #2f2f2f;
 }
 
-.task-list-section {
+.taskList {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -158,7 +158,7 @@ const tasks = ref([
     min-height: 0;
 }
 
-.task-items-wrapper {
+.taskItemContainer {
     height: 150px;
     overflow-y: auto;
     display: flex;
@@ -172,12 +172,12 @@ const tasks = ref([
     /* IE/Edge */
 }
 
-.task-items-wrapper::-webkit-scrollbar {
+.taskItemContainer::-webkit-scrollbar {
     display: none;
     /* Chrome / Safari */
 }
 
-.task-item {
+.taskItem {
     width: 100%;
     background: #fafafa;
     border-radius: 12px;
@@ -191,14 +191,14 @@ const tasks = ref([
     flex-shrink: 0;
 }
 
-.task-item.skipped {
+.taskItem.skipped {
     text-decoration: line-through;
     color: #aaa;
     opacity: 0.6;
     transform: scale(0.98);
 }
 
-.clear-btn {
+.clearBtn {
     margin-top: 16px;
     align-self: last baseline;
     border: none;
@@ -214,7 +214,7 @@ const tasks = ref([
 }
 
 /* 
-.checkin-panel {
+.checkIn {
     flex: 1;
     background: #fafafa;
     border-radius: 14px;
@@ -230,7 +230,7 @@ const tasks = ref([
     }
 }
 
-.checkin-panel {
+.checkIn {
     flex: 1;
     display: flex;
     justify-content: center;
