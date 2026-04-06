@@ -1,7 +1,7 @@
 <template>
     <section class="timer-card">
         <div v-if="!isEditing" class="time" @dblclick="startEdit">
-            {{ defaultMin }}:{{ defaultSec }}
+            {{ displayMin }}:{{ displaySec }}
         </div>
 
         <div v-else class="timeEditor">
@@ -13,21 +13,36 @@
         </div>
 
         <div class="label">SESSION TIMER</div>
-        <div class="sublabel">Modify Timer by Double-Click</div>
+        <div class="sublabel" :style="{ display: isCounting ? 'none' : 'block' }">Modify Timer by Double-Click</div>
 
-        <button class="checkIn" @click="startCountdown" :disabled="isRunning">
-            {{ isRunning ? 'Checked-In' : 'Check-In' }}
-        </button>
+        <div class="btnContainer">
+            <button class="checkIn" @click="startCountdown" :disabled="isCounting">
+                {{ isCounting ? 'Checked-In' : 'Check-In' }}
+            </button>
+            <!-- If user changes the default time (20:00), display "Restore Default".
+                 If user starts a countdown, display "Pause".
+                 If neither condition is met, no message is displayed. -->
+            <button v-if="isCounting || isModified" class="checkIn" @click="handleWhenCounting">
+                {{ isCounting ? 'Pause' : 'Restore Default' }}
+            </button>
+        </div>
+
     </section>
-    <CountdownPop v-if="showPopup" @close="showPopup = false" />
+    <CountdownPop v-if="showPopup" @close="handlePopupClose" />
 </template>
 
 <script setup>
-import { ref, nextTick, onBeforeUnmount } from 'vue'
+import { ref, nextTick, onBeforeUnmount, computed } from 'vue'
 import CountdownPop from './CountdownPop.vue'
 
-const defaultMin = ref('20')
-const defaultSec = ref('00')
+const setMin = ref('20')
+const setSec = ref('00')
+
+const defaultSessionMin = '20'
+const defaultSessionSec = '00'
+
+const displayMin = ref('20')
+const displaySec = ref('00')
 
 const draftMinutes = ref('')
 const draftSeconds = ref('')
@@ -36,17 +51,24 @@ const isEditing = ref(false)
 const minuteInput = ref(null)
 const secondInput = ref(null)
 
-const isRunning = ref(false)
+const isCounting = ref(false)
 const totalSeconds = ref(20 * 60)
 let timerId = null
+
+const isModified = computed(() => {
+    return (
+        setMin.value !== defaultSessionMin ||
+        setSec.value !== defaultSessionSec
+    )
+})
 
 const showPopup = ref(false)
 
 function startEdit() {
-    if (isRunning.value) return
+    if (isCounting.value) return
 
-    draftMinutes.value = defaultMin.value
-    draftSeconds.value = defaultSec.value
+    draftMinutes.value = setMin.value
+    draftSeconds.value = setSec.value
     isEditing.value = true
 
     nextTick(() => {
@@ -99,9 +121,12 @@ function finishEdit() {
         return
     }
 
-    defaultMin.value = mm
-    defaultSec.value = ss
+    setMin.value = mm
+    setSec.value = ss
+
     totalSeconds.value = minuteNumber * 60 + secondNumber
+    updateDisplay()
+
     isEditing.value = false
 }
 
@@ -109,15 +134,27 @@ function updateDisplay() {
     const minutes = Math.floor(totalSeconds.value / 60)
     const seconds = totalSeconds.value % 60
 
-    defaultMin.value = String(minutes).padStart(2, '0')
-    defaultSec.value = String(seconds).padStart(2, '0')
+    displayMin.value = String(minutes).padStart(2, '0')
+    displaySec.value = String(seconds).padStart(2, '0')
+}
+
+function resetTimer() {
+    if (timerId) {
+        clearInterval(timerId)
+        timerId = null
+    }
+
+    isCounting.value = false
+
+    totalSeconds.value = Number(setMin.value) * 60 + Number(setSec.value)
+    updateDisplay()
 }
 
 function startCountdown() {
     if (isEditing.value) finishEdit()
-    if (isRunning.value || totalSeconds.value <= 0) return
+    if (isCounting.value || totalSeconds.value <= 0) return
 
-    isRunning.value = true
+    isCounting.value = true
 
     timerId = setInterval(() => {
         if (totalSeconds.value > 0) {
@@ -128,11 +165,43 @@ function startCountdown() {
         if (totalSeconds.value <= 0) {
             clearInterval(timerId)
             timerId = null
-            isRunning.value = false
-            // alert('yayyy')
+            isCounting.value = false
             showPopup.value = true
         }
     }, 1000)
+}
+
+function handlePopupClose() {
+    showPopup.value = false
+    resetTimer()
+    startCountdown()
+}
+
+function handleWhenCounting() {
+    if (!isCounting.value) {
+        setMin.value = defaultSessionMin
+        setSec.value = defaultSessionSec
+
+        totalSeconds.value = Number(defaultSessionMin) * 60 + Number(defaultSessionSec)
+        updateDisplay()
+        return
+    }
+
+    if (timerId) {
+        clearInterval(timerId)
+        timerId = null
+    }
+
+    isCounting.value = false
+
+    draftMinutes.value = displayMin.value
+    draftSeconds.value = displaySec.value
+    isEditing.value = true
+
+    nextTick(() => {
+        minuteInput.value?.focus()
+        minuteInput.value?.select()
+    })
 }
 
 onBeforeUnmount(() => {
@@ -154,7 +223,7 @@ onBeforeUnmount(() => {
     font-size: 48px;
     font-weight: 800;
     color: #2f2f2f;
-    cursor: pointer;
+    /* cursor: pointer; */
 }
 
 .timeEditor {
@@ -196,6 +265,14 @@ onBeforeUnmount(() => {
     font-size: 10px;
     letter-spacing: 2px;
     color: #8a8a8a;
+}
+
+.btnContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
 }
 
 .checkIn {
