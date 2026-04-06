@@ -1,9 +1,9 @@
 <template>
   <div class="app-wrapper">
     <NavBar />
-    <RouterView />
-    <!-- The footer is only displayed on non-Homepage screens; 
-          otherwise will appear two scrollbars -->
+    <main class="main-content">
+      <RouterView />
+    </main>
     <SiteFooter v-if="!isHomePage" />
   </div>
 </template>
@@ -30,11 +30,17 @@ html, body {
 
 .app-wrapper {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: radial-gradient(
     circle at -20% 80%,
     rgba(168, 89, 20, 0.5) 0%,
     rgba(245, 222, 195, 0.2) 90%
   );
   background-attachment: fixed;
+}
+
+.main-content {
+  flex: 1;
 }
 </style>
