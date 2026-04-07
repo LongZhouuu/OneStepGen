@@ -8,9 +8,9 @@
       </div>
 
       <div class="footer-right">
-        <RouterLink to="/privacy">Privacy</RouterLink>
-        <RouterLink to="/terms">Terms</RouterLink>
-        <RouterLink to="/tools/support">Support</RouterLink>
+        <!-- <RouterLink to="/privacy">Privacy</RouterLink> -->
+        <!-- <RouterLink to="/terms">Terms</RouterLink> -->
+        <!-- <RouterLink to="/tools/support">Support</RouterLink> -->
       </div>
     </div>
   </footer>

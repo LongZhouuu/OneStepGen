@@ -8,9 +8,12 @@
                 </svg>
                 Back to Task Planner
             </button>
-            <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" />
+            <div class="taskCardWrapper" :class="{ expanded: isTimerRunning }">
+                <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" @updateTaskState="updateTaskStatus"
+                    @noMoreTasks="handleNoMoreTasks" />
+            </div>
 
-            <section class="status">
+            <section class="status" :class="{ compressed: isTimerRunning }">
                 <nav class="tabs">
                     <button class="tab" :class="{ active: activeTab === 'checkin' }" @click="activeTab = 'checkin'">
                         Check In
@@ -21,10 +24,13 @@
                 </nav>
 
                 <section v-show="activeTab === 'tasks'" class="taskList">
-                    <div class="taskItemContainer">
+                    <TransitionGroup name="task-slide" tag="div" class="taskItemContainer">
                         <div v-for="task in tasks" :key="task.id" class="taskItem"
                             :class="{ skipped: task.status === 'skipped' }">
                             <span class="taskText">
+                                <span style="font-weight: bold;">
+                                    {{ task.order == null ? '' : task.order + 1 + '. ' }}
+                                </span>
                                 {{ task.text }}
                             </span>
 
@@ -32,14 +38,14 @@
                                 {{ task.status }}
                             </span>
                         </div>
-                    </div>
+                    </TransitionGroup>
                     <button class="clearBtn" @click="clear">
-                        Clear All
+                        Clear All Completed
                     </button>
                 </section>
 
                 <section v-show="activeTab === 'checkin'" class="checkIn">
-                    <SwipingTimer @countingState="isTimerRunning = $event" />
+                    <SwipingTimer ref="timerRef" @countingState="isTimerRunning = $event" />
                 </section>
             </section>
         </div>
@@ -49,57 +55,89 @@
 <script setup>
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
 const router = useRouter()
 
-// mock data
-const tasks = ref([
-    {
-        id: crypto.randomUUID(),
-        text: "Buy headphone for meeting",
-        status: "pending",
-        order: 1,
-        createdAt: Date.now() - 100000,
-        updatedAt: Date.now() - 100000
-    },
-    {
-        id: crypto.randomUUID(),
-        text: "Finish website performance report",
-        status: "pending",
-        order: 2,
-        createdAt: Date.now() - 90000,
-        updatedAt: Date.now() - 50000
-    },
-    {
-        id: crypto.randomUUID(),
-        text: "Call purchasing team for hardware details",
-        status: "pending",
-        order: 3,
-        createdAt: Date.now() - 80000,
-        updatedAt: Date.now() - 80000
-    },
-    {
-        id: crypto.randomUUID(),
-        text: "Prepare slides for weekly meeting",
-        status: "skipped",
-        order: 4,
-        createdAt: Date.now() - 120000,
-        updatedAt: Date.now() - 60000
-    },
-    {
-        id: crypto.randomUUID(),
-        text: "Review UX feedback from team",
-        status: "pending",
-        order: 5,
-        createdAt: Date.now() - 70000,
-        updatedAt: Date.now() - 30000
-    }
-])
+const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
 
+const timerRef = ref(null)
+
+function handleNoMoreTasks() {
+    activeTab.value = 'checkin'
+    timerRef.value?.pauseFromParent()
+}
+
+watch(isTimerRunning, (newVal) => {
+    if (newVal) {
+        activeTab.value = 'tasks'
+    }
+})
+
+// mock data
+// const tasks = ref([
+//     {
+//         id: crypto.randomUUID(),
+//         text: "Buy headphone for meeting",
+//         status: "pending",
+//         order: 1,
+//         createdAt: Date.now() - 100000,
+//         updatedAt: Date.now() - 100000
+//     },
+//     {
+//         id: crypto.randomUUID(),
+//         text: "Finish website performance report",
+//         status: "pending",
+//         order: 2,
+//         createdAt: Date.now() - 90000,
+//         updatedAt: Date.now() - 50000
+//     },
+//     {
+//         id: crypto.randomUUID(),
+//         text: "Call purchasing team for hardware details",
+//         status: "pending",
+//         order: 3,
+//         createdAt: Date.now() - 80000,
+//         updatedAt: Date.now() - 80000
+//     },
+//     {
+//         id: crypto.randomUUID(),
+//         text: "Prepare slides for weekly meeting",
+//         status: "skipped",
+//         order: 4,
+//         createdAt: Date.now() - 120000,
+//         updatedAt: Date.now() - 60000
+//     },
+//     {
+//         id: crypto.randomUUID(),
+//         text: "Review UX feedback from team",
+//         status: "pending",
+//         order: 5,
+//         createdAt: Date.now() - 70000,
+//         updatedAt: Date.now() - 30000
+//     }
+// ])
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks.value))
+}
+
+function updateTaskStatus(index, newStatus) {
+    if (!tasks.value[index]) return
+
+    tasks.value[index].status = newStatus
+    tasks.value[index].updatedAt = Date.now()
+    saveTasks()
+}
+
+function clear() {
+    console.log('fy');
+
+    tasks.value = tasks.value.filter(task => task.status !== 'completed')
+    saveTasks()
+}
 </script>
 
 <style scoped>
@@ -210,10 +248,18 @@ const tasks = ref([
     color: #aaa;
 }
 
+.taskText {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 .taskStatus {
     margin-left: 8px;
     font-size: 12px;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 
@@ -246,6 +292,12 @@ const tasks = ref([
     cursor: pointer;
     /* border: 1px solid black; */
     flex-shrink: 0;
+    transition: all .6s
+}
+
+.clearBtn:hover {
+    background: #4caf50;
+    color: white;
 }
 
 /* 
@@ -292,5 +344,41 @@ const tasks = ref([
 .back-btn:hover {
     background: rgba(255, 255, 255, 0.5);
     color: #2a4d6c;
+}
+
+.task-slide-leave-active {
+    transition: all 0.35s ease;
+}
+
+.task-slide-leave-to {
+    opacity: 0;
+    transform: translateX(80px);
+}
+
+.task-slide-move {
+    transition: transform 0.35s ease;
+}
+
+.taskCardWrapper {
+    transition: transform 0.35s ease;
+    transform-origin: top center;
+}
+
+.taskCardWrapper.expanded {
+    transform: scale(1.08);
+}
+
+.status {
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px 12px;
+    transition: transform 0.35s ease, opacity 0.35s ease, margin-top 0.35s ease;
+    transform-origin: top center;
+}
+
+.status.compressed {
+    transform: scale(0.92);
+    opacity: 0.92;
+    margin-top: 30px;
 }
 </style>

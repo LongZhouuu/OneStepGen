@@ -36,6 +36,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
+const emit = defineEmits(['updateTaskState', 'noMoreTasks'])
+
 const props = defineProps({
     tasks: {
         type: Array,
@@ -47,26 +49,72 @@ const props = defineProps({
     }
 })
 
-const currentIndex = ref(0)
+const currentTaskId = ref(null)
+
+function findFirstValidTask() {
+    return props.tasks.find(task =>
+        task.status === 'pending' || task.status === 'doing'
+    ) || null
+}
 
 const currentTaskItem = computed(() => {
-    return props.tasks[currentIndex.value] || null
-})
+    if (!props.tasks.length) return null
 
-watch(currentTaskItem, (newTask) => {
-    if (!newTask) return
-
-    if (newTask.status !== 'completed' && newTask.status !== 'skipped') {
-        newTask.status = 'doing'
+    if (currentTaskId.value == null) {
+        return findFirstValidTask()
     }
+
+    const task = props.tasks.find(task =>
+        task.id === currentTaskId.value &&
+        (task.status === 'pending' || task.status === 'doing')
+    )
+
+    return task || findFirstValidTask()
 })
+
+const currentTaskRealIndex = computed(() => {
+    if (!currentTaskItem.value) return -1
+
+    return props.tasks.findIndex(task => task.id === currentTaskItem.value.id)
+})
+
+watch(
+    () => props.tasks,
+    () => {
+        if (!currentTaskItem.value) {
+            currentTaskId.value = null
+            return
+        }
+
+        currentTaskId.value = currentTaskItem.value.id
+    },
+    { immediate: true, deep: true }
+)
+
+watch(
+    () => props.canSwipe,
+    (newVal) => {
+        if (!newVal) return
+
+        if (!currentTaskItem.value) {
+            emit('noMoreTasks')
+            return
+        }
+
+        if (currentTaskItem.value.status === 'pending') {
+            emit('updateTaskState', currentTaskRealIndex.value, 'doing')
+        }
+    }
+)
 
 const currentTaskText = computed(() => {
     return currentTaskItem.value?.text || 'No more tasks!'
 })
 
 const currentTaskOrder = computed(() => {
-    return currentTaskItem.value?.order || '🥳'
+    return currentTaskItem.value?.order != null
+        ? currentTaskItem.value.order + 1
+        : '🥳'
 })
 
 const isDragging = ref(false)
@@ -115,7 +163,6 @@ function endDrag() {
 
     const threshold = 120
 
-    // the user behaviour ended
     if (offsetX.value > threshold) {
         swipeOut('right')
     } else if (offsetX.value < -threshold) {
@@ -127,52 +174,53 @@ function endDrag() {
     isDragging.value = false
 }
 
-// when user click instead of swipe
 function swipeByClick(direction) {
     if (!currentTaskItem.value || isDragging.value) return
     swipeOut(direction)
 }
 
-function moveToNextValidTask() {
-    let nextIndex = currentIndex.value + 1
-
-    while (
-        props.tasks[nextIndex] &&
-        (props.tasks[nextIndex].status === 'completed' ||
-         props.tasks[nextIndex].status === 'skipped')
-    ) {
-        nextIndex++
+function getNextValidTask(afterIndex) {
+    for (let i = afterIndex + 1; i < props.tasks.length; i++) {
+        const task = props.tasks[i]
+        if (task.status === 'pending' || task.status === 'doing') {
+            return task
+        }
     }
-
-    currentIndex.value = nextIndex
+    return null
 }
 
 function swipeOut(direction) {
     if (!currentTaskItem.value) return
 
+    const leavingIndex = currentTaskRealIndex.value
+    const leavingTaskId = currentTaskItem.value.id
+    const nextTask = getNextValidTask(leavingIndex)
+
     if (direction === 'right') {
-        skipTask()
+        emit('updateTaskState', leavingIndex, 'skipped')
         offsetX.value = 400
     } else if (direction === 'left') {
-        completeTask()
+        emit('updateTaskState', leavingIndex, 'completed')
         offsetX.value = -400
     }
 
     setTimeout(() => {
-        moveToNextValidTask()
+        if (nextTask) {
+            currentTaskId.value = nextTask.id
+
+            const nextTaskIndex = props.tasks.findIndex(task => task.id === nextTask.id)
+
+            if (props.canSwipe && nextTask.status === 'pending') {
+                emit('updateTaskState', nextTaskIndex, 'doing')
+            }
+        } else {
+            currentTaskId.value = null
+            emit('noMoreTasks')
+        }
+
         offsetX.value = 0
         isDragging.value = false
     }, 220)
-}
-
-function skipTask() {
-    props.tasks[currentIndex.value].status = 'skipped'
-    console.log(props.tasks[currentIndex.value].status)
-}
-
-function completeTask() {
-    props.tasks[currentIndex.value].status = 'completed'
-    console.log(props.tasks[currentIndex.value].status)
 }
 </script>
 
