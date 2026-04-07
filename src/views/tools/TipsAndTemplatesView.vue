@@ -75,7 +75,7 @@
               </div>
               <h3 class="template-title">Weekly Planning</h3>
             </div>
-            <p class="template-description">Plan your week in one page — priorities, tasks, and time blocks included.</p>
+            <p class="template-description">Plan your week in one page - priorities, tasks, and time blocks included.</p>
           </div>
         </div>
       </section>
@@ -119,7 +119,7 @@
           </div>
         </div>
 
-        <!-- Subcategory Filter (only for Management Tips) -->
+        <!-- Subcategory Filter -->
         <div class="filter-section" v-if="selectedCategory.subcategories && selectedCategory.subcategories.length > 1">
           <div class="filter-label">Filter by subcategory:</div>
           <div class="filter-tabs">
@@ -148,15 +148,44 @@
         </div>
 
         <!-- Tips List -->
-        <div class="tips-list">
-          <div class="tip-item" v-for="item in paginatedItems" :key="item.id">
+        <div class="tips-list" v-if="filteredItems.length > 0">
+          <div 
+            class="tip-item" 
+            v-for="item in paginatedItems" 
+            :key="item.id"
+            :class="{ expanded: expandedId === item.id }"
+            @click="toggleExpand(item.id)"
+          >
             <div class="tip-item-header">
               <span class="tip-item-badge" v-if="selectedCategory.subcategories && selectedCategory.subcategories.length > 1">
                 {{ item.subcategory }}
               </span>
-              <h3 class="tip-item-title">{{ item.tip }}</h3>
+              <div class="tip-item-title-row">
+                <h3 class="tip-item-title">{{ item.tip }}</h3>
+                <svg 
+                  class="expand-icon" 
+                  :class="{ rotated: expandedId === item.id }"
+                  width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                >
+                  <path d="M6 9l6 6 6-6"></path>
+                </svg>
+              </div>
             </div>
             <p class="tip-item-description">{{ item.description }}</p>
+            
+            <!-- Expanded Content -->
+            <div class="tip-item-details" v-if="expandedId === item.id">
+              <div class="tip-steps" v-if="item.steps && item.steps.length">
+                <h4 class="steps-title">Steps:</h4>
+                <ol class="steps-list">
+                  <li v-for="(step, index) in item.steps" :key="index">{{ step }}</li>
+                </ol>
+              </div>
+              <div class="tip-example" v-if="item.example">
+                <h4 class="example-title">Example:</h4>
+                <p class="example-text">"{{ item.example }}"</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -199,12 +228,13 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import tipsData from '@/data/tips.json'
+import { tipsData } from '@/data/tips.js'
 
 const selectedCategory = ref(null)
 const selectedSubcategory = ref('All')
 const searchKeyword = ref('')
 const currentPage = ref(1)
+const expandedId = ref(null)
 const itemsPerPage = 6
 
 const categoryIcons = {
@@ -239,7 +269,9 @@ function getCategoryDescription(title) {
 function selectCategory(category) {
   selectedCategory.value = category
   selectedSubcategory.value = 'All'
+  searchKeyword.value = ''
   currentPage.value = 1
+  expandedId.value = null
 }
 
 function goBack() {
@@ -247,6 +279,11 @@ function goBack() {
   selectedSubcategory.value = 'All'
   searchKeyword.value = ''
   currentPage.value = 1
+  expandedId.value = null
+}
+
+function toggleExpand(id) {
+  expandedId.value = expandedId.value === id ? null : id
 }
 
 const filteredItems = computed(() => {
@@ -262,10 +299,13 @@ const filteredItems = computed(() => {
   // Filter by search keyword
   if (searchKeyword.value.trim()) {
     const keyword = searchKeyword.value.toLowerCase().trim()
-    items = items.filter(item => 
-      item.tip.toLowerCase().includes(keyword) || 
-      item.description.toLowerCase().includes(keyword)
-    )
+    items = items.filter(item => {
+      const tipMatch = item.tip.toLowerCase().includes(keyword)
+      const descMatch = item.description.toLowerCase().includes(keyword)
+      const stepsMatch = item.steps?.some(step => step.toLowerCase().includes(keyword))
+      const exampleMatch = item.example?.toLowerCase().includes(keyword)
+      return tipMatch || descMatch || stepsMatch || exampleMatch
+    })
   }
   
   return items
@@ -305,10 +345,12 @@ const visiblePages = computed(() => {
 
 watch(selectedSubcategory, () => {
   currentPage.value = 1
+  expandedId.value = null
 })
 
 watch(searchKeyword, () => {
   currentPage.value = 1
+  expandedId.value = null
 })
 </script>
 
@@ -528,7 +570,7 @@ watch(searchKeyword, () => {
 
 /* Filter Section */
 .filter-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .filter-label {
@@ -625,22 +667,20 @@ watch(searchKeyword, () => {
   font-size: 1rem;
 }
 
-/* Tips List - Grid Layout */
+/* Tips List */
 .tips-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 40px;
 }
 
 .tip-item {
   background: rgba(255, 255, 255, 0.6);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px 24px;
   transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  min-height: 180px;
+  cursor: pointer;
 }
 
 .tip-item:hover {
@@ -648,55 +688,107 @@ watch(searchKeyword, () => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
+.tip-item.expanded {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
 .tip-item-header {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .tip-item-badge {
   display: inline-block;
-  font-size: 0.8rem;
-  padding: 3px 8px;
+  font-size: 0.75rem;
+  padding: 3px 10px;
   background: rgba(74, 109, 140, 0.1);
   color: #4a6d8c;
   border-radius: 10px;
   margin-bottom: 8px;
 }
 
+.tip-item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .tip-item-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #333;
   margin: 0;
   line-height: 1.4;
+  flex: 1;
+}
+
+.expand-icon {
+  color: #888;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.expand-icon.rotated {
+  transform: rotate(180deg);
 }
 
 .tip-item-description {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #666;
   line-height: 1.5;
   margin: 0;
-  flex: 1;
-  overflow-y: auto;
-  max-height: 120px;
-  padding-right: 8px;
 }
 
-.tip-item-description::-webkit-scrollbar {
-  width: 4px;
+/* Expanded Content */
+.tip-item-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.3s ease;
 }
 
-.tip-item-description::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 2px;
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
 }
 
-.tip-item-description::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 2px;
+.tip-steps {
+  margin-bottom: 16px;
 }
 
-.tip-item-description::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+.steps-title,
+.example-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a6d8c;
+  margin: 0 0 8px 0;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.steps-list li {
+  margin-bottom: 4px;
+}
+
+.tip-example {
+  background: rgba(74, 109, 140, 0.05);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.example-text {
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Pagination */
@@ -743,8 +835,7 @@ watch(searchKeyword, () => {
 /* Responsive */
 @media (max-width: 768px) {
   .tips-grid,
-  .template-grid,
-  .tips-list {
+  .template-grid {
     grid-template-columns: 1fr;
   }
   
@@ -769,10 +860,6 @@ watch(searchKeyword, () => {
 
   .filter-tab {
     flex-shrink: 0;
-  }
-
-  .tip-item {
-    min-height: auto;
   }
 }
 
