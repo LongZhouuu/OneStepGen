@@ -202,6 +202,14 @@ function handlePopupClose() {
     startTimer()
 }
 
+function pauseFromParent() {
+    stopTimer()
+}
+
+defineExpose({
+    pauseFromParent
+})
+
 onBeforeUnmount(() => {
     if (timerId) {
         clearInterval(timerId)
@@ -282,6 +290,12 @@ onBeforeUnmount(() => {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: all .6s;
+}
+
+.timerButton:not(:disabled):hover {
+    background: #efd3bd;
+    color: black;
 }
 
 .timerButton:disabled {
