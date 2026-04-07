@@ -3,10 +3,13 @@
         <h1 class="title">Swiping Planner</h1>
 
         <div class="task-board">
-            <div class="task-note" :class="{ disabled: !currentTaskItem }" :style="cardStyle"
-                @pointerdown="currentTaskItem && startDrag($event)" @pointermove="currentTaskItem && onDrag($event)"
-                @pointerup="currentTaskItem && endDrag()" @pointerleave="currentTaskItem && endDrag()"
-                @pointercancel="currentTaskItem && endDrag()">
+            <div class="task-note" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
+                @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
+                @pointermove="currentTaskItem && props.canSwipe && onDrag($event)"
+                @pointerup="currentTaskItem && props.canSwipe && endDrag()"
+                @pointerleave="currentTaskItem && props.canSwipe && endDrag()"
+                @pointercancel="currentTaskItem && props.canSwipe && endDrag()"
+                :title="props.canSwipe ? '' : 'Click Check-In to begin the swipe.'">
                 <div class="task-badge">
                     {{ currentTaskOrder }}
                 </div>
@@ -17,11 +20,13 @@
         </div>
 
         <div class="swipe-hints">
-            <button class="hint-btn" @click="swipeByClick('left')" :disabled="!currentTaskItem || isDragging">
+            <button class="hint-btn" @click="swipeByClick('left')"
+                :disabled="!currentTaskItem || isDragging || !props.canSwipe">
                 ← Swipe left to complete a task
             </button>
 
-            <button class="hint-btn" @click="swipeByClick('right')" :disabled="!currentTaskItem || isDragging">
+            <button class="hint-btn" @click="swipeByClick('right')"
+                :disabled="!currentTaskItem || isDragging || !props.canSwipe">
                 Swipe right to skip a task →
             </button>
         </div>
@@ -29,12 +34,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
     tasks: {
         type: Array,
         required: true
+    },
+    canSwipe: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -42,6 +51,14 @@ const currentIndex = ref(0)
 
 const currentTaskItem = computed(() => {
     return props.tasks[currentIndex.value] || null
+})
+
+watch(currentTaskItem, (newTask) => {
+    if (!newTask) return
+
+    if (newTask.status !== 'completed' && newTask.status !== 'skipped') {
+        newTask.status = 'doing'
+    }
 })
 
 const currentTaskText = computed(() => {
@@ -72,7 +89,13 @@ const cardStyle = computed(() => ({
     `,
     transition: isDragging.value ? 'none' : 'transform 0.28s ease',
     boxShadow: `${Math.abs(offsetX.value) / 8}px 10px 24px rgba(0, 0, 0, 0.14)`,
-    cursor: currentTaskItem.value ? (isDragging.value ? 'grabbing' : 'grab') : 'default'
+    cursor: !currentTaskItem.value
+        ? 'default'
+        : !props.canSwipe
+            ? 'not-allowed'
+            : isDragging.value
+                ? 'grabbing'
+                : 'grab'
 }))
 
 function startDrag(e) {
@@ -110,6 +133,19 @@ function swipeByClick(direction) {
     swipeOut(direction)
 }
 
+function moveToNextValidTask() {
+    let nextIndex = currentIndex.value + 1
+
+    while (
+        props.tasks[nextIndex] &&
+        (props.tasks[nextIndex].status === 'completed' ||
+         props.tasks[nextIndex].status === 'skipped')
+    ) {
+        nextIndex++
+    }
+
+    currentIndex.value = nextIndex
+}
 
 function swipeOut(direction) {
     if (!currentTaskItem.value) return
@@ -123,8 +159,8 @@ function swipeOut(direction) {
     }
 
     setTimeout(() => {
-        currentIndex.value += 1
-        offsetX.value = 0   
+        moveToNextValidTask()
+        offsetX.value = 0
         isDragging.value = false
     }, 220)
 }

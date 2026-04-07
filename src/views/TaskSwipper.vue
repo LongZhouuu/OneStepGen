@@ -1,7 +1,14 @@
 <template>
     <div class="page">
+
         <div class="phone-frame">
-            <TaskCard :tasks="tasks" />
+            <button class="back-btn" @click="router.back()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+                Back to Task Planner
+            </button>
+            <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" />
 
             <section class="status">
                 <nav class="tabs">
@@ -13,21 +20,26 @@
                     </button>
                 </nav>
 
-                <section v-if="activeTab === 'tasks'" class="task-list-section">
-                    <div class="task-items-wrapper">
-                        <div v-for="task in tasks" :key="task.id" class="task-item"
-                            :class="{ skipped: task.status === 'skipped' }"
-                            :title="task.status === 'skipped' ? 'This task has been skipped' : ''">
-                            {{ task.text }}
+                <section v-show="activeTab === 'tasks'" class="taskList">
+                    <div class="taskItemContainer">
+                        <div v-for="task in tasks" :key="task.id" class="taskItem"
+                            :class="{ skipped: task.status === 'skipped' }">
+                            <span class="taskText">
+                                {{ task.text }}
+                            </span>
+
+                            <span class="taskStatus" :class="task.status">
+                                {{ task.status }}
+                            </span>
                         </div>
                     </div>
-                    <button class="clear-btn" @click="clear">
+                    <button class="clearBtn" @click="clear">
                         Clear All
                     </button>
                 </section>
 
-                <section v-else class="checkin-panel">
-                    <SwipingTimer />
+                <section v-show="activeTab === 'checkin'" class="checkIn">
+                    <SwipingTimer @countingState="isTimerRunning = $event" />
                 </section>
             </section>
         </div>
@@ -38,8 +50,11 @@
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const activeTab = ref('checkin')
+const isTimerRunning = ref(false)
+const router = useRouter()
 
 // mock data
 const tasks = ref([
@@ -54,7 +69,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Finish website performance report",
-        status: "doing",
+        status: "pending",
         order: 2,
         createdAt: Date.now() - 90000,
         updatedAt: Date.now() - 50000
@@ -70,7 +85,7 @@ const tasks = ref([
     {
         id: crypto.randomUUID(),
         text: "Prepare slides for weekly meeting",
-        status: "completed",
+        status: "skipped",
         order: 4,
         createdAt: Date.now() - 120000,
         updatedAt: Date.now() - 60000
@@ -149,7 +164,7 @@ const tasks = ref([
     background: #2f2f2f;
 }
 
-.task-list-section {
+.taskList {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -157,7 +172,7 @@ const tasks = ref([
     min-height: 0;
 }
 
-.task-items-wrapper {
+.taskItemContainer {
     height: 150px;
     overflow-y: auto;
     display: flex;
@@ -171,12 +186,12 @@ const tasks = ref([
     /* IE/Edge */
 }
 
-.task-items-wrapper::-webkit-scrollbar {
+.taskItemContainer::-webkit-scrollbar {
     display: none;
     /* Chrome / Safari */
 }
 
-.task-item {
+.taskItem {
     width: 100%;
     background: #fafafa;
     border-radius: 12px;
@@ -190,14 +205,35 @@ const tasks = ref([
     flex-shrink: 0;
 }
 
-.task-item.skipped {
+.taskItem.skipped .taskText {
     text-decoration: line-through;
     color: #aaa;
-    opacity: 0.6;
-    transform: scale(0.98);
 }
 
-.clear-btn {
+.taskStatus {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.taskStatus.pending {
+    color: #4da3ff;
+}
+
+.taskStatus.doing {
+    color: #f4b400;
+}
+
+.taskStatus.completed {
+    color: #4caf50;
+}
+
+.taskStatus.skipped {
+    color: #e74c3c;
+}
+
+.clearBtn {
     margin-top: 16px;
     align-self: last baseline;
     border: none;
@@ -213,7 +249,7 @@ const tasks = ref([
 }
 
 /* 
-.checkin-panel {
+.checkIn {
     flex: 1;
     background: #fafafa;
     border-radius: 14px;
@@ -229,10 +265,32 @@ const tasks = ref([
     }
 }
 
-.checkin-panel {
+.checkIn {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #4a6d8c;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 32px;
+    position: absolute;
+    left: 110px;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #2a4d6c;
 }
 </style>

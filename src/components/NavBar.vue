@@ -7,7 +7,7 @@ import { RouterLink } from 'vue-router'
     <div class="container">
       <!-- Logo -->
       <RouterLink class="navbar-brand d-flex align-items-center" to="/">
-        <img src="@/assets/osg.svg" alt="OneStepGen" height="32" class="me-2" />
+        <img src="@/assets/logo.svg" alt="OneStepGen" height="32" class="me-2" />
         <!-- <span class="brand-text">OneStepGen</span> -->
       </RouterLink>
 
@@ -81,7 +81,7 @@ import { RouterLink } from 'vue-router'
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 998;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -108,7 +108,7 @@ import { RouterLink } from 'vue-router'
 
 .dropdown-menu {
   border: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -122,7 +122,7 @@ import { RouterLink } from 'vue-router'
 }
 
 .dropdown-item:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.94);
   color: #333;
 }
 </style>
