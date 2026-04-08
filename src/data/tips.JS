@@ -1,11 +1,11 @@
 export const tipsData = [
   {
     title: "Communication Tips",
-    subcategories: ["General"],
+    subcategories: ["Written", "Verbal", "Alignment"],
     items: [
       {
         id: 46,
-        subcategory: "General",
+        subcategory: "Written",
         tip: "Ask for written instructions instead of verbal only",
         description: "Get clear instructions you can revisit later",
         steps: [
@@ -17,7 +17,7 @@ export const tipsData = [
       },
       {
         id: 47,
-        subcategory: "General",
+        subcategory: "Verbal",
         tip: "Repeat tasks back to confirm understanding",
         description: "Confirm instructions early",
         steps: [
@@ -29,7 +29,7 @@ export const tipsData = [
       },
       {
         id: 48,
-        subcategory: "General",
+        subcategory: "Alignment",
         tip: "Clarify deadlines and expectations early",
         description: "Avoid confusion and rework",
         steps: [
@@ -40,7 +40,7 @@ export const tipsData = [
       },
       {
         id: 49,
-        subcategory: "General",
+        subcategory: "Written",
         tip: "Use email summaries after meetings",
         description: "Create a clear record of decisions",
         steps: [
@@ -51,7 +51,7 @@ export const tipsData = [
       },
       {
         id: 50,
-        subcategory: "General",
+        subcategory: "Verbal",
         tip: "Ask questions when instructions are unclear",
         description: "Prevent mistakes early",
         steps: [
@@ -63,7 +63,7 @@ export const tipsData = [
       },
       {
         id: 51,
-        subcategory: "General",
+        subcategory: "Written",
         tip: "Use structured formats for communication",
         description: "Make information easier to read",
         steps: [
@@ -74,7 +74,7 @@ export const tipsData = [
       },
       {
         id: 52,
-        subcategory: "General",
+        subcategory: "Alignment",
         tip: "Confirm priorities with your manager regularly",
         description: "Stay aligned with team goals",
         steps: [
@@ -85,7 +85,7 @@ export const tipsData = [
       },
       {
         id: 53,
-        subcategory: "General",
+        subcategory: "Verbal",
         tip: "Keep communication concise and clear",
         description: "Help others respond faster",
         steps: [
@@ -96,7 +96,7 @@ export const tipsData = [
       },
       {
         id: 54,
-        subcategory: "General",
+        subcategory: "Written",
         tip: "Use bullet points in messages for clarity",
         description: "Make messages easier to scan",
         steps: [
@@ -107,7 +107,7 @@ export const tipsData = [
       },
       {
         id: 55,
-        subcategory: "General",
+        subcategory: "Alignment",
         tip: "Follow up on outstanding requests",
         description: "Keep tasks moving",
         steps: [
@@ -121,10 +121,11 @@ export const tipsData = [
   },
   {
     title: "Meeting Tips",
-    subcategories: ["General"],
+    subcategories: ["Preparation", "During Meeting", "After Meeting", "Meeting Management"],
     items: [
       {
         id: 56,
+        subcategory: "Preparation",
         tip: "Prepare an agenda before attending meetings",
         description: "Keep meetings focused",
         steps: [
@@ -135,6 +136,7 @@ export const tipsData = [
       },
       {
         id: 57,
+        subcategory: "During Meeting",
         tip: "Take structured notes during meetings",
         description: "Capture key information clearly",
         steps: [
@@ -145,6 +147,7 @@ export const tipsData = [
       },
       {
         id: 58,
+        subcategory: "After Meeting",
         tip: "Highlight key action items after meetings",
         description: "Make sure tasks are completed",
         steps: [
@@ -155,6 +158,7 @@ export const tipsData = [
       },
       {
         id: 59,
+        subcategory: "After Meeting",
         tip: "Ask for meeting summaries if needed",
         description: "Avoid missing important details",
         steps: [
@@ -165,6 +169,7 @@ export const tipsData = [
       },
       {
         id: 60,
+        subcategory: "During Meeting",
         tip: "Avoid multitasking during meetings",
         description: "Improve focus and understanding",
         steps: [
@@ -175,6 +180,7 @@ export const tipsData = [
       },
       {
         id: 61,
+        subcategory: "After Meeting",
         tip: "Set reminders for meeting follow-ups",
         description: "Ensure tasks are completed",
         steps: [
@@ -185,6 +191,7 @@ export const tipsData = [
       },
       {
         id: 62,
+        subcategory: "Preparation",
         tip: "Keep a list of questions before meetings",
         description: "Stay prepared",
         steps: [
@@ -195,6 +202,7 @@ export const tipsData = [
       },
       {
         id: 63,
+        subcategory: "After Meeting",
         tip: "Summarize outcomes immediately after meetings",
         description: "Avoid forgetting details",
         steps: [
@@ -205,6 +213,7 @@ export const tipsData = [
       },
       {
         id: 64,
+        subcategory: "After Meeting",
         tip: "Use templates for meeting notes",
         description: "Make note-taking easier",
         steps: [
@@ -215,6 +224,7 @@ export const tipsData = [
       },
       {
         id: 65,
+        subcategory: "Meeting Management",
         tip: "Challenge unnecessary meetings",
         description: "Protect your time",
         steps: [
