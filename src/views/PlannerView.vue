@@ -20,12 +20,13 @@
           />
           <button
             class="add-btn"
-            :disabled="newTaskOverLimit"
-            :class="{ 'btn-disabled': newTaskOverLimit }"
+            :disabled="newTaskInvalid"
+            :class="{ 'btn-disabled': newTaskInvalid }"
             @click="addTask"
           >Add Task</button>
         </div>
         <p v-if="newTaskOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
+        <p v-else-if="newTaskInvalidChars" class="char-limit-error">Only English characters are allowed</p>
       </div>
 
       <!-- Active Tasks -->
@@ -49,6 +50,7 @@
                   @keyup.escape="cancelEdit"
                 />
                 <p v-if="editOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
+                <p v-else-if="editInvalidChars" class="char-limit-error">Only English characters are allowed</p>
               </template>
               <template v-else>
                 <span class="task-text">{{ task.text }}</span>
@@ -119,8 +121,15 @@ const editingId = ref(null)
 const editingText = ref('')
 
 const TASK_MAX_LEN = 50
+const ALLOWED_CHARS = /^[a-zA-Z0-9\s.,!?;:'"()\-_@#$%&*+=/<>]*$/
+
 const newTaskOverLimit = computed(() => newTaskText.value.length > TASK_MAX_LEN)
+const newTaskInvalidChars = computed(() => !newTaskOverLimit.value && !ALLOWED_CHARS.test(newTaskText.value))
+const newTaskInvalid = computed(() => newTaskOverLimit.value || newTaskInvalidChars.value)
+
 const editOverLimit = computed(() => editingText.value.length > TASK_MAX_LEN)
+const editInvalidChars = computed(() => !editOverLimit.value && !ALLOWED_CHARS.test(editingText.value))
+const editInvalid = computed(() => editOverLimit.value || editInvalidChars.value)
 
 // ── Task lists ────────────────────────────────────────────────────────────────
 const activeTasks = ref([])
@@ -163,7 +172,7 @@ saveTasks()
 // ── Add task ──────────────────────────────────────────────────────────────────
 function addTask() {
   const text = newTaskText.value.trim()
-  if (!text || newTaskOverLimit.value) return
+  if (!text || newTaskInvalid.value) return
 
   activeTasks.value.push({
     id: crypto.randomUUID(),
@@ -186,7 +195,7 @@ function startEdit(task) {
 
 function confirmEdit(task) {
   if (editingId.value !== task.id) return
-  if (editOverLimit.value) return
+  if (editInvalid.value) return
   const text = editingText.value.trim()
   if (text && text !== task.text) {
     task.text = text
