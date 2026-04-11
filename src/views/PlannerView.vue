@@ -2,53 +2,32 @@
   <div class="page-container">
     <div class="page-header">
       <h1 class="page-title">Planner</h1>
-      <p class="page-subtitle">Map out your day with calm and intention, no pressure, just one gentle step at a time.</p>
+      <p class="page-subtitle">Map out your day with calm and intention, no pressure, just one gentle step at a time.
+      </p>
     </div>
 
     <div class="content-area">
       <!-- Input Area -->
       <div class="input-wrapper">
         <div class="search-box" :class="{ focused: inputFocused }">
-          <input
-            v-model="newTaskText"
-            class="task-input"
-            type="text"
-            placeholder="Please enter a task"
-            @focus="inputFocused = true"
-            @blur="inputFocused = false"
-            @keyup.enter="addTask"
-          />
-          <button
-            class="add-btn"
-            :disabled="newTaskInvalid"
-            :class="{ 'btn-disabled': newTaskInvalid }"
-            @click="addTask"
-          >Add Task</button>
+          <input v-model="newTaskText" class="task-input" type="text" placeholder="Please enter a task"
+            @focus="inputFocused = true" @blur="inputFocused = false" @keyup.enter="addTask" />
+          <button class="add-btn" :disabled="newTaskInvalid" :class="{ 'btn-disabled': newTaskInvalid }"
+            @click="addTask">Add Task</button>
         </div>
         <p v-if="newTaskOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
         <p v-else-if="newTaskInvalidChars" class="char-limit-error">Only English characters are allowed</p>
       </div>
 
       <!-- Active Tasks -->
-      <draggable
-        v-model="activeTasks"
-        item-key="id"
-        class="task-list"
-        handle=".task-dot"
-        @end="onDragEnd"
-      >
+      <draggable v-model="activeTasks" item-key="id" class="task-list" handle=".task-dot" @end="onDragEnd">
         <template #item="{ element: task }">
           <div class="task-row">
             <span class="task-dot" :class="task.status" title="Drag to reorder"></span>
             <div class="task-info">
               <template v-if="editingId === task.id">
-                <input
-                  v-model="editingText"
-                  class="task-edit-input"
-                  @keyup.enter="confirmEdit(task)"
-                  @blur="confirmEdit(task)"
-                  @keyup.escape="cancelEdit"
-                />
+                <input v-model="editingText" class="task-edit-input" @keyup.enter="confirmEdit(task)"
+                  @blur="confirmEdit(task)" @keyup.escape="cancelEdit" />
                 <p v-if="editOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
                 <p v-else-if="editInvalidChars" class="char-limit-error">Only English characters are allowed</p>
               </template>
@@ -71,11 +50,7 @@
       <!-- Skipped Tasks -->
       <div v-if="skippedTasks.length > 0" class="skipped-section">
         <h3 class="skipped-title">Skipped Tasks</h3>
-        <div
-          v-for="task in skippedTasks"
-          :key="task.id"
-          class="task-row"
-        >
+        <div v-for="task in skippedTasks" :key="task.id" class="task-row">
           <span class="task-dot skipped"></span>
           <div class="task-info">
             <span class="task-text">{{ task.text }}</span>
@@ -89,19 +64,11 @@
 
       <!-- Create Planner + Clear All -->
       <div class="create-planner-wrapper">
-        <button
-          class="create-planner-btn"
-          :disabled="activeTasks.length === 0"
-          :class="{ 'btn-disabled': activeTasks.length === 0 }"
-          @click="createPlanner"
-        >
+        <button class="create-planner-btn" :disabled="activeTasks.length === 0"
+          :class="{ 'btn-disabled': activeTasks.length === 0 }" @click="createPlanner">
           Create Planner
         </button>
-        <button
-          v-if="activeTasks.length > 0"
-          class="clear-all-btn"
-          @click="clearAll"
-        >Clear All</button>
+        <button v-if="activeTasks.length > 0" class="clear-all-btn" @click="clearAll">Clear All</button>
       </div>
     </div>
   </div>
@@ -249,9 +216,11 @@ function createPlanner() {
   if (activeTasks.value.length === 0) return
   const now = Date.now()
   activeTasks.value.forEach(t => {
-    t.status = 'pending'
+    t.status = (t.order === 0) ? 'doing' : 'pending'
     t.updatedAt = now
   })
+  console.log(activeTasks.value);
+
   saveTasks()
   router.push({ name: 'TaskSwipper' })
 }
@@ -542,6 +511,7 @@ function createPlanner() {
 .task-dot {
   cursor: grab;
 }
+
 .task-dot:active {
   cursor: grabbing;
 }
