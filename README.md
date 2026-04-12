@@ -51,13 +51,19 @@ This project prioritises simplicity and usability to ensure feasibility within e
 ## How to Run the Project
 
 This project is currently under development, and the setup process may change in future iterations.
-
-Planned development environment:
-- Node.js
-- npm
-- Vue.js
-
 The final local setup instructions and deployment link will be added once the first working build is completed.
+
+1. Clone the repository:
+git clone https://github.com/LongZhouuu/OneStepGen.git
+
+2. Navigate to the project folder:
+cd OneStepGen
+
+3. Install dependencies:
+npm install
+
+4. Run the development server:
+npm run dev
 
 ---
 
