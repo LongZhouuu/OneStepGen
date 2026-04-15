@@ -2,7 +2,8 @@
   <div class="page-container">
     <div class="page-header">
       <h1 class="page-title">Planner</h1>
-      <p class="page-subtitle">Map out your day with calm and intention, no pressure, just one gentle step at a time.
+      <p class="page-subtitle">Have a lot to do today? No pressure, just list your tasks here.<br>  
+        We’ll guide you through them, one step at a time.
       </p>
     </div>
 
@@ -10,7 +11,7 @@
       <!-- Input Area -->
       <div class="input-wrapper">
         <div class="search-box" :class="{ focused: inputFocused }">
-          <input v-model="newTaskText" class="task-input" type="text" placeholder="Please enter a task"
+          <input v-model="newTaskText" class="task-input" type="text" placeholder="Enter a task (e.g. reply to emails)"
             @focus="inputFocused = true" @blur="inputFocused = false" @keyup.enter="addTask" />
           <button class="add-btn" :disabled="newTaskInvalid" :class="{ 'btn-disabled': newTaskInvalid }"
             @click="addTask">Add Task</button>
