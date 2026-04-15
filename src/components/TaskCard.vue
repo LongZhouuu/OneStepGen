@@ -1,10 +1,10 @@
 <template>
     <section class="planner-card">
-        <h1 class="title">Swiping Planner</h1>
-        <h2 class="subTitle">
+        <h1 class="title">One-Step Planner</h1>
+        <!-- <h2 class="subTitle">
             You can mark a task as completed by dragging the card to the left, or mark it as skipped
             by dragging it to the right.
-        </h2>
+        </h2> -->
 
         <div class="task-board">
             <div class="task-note" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
@@ -26,12 +26,14 @@
         <div class="swipe-hints">
             <button class="hintBtn completeHintBtn" @click="swipeByClick('left')"
                 :disabled="!currentTaskItem || isDragging || !props.canSwipe">
-                Complete this task
+                <p style="font-weight: bold;">Complete this task</p>
+                <p style="font-size: 11px;color: #eaeaea;;">or try hold and swipe to Left⬅️</p>
             </button>
 
             <button class="hintBtn skipHintBtn" @click="swipeByClick('right')"
                 :disabled="!currentTaskItem || isDragging || !props.canSwipe">
-                Skip this task
+                <p style="font-weight: bold;">Complete this task</p>
+                <p style="font-size: 11px;color: #eaeaea;;">➡️or try hold and swipe to Right</p>
             </button>
         </div>
     </section>
@@ -234,6 +236,9 @@ function swipeOut(direction) {
     border-radius: 28px;
     padding: 28px 14px 14px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    width: 106%;
+    position: relative;
+    left: -3%;
 }
 
 .title {
@@ -324,7 +329,7 @@ function swipeOut(direction) {
 
 .swipe-hints {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: 0px;
 }
 
@@ -339,9 +344,15 @@ function swipeOut(direction) {
     cursor: pointer;
     transition: transform 0.15s ease, opacity 0.15s ease;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-width: 128px;
+}
+
+.hintBtn p {
+    margin: 0;
+    font-weight: normal;
 }
 
 .skipHintBtn {

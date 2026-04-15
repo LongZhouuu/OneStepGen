@@ -186,6 +186,7 @@ function startTimer() {
         if (totalSeconds.value <= 0) {
             stopTimer()
             isPopupVisible.value = true
+            alert("gfuc")
         }
     }, 1000)
 }
