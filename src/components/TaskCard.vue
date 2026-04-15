@@ -1,6 +1,10 @@
 <template>
     <section class="planner-card">
         <h1 class="title">Swiping Planner</h1>
+        <h2 class="subTitle">
+            You can mark a task as completed by dragging the card to the left, or mark it as skipped
+            by dragging it to the right.
+        </h2>
 
         <div class="task-board">
             <div class="task-note" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
@@ -20,14 +24,14 @@
         </div>
 
         <div class="swipe-hints">
-            <button class="hint-btn" @click="swipeByClick('left')"
+            <button class="hintBtn completeHintBtn" @click="swipeByClick('left')"
                 :disabled="!currentTaskItem || isDragging || !props.canSwipe">
-                ← Swipe left to complete a task
+                Complete this task
             </button>
 
-            <button class="hint-btn" @click="swipeByClick('right')"
+            <button class="hintBtn skipHintBtn" @click="swipeByClick('right')"
                 :disabled="!currentTaskItem || isDragging || !props.canSwipe">
-                Swipe right to skip a task →
+                Skip this task
             </button>
         </div>
     </section>
@@ -240,6 +244,15 @@ function swipeOut(direction) {
     color: #242424;
 }
 
+.subTitle {
+    margin-top: 6px;
+    text-align: center;
+    font-size: 12.2px;
+    font-weight: 500;
+    color: #7c7c7c;
+    font-style: italic;
+}
+
 .task-board {
     display: flex;
     justify-content: center;
@@ -248,6 +261,7 @@ function swipeOut(direction) {
     perspective: 1000px;
     overflow: hidden;
     min-height: 240px;
+    padding-top: 6px;
 }
 
 .task-note {
@@ -310,26 +324,41 @@ function swipeOut(direction) {
 
 .swipe-hints {
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    justify-content: space-around;
+    gap: 0px;
 }
 
-.hint-btn {
+.hintBtn {
     border: none;
-    background: transparent;
-    padding: 0;
-    font-size: 11px;
-    color: #b8b8b8;
+    background: #ffcf5a;
+    padding: 8px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: white;
+    font-weight: bold;
     cursor: pointer;
     transition: transform 0.15s ease, opacity 0.15s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 128px;
 }
 
-.hint-btn:hover:not(:disabled) {
+.skipHintBtn {
+    background: #e74c3c;
+
+}
+
+.completeHintBtn {
+    background: #4caf50;
+}
+
+.hintBtn:hover:not(:disabled) {
     opacity: 0.85;
     transform: translateY(-1px);
 }
 
-.hint-btn:disabled {
+.hintBtn:disabled {
     cursor: not-allowed;
     opacity: 0.45;
 }

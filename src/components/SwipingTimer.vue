@@ -1,6 +1,6 @@
 <template>
     <section class="timerCard">
-        <div v-if="!isEditing" class="timerText" @dblclick="startEdit">
+        <div v-if="!isEditing" class="timerText" @dblclick="!isAllTasksFinished && startEdit()">
             {{ currentMin }}:{{ currentSec }}
         </div>
 
@@ -12,17 +12,20 @@
                 @input="handleSecInput" @keyup.enter="finishEdit" @blur="handleBlur" />
         </div>
 
-        <div class="timerLabel">SESSION TIMER</div>
+        <div class="timerLabel">
+            {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
+        </div>
         <div v-show="!isRunning" class="timerSubLabel">
-            Modify Timer by Double-Click
+            {{ isAllTasksFinished ? 'You have completed all listed tasks.' : 'Modify Timer by Double-Click' }}
         </div>
 
         <div class="timerButtonGroup">
-            <button class="timerButton" @click="startTimer" :disabled="isRunning">
+            <button class="timerButton" @click="startTimer" :disabled="isRunning || isAllTasksFinished">
                 {{ isRunning ? 'Checked-In' : 'Check-In' }}
             </button>
 
-            <button v-if="isRunning || !isDefaultTime" class="timerButton" @click="handleSecondButton">
+            <button v-if="isRunning || !isDefaultTime || isAllTasksFinished" class="timerButton"
+                @click="handleSecondButton" :disabled="isAllTasksFinished">
                 {{ isRunning ? 'Pause' : 'Restore Default' }}
             </button>
         </div>
@@ -57,6 +60,8 @@ const isPopupVisible = ref(false)
 
 const minuteInput = ref(null)
 const secondInput = ref(null)
+
+const isAllTasksFinished = ref(false)
 
 const totalSeconds = ref(20 * 60)
 let timerId = null
@@ -106,7 +111,7 @@ function openEditor(min, sec) {
 }
 
 function startEdit() {
-    if (isRunning.value) return
+    if (isRunning.value || isAllTasksFinished.value) return
     openEditor(savedMin.value, savedSec.value)
 }
 
@@ -161,6 +166,8 @@ function finishEdit() {
 }
 
 function startTimer() {
+    if (isAllTasksFinished.value) return
+
     if (isEditing.value) {
         finishEdit()
     }
@@ -189,6 +196,8 @@ function pauseTimer() {
 }
 
 function handleSecondButton() {
+    if (isAllTasksFinished.value) return
+
     if (isRunning.value) {
         pauseTimer()
     } else {
@@ -202,8 +211,12 @@ function handlePopupClose() {
     startTimer()
 }
 
-function pauseFromParent() {
+function pauseFromParent(hasNoRemainingTasks = false) {
     stopTimer()
+
+    if (hasNoRemainingTasks) {
+        isAllTasksFinished.value = true
+    }
 }
 
 defineExpose({

@@ -55,7 +55,7 @@
 <script setup>
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const activeTab = ref('checkin')
@@ -66,9 +66,15 @@ const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
 
 const timerRef = ref(null)
 
+const hasRemainingTasks = computed(() => {
+    return tasks.value.some(task =>
+        task.status !== 'completed' && task.status !== 'skipped'
+    )
+})
+
 function handleNoMoreTasks() {
     activeTab.value = 'checkin'
-    timerRef.value?.pauseFromParent()
+    timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
 }
 
 watch(isTimerRunning, (newVal) => {
