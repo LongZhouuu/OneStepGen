@@ -39,6 +39,7 @@
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import CountdownPop from './CountdownPop.vue'
+import timerSound from '@/assets/timerRing.mp3'
 
 const emit = defineEmits(['countingState'])
 
@@ -63,12 +64,72 @@ const secondInput = ref(null)
 
 const isAllTasksFinished = ref(false)
 
+const finishAudio = ref(null)
+
 const totalSeconds = ref(20 * 60)
 let timerId = null
 
 const isDefaultTime = computed(() => {
     return savedMin.value === defaultMin && savedSec.value === defaultSec
 })
+
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        return false
+    }
+
+    if (Notification.permission === 'granted') {
+        return true
+    }
+
+    if (Notification.permission === 'denied') {
+        return false
+    }
+
+    const permission = await Notification.requestPermission()
+    return permission === 'granted'
+}
+
+function showFinishNotification() {
+    if (!('Notification' in window)) return
+    if (Notification.permission !== 'granted') return
+
+    new Notification('Break Time!', {
+        body: 'Take a short break',
+    })
+}
+
+function setupFinishAudio() {
+    if (!finishAudio.value) {
+        finishAudio.value = new Audio(timerSound)
+        finishAudio.value.preload = 'auto'
+    }
+}
+
+async function unlockAudio() {
+    setupFinishAudio()
+
+    try {
+        finishAudio.value.muted = true
+        await finishAudio.value.play()
+        finishAudio.value.pause()
+        finishAudio.value.currentTime = 0
+        finishAudio.value.muted = false
+    } catch (e) {
+        console.log('audio unlock failed', e)
+    }
+}
+
+async function playFinishSound() {
+    if (!finishAudio.value) return
+
+    try {
+        finishAudio.value.currentTime = 0
+        await finishAudio.value.play()
+    } catch (e) {
+        console.log('play blocked', e)
+    }
+}
 
 function updateCurrentTime() {
     const min = Math.floor(totalSeconds.value / 60)
@@ -165,7 +226,7 @@ function finishEdit() {
     isEditing.value = false
 }
 
-function startTimer() {
+async function startTimer() {
     if (isAllTasksFinished.value) return
 
     if (isEditing.value) {
@@ -173,6 +234,9 @@ function startTimer() {
     }
 
     if (isRunning.value || totalSeconds.value <= 0) return
+
+    await requestNotificationPermission()
+    await unlockAudio()
 
     isRunning.value = true
     emit('countingState', true)
@@ -186,7 +250,8 @@ function startTimer() {
         if (totalSeconds.value <= 0) {
             stopTimer()
             isPopupVisible.value = true
-            alert("gfuc")
+            showFinishNotification()
+            playFinishSound()
         }
     }, 1000)
 }
