@@ -4,6 +4,15 @@
       <h1 class="page-title">Reward</h1>
       <p class="page-subtitle">Celebrate your progress and stay motivated with meaningful rewards for your achievements.</p>
     </div>
+
+    <section class="coming-soon-card">
+      <p class="coming-soon-kicker">Coming soon</p>
+      <h2 class="coming-soon-title">This reward space is still being built.</h2>
+      <p class="coming-soon-text">
+        Reward will help you notice progress, celebrate finished tasks, and build small moments of motivation into
+        your routine. It is coming soon - see you back here.
+      </p>
+    </section>
   </div>
 </template>
 
@@ -35,5 +44,38 @@
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+.coming-soon-card {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 36px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(248, 241, 234, 0.94) 0%, rgba(255, 250, 246, 0.98) 100%);
+  box-shadow: 0 16px 36px rgba(97, 75, 52, 0.08);
+  text-align: center;
+}
+
+.coming-soon-kicker {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b46a2d;
+  margin: 0 0 10px;
+}
+
+.coming-soon-title {
+  font-size: 1.9rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 14px;
+}
+
+.coming-soon-text {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #666;
+  margin: 0;
 }
 </style>
