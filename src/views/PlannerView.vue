@@ -7,15 +7,98 @@
       </p>
     </div>
 
+    <div class="how-it-works">
+      <div class="how-it-works-header">
+        <div class="how-it-works-heading">
+          <p class="how-it-works-kicker">How it works</p>
+          <h2 class="how-it-works-title">Turn a messy to-do list into one clear next step.</h2>
+        </div>
+        <button
+          type="button"
+          class="how-it-works-toggle"
+          :aria-expanded="howItWorksOpen"
+          @click="howItWorksOpen = !howItWorksOpen"
+        >
+          {{ howItWorksOpen ? 'Hide' : 'Show' }}
+          <span class="how-it-works-toggle-icon" :class="{ open: howItWorksOpen }">&gt;</span>
+        </button>
+      </div>
+      <div v-show="howItWorksOpen" class="how-it-works-steps">
+        <div class="how-it-works-step">
+          <span class="step-number">1</span>
+          <div class="step-copy">
+            <h3 class="step-title">Add your tasks</h3>
+            <p class="step-text">Write down everything you need to do, even if it feels too much right now.</p>
+          </div>
+        </div>
+        <div class="how-it-works-step">
+          <span class="step-number">2</span>
+          <div class="step-copy">
+            <h3 class="step-title">Reorder what matters</h3>
+            <p class="step-text">Drag tasks into the order that makes the most sense for today.</p>
+          </div>
+        </div>
+        <div class="how-it-works-step">
+          <span class="step-number">3</span>
+          <div class="step-copy">
+            <h3 class="step-title">Start one task at a time</h3>
+            <p class="step-text">Create your planner and focus on the next step instead of the whole list.</p>
+          </div>
+        </div>
+        <div class="how-it-works-step">
+          <span class="step-number">4</span>
+          <div class="step-copy">
+            <h3 class="step-title">Adjust anytime</h3>
+            <p class="step-text">Go back to add new tasks whenever you need, or move skipped tasks back into your task list.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="content-area">
       <!-- Input Area -->
       <div class="input-wrapper">
         <div class="search-box" :class="{ focused: inputFocused }">
-          <input v-model="newTaskText" class="task-input" type="text" placeholder="Enter a task (e.g. reply to emails)"
-            @focus="inputFocused = true" @blur="inputFocused = false" @keyup.enter="addTask" />
+          <input
+            ref="taskInputRef"
+            v-model="newTaskText"
+            class="task-input"
+            type="text"
+            placeholder="Enter a task (e.g. reply to emails)"
+            :aria-invalid="newTaskInvalid"
+            aria-describedby="task-input-help"
+            @focus="inputFocused = true"
+            @blur="inputFocused = false"
+            @keyup.enter="addTask"
+          />
+          <button
+            type="button"
+            class="voice-btn"
+            :class="{ listening: isListening }"
+            :aria-label="isListening ? 'Stop voice input' : 'Start voice input'"
+            :aria-pressed="isListening"
+            :disabled="!speechSupported"
+            @click="toggleVoiceInput"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 4.75a2.75 2.75 0 0 1 2.75 2.75v4.5a2.75 2.75 0 1 1-5.5 0V7.5A2.75 2.75 0 0 1 12 4.75Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M7.75 11.75a4.25 4.25 0 1 0 8.5 0M12 16v3.25M9 19.25h6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
           <button class="add-btn" :disabled="newTaskInvalid" :class="{ 'btn-disabled': newTaskInvalid }"
             @click="addTask">Add Task</button>
         </div>
+        <p id="task-input-help" class="voice-status" aria-live="polite">{{ voiceStatusMessage }}</p>
         <p v-if="newTaskOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
         <p v-else-if="newTaskInvalidChars" class="char-limit-error">Only English characters are allowed</p>
       </div>
@@ -76,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
 
@@ -87,6 +170,13 @@ const newTaskText = ref('')
 const inputFocused = ref(false)
 const editingId = ref(null)
 const editingText = ref('')
+const taskInputRef = ref(null)
+const speechRecognition = ref(null)
+const speechSupported = ref(false)
+const isListening = ref(false)
+const voiceStatusMessage = ref('Checking voice input support...')
+const voiceStopRequested = ref(false)
+const howItWorksOpen = ref(true)
 
 const TASK_MAX_LEN = 50
 const ALLOWED_CHARS = /^[a-zA-Z0-9\s.,!?;:'"()\-_@#$%&*+=/<>]*$/
@@ -98,6 +188,91 @@ const newTaskInvalid = computed(() => newTaskOverLimit.value || newTaskInvalidCh
 const editOverLimit = computed(() => editingText.value.length > TASK_MAX_LEN)
 const editInvalidChars = computed(() => !editOverLimit.value && !ALLOWED_CHARS.test(editingText.value))
 const editInvalid = computed(() => editOverLimit.value || editInvalidChars.value)
+
+function updateVoiceStatus(message) {
+  voiceStatusMessage.value = message
+}
+
+function initSpeechRecognition() {
+  if (typeof window === 'undefined') return
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    speechSupported.value = false
+    updateVoiceStatus('Voice input is not supported in this browser.')
+    return
+  }
+
+  const recognition = new SpeechRecognition()
+  recognition.lang = navigator.language?.startsWith('en') ? navigator.language : 'en-US'
+  recognition.interimResults = false
+  recognition.maxAlternatives = 1
+
+  recognition.onstart = () => {
+    isListening.value = true
+    voiceStopRequested.value = false
+    updateVoiceStatus('Listening... Speak your task now.')
+  }
+
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .slice(event.resultIndex)
+      .map(result => result[0]?.transcript ?? '')
+      .join(' ')
+      .trim()
+
+    if (!transcript) return
+
+    newTaskText.value = [newTaskText.value.trim(), transcript].filter(Boolean).join(' ')
+    updateVoiceStatus('Voice input added to the task field.')
+    taskInputRef.value?.focus()
+  }
+
+  recognition.onerror = (event) => {
+    isListening.value = false
+
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      updateVoiceStatus('Microphone access was blocked. Please allow microphone access and try again.')
+      return
+    }
+
+    if (event.error === 'no-speech') {
+      updateVoiceStatus('No speech detected. Try again when you are ready.')
+      return
+    }
+
+    updateVoiceStatus('Voice input could not be completed. Please try again.')
+  }
+
+  recognition.onend = () => {
+    isListening.value = false
+    if (voiceStopRequested.value) {
+      voiceStopRequested.value = false
+      updateVoiceStatus('Voice input stopped.')
+    }
+  }
+
+  speechRecognition.value = recognition
+  speechSupported.value = true
+  updateVoiceStatus('Use the microphone to speak a task into the input field.')
+}
+
+function stopVoiceInput() {
+  if (!speechRecognition.value || !isListening.value) return
+  voiceStopRequested.value = true
+  speechRecognition.value.stop()
+}
+
+function toggleVoiceInput() {
+  if (!speechSupported.value || !speechRecognition.value) return
+
+  if (isListening.value) {
+    stopVoiceInput()
+    return
+  }
+
+  speechRecognition.value.start()
+}
 
 // ── Task lists ────────────────────────────────────────────────────────────────
 const activeTasks = ref([])
@@ -136,6 +311,19 @@ function loadTasks() {
 loadTasks()
 reorderTasks()
 saveTasks()
+
+onMounted(() => {
+  initSpeechRecognition()
+})
+
+onBeforeUnmount(() => {
+  if (!speechRecognition.value) return
+  speechRecognition.value.onstart = null
+  speechRecognition.value.onresult = null
+  speechRecognition.value.onerror = null
+  speechRecognition.value.onend = null
+  speechRecognition.value.abort()
+})
 
 // ── Add task ──────────────────────────────────────────────────────────────────
 function addTask() {
@@ -236,7 +424,7 @@ function createPlanner() {
 
 .page-header {
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 30px;
 }
 
 .page-title {
@@ -252,6 +440,121 @@ function createPlanner() {
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* How it works section */
+.how-it-works {
+  max-width: 600px;
+  margin: 0 auto 44px;
+  padding: 28px 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(248, 241, 234, 0.94) 0%, rgba(255, 250, 246, 0.98) 100%);
+  box-shadow: 0 16px 36px rgba(97, 75, 52, 0.08);
+}
+
+.how-it-works-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.how-it-works-heading {
+  flex: 1;
+}
+
+.how-it-works-kicker {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b46a2d;
+  margin: 0 0 10px;
+}
+
+.how-it-works-title {
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #333;
+  margin: 0;
+}
+
+.how-it-works-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #6a5238;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.how-it-works-toggle-icon {
+  font-size: 0.9rem;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.how-it-works-toggle-icon.open {
+  transform: rotate(270deg);
+}
+
+.how-it-works-steps {
+  display: grid;
+  gap: 14px;
+}
+
+.how-it-works-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(180, 106, 45, 0.08);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #b46a2d;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.step-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
 }
 
 /* Content area centred at 600px */
@@ -290,6 +593,48 @@ function createPlanner() {
 
 .task-input::placeholder {
   color: #aaa;
+}
+
+.voice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(180, 106, 45, 0.12);
+  color: #8d5b2b;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.voice-btn:hover:not(:disabled) {
+  background: rgba(180, 106, 45, 0.2);
+  transform: translateY(-1px);
+}
+
+.voice-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.voice-btn.listening {
+  background: #b46a2d;
+  color: #fff;
+}
+
+.voice-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.voice-status {
+  font-size: 0.82rem;
+  color: #7a6757;
+  margin: 8px 4px 0;
+  min-height: 1.3em;
 }
 
 .add-btn {
@@ -515,5 +860,44 @@ function createPlanner() {
 
 .task-dot:active {
   cursor: grabbing;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 72px 20px 96px;
+  }
+
+  .page-title {
+    font-size: 2.4rem;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .how-it-works {
+    margin-bottom: 32px;
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .how-it-works-title {
+    font-size: 1.45rem;
+  }
+
+  .how-it-works-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .how-it-works-step {
+    padding: 14px 14px;
+    border-radius: 16px;
+  }
+
+  .voice-btn {
+    width: 40px;
+    height: 40px;
+  }
 }
 </style>
