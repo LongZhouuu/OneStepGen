@@ -190,9 +190,9 @@ function clear() {
     border: none;
     background: transparent;
     color: #9a9a9a;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 700;
-    padding: 6px 0 10px;
+    padding: 8px 0 12px;
     position: relative;
     cursor: pointer;
 }
@@ -242,12 +242,12 @@ function clear() {
 .taskItem {
     width: 100%;
     background: #fafafa;
-    border-radius: 12px;
+    border-radius: 16px;
     min-height: 20px;
-    padding: 10px 16px;
+    padding: 12px 16px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight:500;
     display: flex;
     align-items: center;
     flex-shrink: 0;
@@ -267,8 +267,8 @@ function clear() {
 
 .taskStatus {
     margin-left: 8px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
     flex-shrink: 0;
 }
 
@@ -293,12 +293,12 @@ function clear() {
     margin-top: 16px;
     align-self: last baseline;
     border: none;
-    border-radius: 999px;
+    border-radius: 8px;
     padding: 10px 20px;
     background: #c8e1f5;
     color: #2f2f2f;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
     /* border: 1px solid black; */
     flex-shrink: 0;

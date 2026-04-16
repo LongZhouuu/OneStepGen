@@ -465,7 +465,7 @@ function createPlanner() {
 }
 
 .how-it-works-kicker {
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -474,7 +474,7 @@ function createPlanner() {
 }
 
 .how-it-works-title {
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   font-weight: 500;
   line-height: 1.25;
   color: #333;
@@ -544,7 +544,7 @@ function createPlanner() {
 }
 
 .step-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #333;
   margin: 0;
@@ -643,7 +643,7 @@ function createPlanner() {
   padding: 10px 20px;
   background: #c8e1f5;
   color: #2f2f2f;
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -702,13 +702,13 @@ function createPlanner() {
 }
 
 .task-text {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #333;
 }
 
 .task-status {
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: #999;
 }
 
@@ -719,7 +719,7 @@ function createPlanner() {
 }
 
 .action-edit {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #888;
   cursor: pointer;
 }
@@ -729,7 +729,7 @@ function createPlanner() {
 }
 
 .action-delete {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #e57373;
   cursor: pointer;
 }
@@ -747,7 +747,7 @@ function createPlanner() {
 }
 
 .skipped-title {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #555;
   margin: 0 0 4px 4px;
@@ -755,7 +755,7 @@ function createPlanner() {
 
 /* Character limit error */
 .char-limit-error {
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: #e57373;
   margin: 4px 4px 0;
 }
@@ -768,7 +768,7 @@ function createPlanner() {
 
 /* Drag hint */
 .drag-hint {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: #666;
   text-align: center;
   margin: 0;
@@ -792,8 +792,8 @@ function createPlanner() {
   padding: 14px 32px;
   background: #c8e1f5;
   color: #2f2f2f;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
   transition: opacity 0.2s ease, box-shadow 0.2s ease;
 }
@@ -818,7 +818,7 @@ function createPlanner() {
   padding: 10px 20px;
   background: #ffcccc;
   color: #2f2f2f;
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -846,7 +846,7 @@ function createPlanner() {
   border: none;
   border-bottom: 1.5px solid #c8e1f5;
   background: transparent;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #333;
   outline: none;

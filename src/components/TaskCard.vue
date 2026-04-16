@@ -234,7 +234,7 @@ function swipeOut(direction) {
 .planner-card {
     background: #f8f8f8;
     border-radius: 28px;
-    padding: 28px 14px 14px;
+    padding: 40px 24px 24px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
     width: 106%;
     position: relative;
@@ -244,7 +244,7 @@ function swipeOut(direction) {
 .title {
     margin: 0;
     text-align: center;
-    font-size: 18px;
+    font-size: 1.5rem;
     font-weight: 800;
     color: #242424;
 }
@@ -252,7 +252,7 @@ function swipeOut(direction) {
 .subTitle {
     margin-top: 6px;
     text-align: center;
-    font-size: 12.2px;
+    font-size: 1rem;
     font-weight: 500;
     color: #7c7c7c;
     font-style: italic;
@@ -262,11 +262,11 @@ function swipeOut(direction) {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 28px 0 22px;
+    padding: 40px 0 32px;
     perspective: 1000px;
     overflow: hidden;
     min-height: 240px;
-    padding-top: 6px;
+    padding-top: 12px;
 }
 
 .task-note {
@@ -274,12 +274,12 @@ function swipeOut(direction) {
     width: 230px;
     height: 230px;
     background: #efd3bd;
-    border-radius: 10px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 26px 20px 20px;
+    padding: 40px 32px 32px;
     font-weight: 700;
     line-height: 1.35;
     color: #343434;
@@ -295,7 +295,7 @@ function swipeOut(direction) {
     left: 12px;
     min-width: 34px;
     height: 34px;
-    padding: 0 10px;
+    padding: 0 16px;
     border-radius: 999px;
     background: #ffcf5a;
     color: #2b2b2b;
@@ -303,18 +303,18 @@ function swipeOut(direction) {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 1.3rem;
     font-weight: 900;
     line-height: 1;
-    box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.18);
+    box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.18);
 }
 
 .task-text {
     white-space: pre-line;
     backface-visibility: hidden;
-    font-size: 17px;
+    font-size: 1.3rem;
     font-weight: 800;
-    max-width: 170px;
+    max-width: 200px;
 }
 
 .note-corner {
@@ -323,8 +323,8 @@ function swipeOut(direction) {
     bottom: 0;
     width: 0;
     height: 0;
-    border-left: 18px solid transparent;
-    border-top: 18px solid rgba(255, 255, 255, 0.72);
+    border-left: 24px solid transparent;
+    border-top: 24px solid rgba(255, 255, 255, 0.72);
 }
 
 .swipe-hints {
@@ -338,16 +338,16 @@ function swipeOut(direction) {
     background: #ffcf5a;
     padding: 8px 8px;
     border-radius: 6px;
-    font-size: 12px;
-    color: white;
-    font-weight: bold;
+    font-size: 1rem;
+    color: rgb(255, 255, 255);
+    font-weight: 700;
     cursor: pointer;
     transition: transform 0.15s ease, opacity 0.15s ease;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-width: 128px;
+    min-width: 160px;
 }
 
 .hintBtn p {
