@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">Support</h1>
+      <h1 class="page-title">Emotional Support</h1>
       <p class="page-subtitle">A judgment-free space to check in with how you're feeling and take care of your mental well-being, anytime you need it.</p>
     </div>
   </div>
