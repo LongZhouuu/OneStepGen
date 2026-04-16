@@ -1,0 +1,122 @@
+{
+    "15–24": {
+        "withDisability": {
+            "fullTime": 12.4,
+            "partTime": 26.8,
+            "underemployed": 9.1,
+            "totalEmployed": 39.6,
+            "unemployed": 12.8,
+            "totalInLabourForce": 52.0,
+            "notInLabourForce": 48.5
+        },
+        "noDisability": {
+            "fullTime": 26.0,
+            "partTime": 37.5,
+            "underemployed": 10.9,
+            "totalEmployed": 63.5,
+            "unemployed": 8.2,
+            "totalInLabourForce": 71.7,
+            "notInLabourForce": 28.4
+        }
+    },
+    "25–34": {
+        "withDisability": {
+            "fullTime": 36.0,
+            "partTime": 20.2,
+            "underemployed": 6.4,
+            "totalEmployed": 55.4,
+            "unemployed": 8.8,
+            "totalInLabourForce": 64.8,
+            "notInLabourForce": 35.6
+        },
+        "noDisability": {
+            "fullTime": 63.8,
+            "partTime": 20.7,
+            "underemployed": 4.7,
+            "totalEmployed": 84.5,
+            "unemployed": 3.7,
+            "totalInLabourForce": 88.3,
+            "notInLabourForce": 11.8
+        }
+    },
+    "35–44": {
+        "withDisability": {
+            "fullTime": 35.0,
+            "partTime": 21.0,
+            "underemployed": 4.6,
+            "totalEmployed": 55.9,
+            "unemployed": 4.9,
+            "totalInLabourForce": 61.0,
+            "notInLabourForce": 38.7
+        },
+        "noDisability": {
+            "fullTime": 64.6,
+            "partTime": 23.1,
+            "underemployed": 4.0,
+            "totalEmployed": 87.8,
+            "unemployed": 2.4,
+            "totalInLabourForce": 90.1,
+            "notInLabourForce": 9.9
+        }
+    },
+    "45–54": {
+        "withDisability": {
+            "fullTime": 34.7,
+            "partTime": 19.3,
+            "underemployed": 4.2,
+            "totalEmployed": 54.1,
+            "unemployed": 3.2,
+            "totalInLabourForce": 57.2,
+            "notInLabourForce": 42.5
+        },
+        "noDisability": {
+            "fullTime": 66.8,
+            "partTime": 21.8,
+            "underemployed": 4.4,
+            "totalEmployed": 88.6,
+            "unemployed": 2.5,
+            "totalInLabourForce": 91.1,
+            "notInLabourForce": 9.0
+        }
+    },
+    "55–64": {
+        "withDisability": {
+            "fullTime": 24.4,
+            "partTime": 15.8,
+            "underemployed": 2.5,
+            "totalEmployed": 40.3,
+            "unemployed": 3.1,
+            "totalInLabourForce": 43.3,
+            "notInLabourForce": 57.0
+        },
+        "noDisability": {
+            "fullTime": 50.5,
+            "partTime": 24.5,
+            "underemployed": 3.1,
+            "totalEmployed": 75.1,
+            "unemployed": 2.1,
+            "totalInLabourForce": 77.1,
+            "notInLabourForce": 22.7
+        }
+    },
+    "65 and over": {
+        "withDisability": {
+            "fullTime": 3.3,
+            "partTime": 5.6,
+            "underemployed": 0.3,
+            "totalEmployed": 8.9,
+            "unemployed": 0.1,
+            "totalInLabourForce": 9.0,
+            "notInLabourForce": 91.0
+        },
+        "noDisability": {
+            "fullTime": 9.1,
+            "partTime": 12.9,
+            "underemployed": 0.9,
+            "totalEmployed": 22.1,
+            "unemployed": 0.2,
+            "totalInLabourForce": 22.3,
+            "notInLabourForce": 77.7
+        }
+    }
+}
