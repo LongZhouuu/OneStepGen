@@ -48,10 +48,14 @@ import { RouterLink } from 'vue-router'
                 <RouterLink class="dropdown-item" to="/tools/planner">Planner</RouterLink>
               </li>
               <li>
-                <RouterLink class="dropdown-item" to="/tools/prioritizer">Prioritizer</RouterLink>
+                <RouterLink class="dropdown-item" to="/tools/prioritizer">
+                  Prioritizer <span class="nav-status">Coming soon</span>
+                </RouterLink>
               </li>
               <li>
-                <RouterLink class="dropdown-item" to="/tools/support">Support</RouterLink>
+                <RouterLink class="dropdown-item" to="/tools/support">
+                  Support <span class="nav-status">Coming soon</span>
+                </RouterLink>
               </li>
               <li>
                 <RouterLink class="dropdown-item" to="/tools/tips">Tips & Templates</RouterLink>
@@ -109,7 +113,7 @@ import { RouterLink } from 'vue-router'
 
 .dropdown-menu {
   border: none;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -123,8 +127,17 @@ import { RouterLink } from 'vue-router'
   color: #333;
 }
 
+.nav-status {
+  margin-left: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b46a2d;
+}
+
 .dropdown-item:hover {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(239, 150, 66, 0.683);
   color: #333;
 }
 </style>
