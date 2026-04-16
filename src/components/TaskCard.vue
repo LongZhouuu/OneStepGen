@@ -32,7 +32,7 @@
 
             <button class="hintBtn skipHintBtn" @click="swipeByClick('right')"
                 :disabled="!currentTaskItem || isDragging || !props.canSwipe">
-                <p style="font-weight: bold;">Complete this task</p>
+                <p style="font-weight: bold;">Skip this task</p>
                 <p style="font-size: 11px;color: #eaeaea;;">➡️or try hold and swipe to Right</p>
             </button>
         </div>

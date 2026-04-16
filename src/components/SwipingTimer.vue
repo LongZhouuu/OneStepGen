@@ -16,7 +16,11 @@
             {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
         </div>
         <div v-show="!isRunning" class="timerSubLabel">
-            {{ isAllTasksFinished ? 'You have completed all listed tasks.' : 'Modify Timer by Double-Click' }}
+            {{
+                isAllTasksFinished ?
+                    'You have completed all listed tasks.' :
+                    'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
+            }}
         </div>
 
         <div class="timerButtonGroup">
