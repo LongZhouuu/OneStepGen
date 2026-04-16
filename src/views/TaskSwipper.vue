@@ -155,15 +155,19 @@ function clear() {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 40px 0px 0px 0px;
-    font-family: Arial, Helvetica, sans-serif;
+    padding: 100px 24px 120px;
+    font-family: inherit;
     color: #2d2d2d;
+}
+
+.page button,
+.page input {
+    font-family: inherit;
 }
 
 .phone-frame {
     width: 100%;
     max-width: 380px;
-    margin-top: 30px;
 }
 
 .status {
@@ -344,7 +348,7 @@ function clear() {
     transition: all 0.3s ease;
     margin-bottom: 32px;
     position: absolute;
-    left: 110px;
+    left: 200px;
 }
 
 .back-btn:hover {
@@ -366,6 +370,7 @@ function clear() {
 }
 
 .taskCardWrapper {
+    margin-top: 40px;
     transition: transform 0.35s ease;
     transform-origin: top center;
 }
