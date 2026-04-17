@@ -1,7 +1,6 @@
 <template>
   <div class="home-page">
     <section class="hero-wrapper">
-      <NavBar />
       <HeroSection />
     </section>
 
@@ -79,8 +78,12 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import HeroSection from '@/components/HeroSection.vue'
-import NavBar from "../components/NavBar.vue"
 import SiteFooter from '@/components/SiteFooter.vue';
+
+/** Smooth-scroll the home page inner scroller to the core tools block. */
+function scrollToCoreTools() {
+  document.getElementById('core-tools')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 </script>
 
 <style scoped>
