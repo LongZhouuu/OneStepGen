@@ -1,0 +1,44 @@
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Baloo2-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/Baloo2-500.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Baloo2-600.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Baloo2-700.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/Baloo2-800.ttf') format('truetype');
+}
+
+html,
+body {
+  font-family: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+}
