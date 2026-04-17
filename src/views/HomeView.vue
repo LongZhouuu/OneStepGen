@@ -1,4 +1,5 @@
 <template>
+  <!-- Landing: full-height scroll-snap (hero -> problem -> tools -> privacy -> footer). Root scroller, not body. -->
   <div class="home-page">
     <section class="hero-wrapper">
       <NavBar />
@@ -52,20 +53,32 @@
           <p class="problem-closing">You're not alone - We created simple tools that guide you one step at a time.</p>
         </div>
       </div>
-      <div class="section-flow" aria-hidden="true">
+      <!-- In-page jump: scrollIntoView targets #core-tools inside this same scrollable root (hash alone is unreliable). -->
+      <a
+        href="#core-tools"
+        class="section-flow section-flow-link"
+        aria-label="Scroll to our core tools"
+        @click.prevent="scrollToCoreTools"
+      >
         <span class="section-flow-line"></span>
         <span class="section-flow-chip">
-          <svg class="section-flow-icon" viewBox="0 0 24 24" fill="none">
-            <path d="M5 12h14m0 0-4.5-4.5M19 12l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <svg class="section-flow-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 5v14m0 0-4.25-4.25M12 19l4.25-4.25"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           Here's how we support you
         </span>
         <span class="section-flow-line"></span>
-      </div>
+      </a>
     </section>
 
-    <!-- Explore Our Core Tools Section -->
-    <section class="core-tools-section">
+    <!-- Core tools: id used by problem-section CTA above. -->
+    <section id="core-tools" class="core-tools-section">
       <div class="section-header">
         <p class="section-label">Our core tools</p>
         <h2 class="section-title">Tools designed to help you start and stay on track</h2>
@@ -146,6 +159,7 @@
         </div>
       </div>
     </section>
+    <!-- Footer as its own snap target so the last panel can sit flush in the snap sequence. -->
     <section class="footer-snap" style="scroll-snap-align: start; scroll-snap-stop: always;">
       <SiteFooter />
     </section>
@@ -157,10 +171,16 @@
 import { RouterLink } from 'vue-router'
 import HeroSection from '@/components/HeroSection.vue'
 import NavBar from "../components/NavBar.vue"
-import SiteFooter from '@/components/SiteFooter.vue';
+import SiteFooter from '@/components/SiteFooter.vue'
+
+/** Smooth-scroll the home page inner scroller to the core tools block. */
+function scrollToCoreTools() {
+  document.getElementById('core-tools')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 </script>
 
 <style scoped>
+/* --- Page shell: vertical snap between major sections --- */
 .home-page {
   width: 100%;
   height: 100vh;
@@ -178,7 +198,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
   scroll-snap-stop: always;
 }
 
-/* Problem Section */
+/* --- Problem framing (pain points + bridge CTA to tools) --- */
 .problem-section {
   max-width: 1200px;
   margin: 0 auto;
@@ -288,12 +308,35 @@ import SiteFooter from '@/components/SiteFooter.vue';
   margin: 0;
 }
 
+/* Divider + pill label between problem copy and core tools. */
 .section-flow {
   display: flex;
   align-items: center;
   gap: 18px;
   margin: 28px auto 0;
   max-width: 760px;
+}
+
+/* Override global <a> hover tint from main.css. */
+.section-flow-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.section-flow-link:hover {
+  background-color: transparent;
+}
+
+.section-flow-link:hover .section-flow-chip {
+  box-shadow: 0 10px 20px rgba(193, 144, 91, 0.489);
+  border-color: rgba(180, 106, 45, 0.28);
+}
+
+.section-flow-link:focus-visible {
+  outline: 2px solid #b46a2d;
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .section-flow-line {
@@ -324,7 +367,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
   height: 16px;
 }
 
-/* Core Tools Section */
+/* --- Core tools: illustration + stacked tool links --- */
 .core-tools-section {
   padding: 80px 24px 80px;
   max-width: 1200px;
@@ -397,6 +440,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
   cursor: pointer;
 }
 
+/* Soft spotlight behind row on hover (z-index keeps it under text). */
 .tool-item::before {
   content: '';
   position: absolute;
@@ -477,7 +521,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
   background: linear-gradient(to right, #ccc, transparent);
 }
 
-/* Security Section */
+/* --- Privacy & security --- */
 .security-section {
   padding: 160px 24px 180px;
   max-width: 1200px;
@@ -561,7 +605,7 @@ import SiteFooter from '@/components/SiteFooter.vue';
   object-fit: cover;
 }
 
-/* Responsive */
+/* --- Breakpoint: drop side-by-side layouts, relax snap min-heights --- */
 @media (max-width: 768px) {
   .problem-section {
     padding: 80px 20px 20px;

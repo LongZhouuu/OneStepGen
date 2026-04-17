@@ -67,7 +67,9 @@ import { RouterLink } from 'vue-router'
           </li>
 
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/reward">Reward</RouterLink>
+            <RouterLink class="nav-link" to="/reward">
+              Reward<span class="nav-status">Coming soon</span>
+            </RouterLink>
           </li>
 
           <li class="nav-item">
