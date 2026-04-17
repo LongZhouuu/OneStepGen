@@ -88,9 +88,18 @@ import { RouterLink } from 'vue-router'
   left: 0;
   right: 0;
   z-index: 998;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  isolation: isolate;
+  background-color: rgba(255, 255, 255, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(51, 51, 51, 0.04);
+}
+
+@supports ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+  .navbar {
+    background-color: rgba(255, 255, 255, 0.42);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+  }
 }
 
 .brand-text {
