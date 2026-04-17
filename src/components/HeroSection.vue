@@ -51,7 +51,7 @@ import { RouterLink } from 'vue-router'
 }
 
 .hero-title {
-  font-size: 6rem;
+  font-size: clamp(2.8rem, 9vw, 6rem);
   font-weight: 400;
   margin-bottom: 3rem;
   line-height: 1.2;
@@ -62,8 +62,8 @@ import { RouterLink } from 'vue-router'
 }
 
 .hero-subtitle {
-  font-size: 1.7rem;
-  line-height: 2;
+  font-size: clamp(1.05rem, 2.7vw, 1.7rem);
+  line-height: 1.7;
   color: #333;
   font-weight: 400;
 }
@@ -80,7 +80,7 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   gap: 8px;
   color: #333;
-  font-size: 1.7rem;
+  font-size: clamp(1rem, 2.8vw, 1.7rem);
   font-weight: 500;
   text-decoration: none;
   padding: 0.75rem 1.4rem;
@@ -106,5 +106,41 @@ import { RouterLink } from 'vue-router'
 
 .cta-button:hover .cta-arrow {
   transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: calc(100vh - 68px);
+    padding: 20px 20px 28px;
+    justify-content: space-between;
+  }
+
+  .hero-content {
+    margin-top: 20px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.8rem;
+  }
+
+  .hero-title {
+    margin-bottom: 1.2rem;
+    line-height: 1.12;
+  }
+
+  .hero-subtitle br {
+    display: none;
+  }
+
+  .hero-cta {
+    position: static;
+    transform: none;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
 }
 </style>

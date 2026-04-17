@@ -142,4 +142,26 @@ import { RouterLink } from 'vue-router'
   background-color: rgba(239, 150, 66, 0.683);
   color: #333;
 }
+
+@media (max-width: 991px) {
+  .navbar .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .navbar-collapse {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+  .navbar-nav {
+    width: 100%;
+    align-items: flex-start !important;
+    gap: 4px;
+  }
+  .nav-link,
+  .dropdown-item {
+    font-size: 1rem;
+  }
+}
 </style>

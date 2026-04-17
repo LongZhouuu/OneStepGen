@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h1 class="page-title">Planner</h1>
-      <p class="page-subtitle">Have a lot to do today? No pressure, just list your tasks here.<br>  
+      <p class="page-subtitle">Have a lot to do today? No pressure, just list your tasks here.<br>
         We’ll guide you through them, one step at a time.
       </p>
     </div>
@@ -863,6 +863,44 @@ function createPlanner() {
 }
 
 @media (max-width: 768px) {
+  .search-box {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.task-input {
+  min-width: 100%;
+}
+
+.add-btn {
+  width: 100%;
+}
+
+.task-row {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.task-actions {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.create-planner-wrapper {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.create-planner-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.clear-all-btn {
+  position: static;
+  width: 100%;
+}
+
   .page-container {
     padding: 72px 20px 96px;
   }

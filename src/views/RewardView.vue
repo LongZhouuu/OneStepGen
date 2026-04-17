@@ -78,4 +78,12 @@
   color: #666;
   margin: 0;
 }
+@media (max-width: 768px) {
+  .page-container { padding: 72px 20px 96px; }
+  .page-header { margin-bottom: 34px; }
+  .page-title { font-size: 2.4rem; }
+  .page-subtitle { font-size: 1.1rem; }
+  .coming-soon-card { padding: 24px 18px; border-radius: 22px; }
+  .coming-soon-title { font-size: 1.55rem; }
+}
 </style>
