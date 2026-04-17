@@ -1,0 +1,10 @@
+{
+  "indicator": "Proportion of High / Very high Psychological Distress",
+  "years": ["2001", "2004–05", "2007–08", "2011–12", "2014–15", "2017–18", "2022"],
+  "series": [
+    {
+      "name": "Proportion",
+      "data": [12.6, 13.0, 12.0, 10.8, 11.7, 13.5, 14.3]
+    }
+  ]
+}

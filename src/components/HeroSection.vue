@@ -1,17 +1,17 @@
 <template>
   <section class="hero-section">
     <div class="hero-content">
+      <p class="hero-eyebrow">Designed for ADHD minds</p>
       <h1 class="hero-title">
         <span class="title-bold">One step</span> at a time
       </h1>
       <p class="hero-subtitle">
-        A simple tool designed for focus, for a calmer<br />
-        and more organized day.
+        A simple tool designed for people with ADHD to break down tasks,<br /> reduce overwhelm, and get started.
       </p>
     </div>
     <div class="hero-cta">
       <RouterLink to="/tools/planner" class="cta-button">
-        Start Your First Task <span class="cta-arrow">›</span>
+        Start Your First Step <span class="cta-arrow">&gt;</span>
       </RouterLink>
     </div>
   </section>
@@ -41,8 +41,17 @@ import { RouterLink } from 'vue-router'
   max-width: 1200px;
 }
 
+.hero-eyebrow {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #e2dedb;
+  margin: 0 0 1.25rem;
+}
+
 .hero-title {
-  font-size: 6.5rem;
+  font-size: clamp(2.8rem, 9vw, 6rem);
   font-weight: 400;
   margin-bottom: 3rem;
   line-height: 1.2;
@@ -53,8 +62,8 @@ import { RouterLink } from 'vue-router'
 }
 
 .hero-subtitle {
-  font-size: 1.6rem;
-  line-height: 1.6;
+  font-size: clamp(1.05rem, 2.7vw, 1.7rem);
+  line-height: 1.7;
   color: #333;
   font-weight: 400;
 }
@@ -71,17 +80,23 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   gap: 8px;
   color: #333;
-  font-size: 2rem;
+  font-size: clamp(1rem, 2.8vw, 1.7rem);
   font-weight: 500;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.75rem 1.4rem;
+  border: 2px solid rgba(76, 74, 74, 0);
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .cta-button:hover {
-  color: #000;
-  background-color: rgba(255, 255, 255, 0.3);
+  color: #b46a2d;
+  border-color: #33333300;
+  background-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
 }
 
 .cta-arrow {
@@ -91,5 +106,41 @@ import { RouterLink } from 'vue-router'
 
 .cta-button:hover .cta-arrow {
   transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: calc(100vh - 68px);
+    padding: 20px 20px 28px;
+    justify-content: space-between;
+  }
+
+  .hero-content {
+    margin-top: 20px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.8rem;
+  }
+
+  .hero-title {
+    margin-bottom: 1.2rem;
+    line-height: 1.12;
+  }
+
+  .hero-subtitle br {
+    display: none;
+  }
+
+  .hero-cta {
+    position: static;
+    transform: none;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
 }
 </style>
