@@ -43,14 +43,4 @@ html, body {
 .main-content {
   flex: 1;
 }
-
-.main-content {
-  flex: 1;
-  padding-top: 72px;
-}
-@media (max-width: 768px) {
-  .main-content {
-    padding-top: 68px;
-  }
-}
 </style>
