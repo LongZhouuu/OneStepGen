@@ -463,7 +463,7 @@ function scrollToCoreTools() {
 }
 
 .tool-name {
-  font-size: 1.8rem;
+  font-size: clamp(1.35rem, 2.8vw, 1.8rem);
   font-weight: 500;
   color: #333;
   margin-bottom: 10px;
@@ -553,7 +553,7 @@ function scrollToCoreTools() {
 }
 
 .security-title {
-  font-size: 2.9rem;
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
   font-weight: 500;
   line-height: 1.15;
   color: #333;
@@ -607,6 +607,26 @@ function scrollToCoreTools() {
 
 /* --- Breakpoint: drop side-by-side layouts, relax snap min-heights --- */
 @media (max-width: 768px) {
+  .home-page {
+  scroll-snap-type: y proximity;
+}
+
+.hero-wrapper,
+.problem-section,
+.core-tools-section,
+.security-section {
+  min-height: auto;
+  scroll-snap-stop: normal;
+}
+
+.tools-illustration {
+  margin-top: 0;
+}
+
+.tools-illustration img {
+  width: 100%;
+  transform: none;
+}
   .problem-section {
     padding: 80px 20px 20px;
     min-height: auto;
@@ -655,7 +675,7 @@ function scrollToCoreTools() {
   }
 
   .core-tools-section {
-    height: auto;
+    min-height: 100vh;
     padding: 28px 20px 64px;
   }
 
@@ -681,7 +701,7 @@ function scrollToCoreTools() {
   }
 
   .section-title {
-    font-size: 2rem;
+    font-size: clamp(2rem, 5vw, 3.2rem);
     max-width: none;
   }
 

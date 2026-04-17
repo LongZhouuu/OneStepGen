@@ -6,8 +6,7 @@
 
     </div>
 
-    <div class="card shadow-sm mb-4"
-      style="padding: 18px 10px 10px 36px; display: flex; flex-direction: row; justify-content: space-around; align-items: center;">
+    <div class="card shadow-sm mb-4 overview-card">
       <img src="../assets/logo.png" alt="logo" class="logo my-3">
       <div class="card-body">
         <h3 class="card-title mb-3">Overview</h3>
@@ -26,8 +25,8 @@
     </div>
 
     <!-- problem state + employment -->
-    <div class="problem" style="height: 43.8rem;">
-      <div class="card shadow-sm mb-4" style="margin-right: 20px;">
+    <div class="problem problem-employment">
+      <div class="card shadow-sm mb-4 problem-main-card">
         <div class="card-body">
           <h3 class="card-title mb-3">Our Focused Problem & Challenges</h3>
 
@@ -64,12 +63,12 @@
     </div>
 
     <!-- ADHD knowledge -->
-    <div class="problem" style="height: 34rem;">
+    <div class="problem problem-prevalence">
       <div class="card shadow-sm mb-5">
         <div class="card-body">
           <h3 class="card-title mb-3">Data - Prevalence of ADHD</h3>
-          <div style="display: flex; flex-direction: row; align-items: start; justify-content: space-between;">
-            <figure class="figure" style="width: 58%; ">
+          <div class="prevalence-layout">
+            <figure class="figure prevalence-figure">
               <img src="../assets/infoGraph.png" class="figure-img img-fluid rounded"
                 alt="1-2 out of every 20 Australians have ADHD">
               <figcaption class="figure-caption">
@@ -79,7 +78,7 @@
               </figcaption>
             </figure>
 
-            <p class="text-muted" style="display: block; width: 40%;">
+            <p class="text-muted prevalence-text">
               The DSM-IV diagnostic criteria classify the number of symptoms of ADHD in adults into five categories,
               including inattention and hyperactivity/impulsivity.
               <br><br>
@@ -109,7 +108,7 @@
     </div>
 
     <!-- psychological distress -->
-    <div class="problem" style="height: 34rem;">
+    <div class="problem problem-distress">
       <div class="card shadow-sm mb-5">
         <div class="card-body">
           <h3 class="card-title mb-3">Data - Trend of Psychological Distress</h3>
@@ -147,6 +146,8 @@ import LineChart from '@/components/LineChart.vue';
 
 .logo {
   width: 380px;
+  max-width: 100%;
+  height: auto;
   opacity: 0.9;
   border-radius: 15px;
 }
@@ -160,6 +161,15 @@ import LineChart from '@/components/LineChart.vue';
 
 .card {
   border-radius: 12px;
+}
+
+.overview-card {
+  padding: 18px 16px 12px 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 18px;
 }
 
 .card-title {
@@ -176,11 +186,39 @@ import LineChart from '@/components/LineChart.vue';
 .problem {
   display: flex;
   flex-direction: row;
-  /* height: 500px; */
   align-items: start;
-  /* border: 1px black solid; */
-
   margin-top: 24px;
+  gap: 20px;
+}
+
+.problem-employment {
+  min-height: 43.8rem;
+}
+
+.problem-prevalence,
+.problem-distress {
+  min-height: 34rem;
+}
+
+.problem-main-card {
+  margin-right: 0;
+}
+
+.prevalence-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.prevalence-figure {
+  width: 58%;
+}
+
+.prevalence-text {
+  display: block;
+  width: 40%;
 }
 
 .source-text {
@@ -193,5 +231,39 @@ import LineChart from '@/components/LineChart.vue';
 .data {
   width: 100%;
   height: 100%;
+}
+
+@media (max-width: 992px) {
+  .overview-card,
+  .problem,
+  .prevalence-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .problem-employment,
+  .problem-prevalence,
+  .problem-distress {
+    min-height: auto;
+  }
+
+  .prevalence-figure,
+  .prevalence-text {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 72px 20px 96px;
+  }
+
+  .page-title {
+    font-size: 2.4rem;
+  }
+
+  .logo {
+    width: min(100%, 280px);
+  }
 }
 </style>
