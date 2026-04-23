@@ -310,7 +310,7 @@ function enterWorkspace() {
 
 .section-intro h2 {
   font-size: clamp(28px, 3.5vw, 42px);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--brown-dark);
   margin-bottom: 20px;
   max-width: 600px;
