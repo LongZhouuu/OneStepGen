@@ -37,7 +37,8 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   gap: 24px;
   font-size: 14.6px;
-  background-color: rgba(224, 223, 223, 0.384);
+  background-color: rgba(45, 31, 20, 0.96);
+  backdrop-filter: blur(20px);
   padding: 20px 40px;
   min-height: 60px;
 }
@@ -45,17 +46,17 @@ import { RouterLink } from 'vue-router'
 .footer-left {
   max-width: 500px;
   line-height: 1.5;
-  color: #444;
+  color: #fffcfc;
 }
 
 .footer-left a {
-  color: #333;
+  color: #fffcfc;
   text-decoration: underline;
   transition: opacity 0.3s ease;
 }
 
 .footer-left a:hover {
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .footer-right {

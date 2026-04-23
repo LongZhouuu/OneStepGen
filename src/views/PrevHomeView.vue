@@ -2,11 +2,11 @@
   <!-- Landing: full-height scroll-snap (hero -> problem -> tools -> privacy -> footer). Root scroller, not body. -->
   <div class="home-page">
     <section class="hero-wrapper">
-      <HeroSection />
+      <HeroSection scroll-target="problem-section" />
     </section>
 
     <!-- Problem Section -->
-    <section class="problem-section">
+    <section id="problem-section" class="problem-section">
       <div class="problem-card">
         <div class="problem-copy">
           <p class="problem-kicker">When Getting Started Feels Hard</p>
@@ -191,6 +191,7 @@ function enterWorkflow() {
   overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  background: linear-gradient(135deg, rgba(248, 241, 234, 0.94) 0%, rgba(255, 250, 246, 0.98) 100%);
 }
 
 .hero-wrapper,
