@@ -9,16 +9,33 @@
     <div class="card shadow-sm mb-4 overview-card">
       <img src="../assets/logo.png" alt="logo" class="logo my-3">
       <div class="card-body">
-        <h3 class="card-title mb-3">Overview</h3>
+        <!-- <h3 class="card-title mb-3">Overview</h3> -->
         <p class="text-muted">
-          This project focuses on designing a solution to support ADHD workers in managing their daily work tasks.
-          ADHD workers in Australia experience difficulties with task organization, time management, maintaining focus,
-          and following instructions in their daily work.
-        </p>
-        <p class="text-muted">
-          These challenges are often amplified in workplace environments due to higher demands, frequent distractions,
-          and limited flexibility. Existing support tools primarily focus on job entry and career preparation, providing
-          limited support for managing day-to-day work tasks.
+        <h3>
+          Our Goal
+        </h3>
+        <ul>
+          <li>
+            Design a solution to help ADHD workers manage daily work tasks
+          </li>
+        </ul>
+        <h3>
+          Key Challenges for ADHD Workers (Australia)
+        </h3>
+        <ul>
+          <li>Difficulty with task organization</li>
+          <li>Difficulty with time management</li>
+          <li>Difficulty maintaining focus</li>
+          <li>Difficulty following instructions</li>
+        </ul>
+        <h3>
+          Why It Gets Worse at Work
+        </h3>
+        <ul>
+          <li>Higher demands increase pressure</li>
+          <li>Frequent distractions break focus</li>
+          <li>Limited flexibility reduces coping options</li>
+        </ul>
         </p>
       </div>
 
@@ -78,19 +95,30 @@
               </figcaption>
             </figure>
 
-            <p class="text-muted prevalence-text">
-              The DSM-IV diagnostic criteria classify the number of symptoms of ADHD in adults into five categories,
-              including inattention and hyperactivity/impulsivity.
-              <br><br>
-              Currently, according to the DSM-IV diagnostic criteria, the prevalence of ADHD is 7.5% (of which 6.8% have
-              functional impairment), with inattention-type ADHD being more common than hyperactivity/impulsivity-type
-              and mixed-type.
-              <br><br>
-              There are currently no studies on the prevalence of ADHD in Australian adults using the current DSM-5
-              diagnostic criteria, but it is estimated that the prevalence of ADHD in Australian adults is likely
-              similar to international levels, approximately 2% to 6% (Simon, Czobor, Bálint, Mészáros, & Bitter, 2009;
-              Song et al., 2021; Willcutt, 2012).
-            </p>
+            <div class="prevalence-text">
+
+              <p>
+                <strong>DSM-IV Diagnosis:</strong><br>
+                Symptoms are grouped into <strong>5 categories</strong>, mainly
+                <strong>Inattention</strong> and <strong>Hyperactivity / Impulsivity</strong>.
+              </p>
+
+              <p>
+                <strong>Prevalence:</strong><br>
+                <strong>7.5%</strong> of people have ADHD, and
+                <strong>6.8%</strong> experience functional impairment.<br>
+                <strong>Inattention type</strong> is the most common.
+              </p>
+
+              <p>
+                <strong>Australian Adults (DSM-5):</strong><br>
+                No exact local data.<br>
+                Estimated prevalence: <strong>2% – 6%</strong>,
+                similar to international levels. <br> (Simon, Czobor, Bálint, Mészáros, & Bitter, 2009; Song et al., 2021;
+                Willcutt, 2012).
+              </p>
+
+            </div>
           </div>
           <strong class="source-text">Source: </strong>
           <a href="https://pubmed.ncbi.nlm.nih.gov/11765286/" target="_blank" class="source-text">
@@ -222,10 +250,10 @@ import LineChart from '@/components/LineChart.vue';
 }
 
 .source-text {
-    font-size: 0.84rem;
-    color: #7b8190;
-    line-height: 1;
-    text-align: center;
+  font-size: 0.84rem;
+  color: #7b8190;
+  line-height: 1;
+  text-align: center;
 }
 
 .data {
@@ -233,7 +261,10 @@ import LineChart from '@/components/LineChart.vue';
   height: 100%;
 }
 
+
+
 @media (max-width: 992px) {
+
   .overview-card,
   .problem,
   .prevalence-layout {
