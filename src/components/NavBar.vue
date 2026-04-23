@@ -31,7 +31,7 @@ import { RouterLink } from 'vue-router'
             <RouterLink class="nav-link" to="/">Home</RouterLink>
           </li>
 
-          <!-- Tools Dropdown -->
+          <!-- Tools Dropdown
           <li class="nav-item dropdown">
             <a
               class="nav-link dropdown-toggle"
@@ -59,12 +59,12 @@ import { RouterLink } from 'vue-router'
               </li>
               <li>
                 <RouterLink class="dropdown-item" to="/tools/tips">Tips & Templates</RouterLink>
-              </li>
+              </li> -->
               <!-- <li> -->
                 <!-- <RouterLink class="dropdown-item" to="/tools/planner/swipper">Swipe</RouterLink> -->
               <!-- </li> -->
-            </ul>
-          </li>
+            <!-- </ul>
+          </li> -->
 
           <li class="nav-item">
             <RouterLink class="nav-link" to="/reward">
