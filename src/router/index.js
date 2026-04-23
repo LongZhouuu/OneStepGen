@@ -7,6 +7,8 @@ import PrioritizerView from '../views/tools/PrioritizerView.vue'
 import SupportView from '../views/tools/SupportView.vue'
 import TipsView from '../views/tools/TipsAndTemplatesView.vue'
 import TaskSwipper from '@/views/TaskSwipper.vue'
+import AIDump from '@/views/AIDump.vue'
+import PlanView from '@/views/PlanView.vue'
 
 const routes = [
   {
@@ -14,31 +16,35 @@ const routes = [
     name: 'Home',
     component: HomeView
   },
+  { path: '/workflow/ai-dump', name: 'AIDump', component: AIDump },
+  { path: '/workflow/plan', name: 'Plan', component: PlanView },
+  { path: '/workflow/planner', name: 'Planner', component: PlannerView },
+  { path: '/workflow/swiper', name: 'TaskSwipper', component: TaskSwipper },
   {
     path: '/about',
     name: 'About',
     component: AboutView
   },
-  {
-    path: '/tools/planner',
-    name: 'Planner',
-    component: PlannerView
-  },
-  {
-    path: '/tools/planner/swipper',
-    name: 'TaskSwipper',
-    component: TaskSwipper
-  },
-  {
-    path: '/tools/prioritizer',
-    name: 'Prioritizer',
-    component: PrioritizerView
-  },
-  {
-    path: '/tools/support',
-    name: 'Support',
-    component: SupportView
-  },
+  // {
+  //   path: '/tools/planner',
+  //   name: 'Planner',
+  //   component: PlannerView
+  // },
+  // {
+  //   path: '/tools/planner/swipper',
+  //   name: 'TaskSwipper',
+  //   component: TaskSwipper
+  // },
+  // {
+  //   path: '/tools/prioritizer',
+  //   name: 'Prioritizer',
+  //   component: PrioritizerView
+  // },
+  // {
+  //   path: '/tools/support',
+  //   name: 'Support',
+  //   component: SupportView
+  // },
   {
     path: '/tools/tips',
     name: 'Tips',

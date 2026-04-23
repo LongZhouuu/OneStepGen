@@ -2,7 +2,7 @@
     <div class="page">
 
         <div class="phone-frame">
-            <button class="back-btn" @click="router.back()">
+            <button class="back-btn" @click="goBackToPlanner">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7"></path>
                 </svg>
@@ -55,94 +55,57 @@
 <script setup>
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
-import { ref, watch, computed } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { guardWorkflowStep } from '../router/workflow'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
 const router = useRouter()
 
-const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
+onMounted(() => {
+  guardWorkflowStep(3, router)
+})
 
+function goBackToPlanner() {
+  router.push({ name: 'Planner' })
+}
+
+const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
 const timerRef = ref(null)
 
 const hasRemainingTasks = computed(() => {
-    return tasks.value.some(task =>
-        task.status !== 'completed' && task.status !== 'skipped'
-    )
+  return tasks.value.some(task =>
+    task.status !== 'completed' && task.status !== 'skipped'
+  )
 })
 
 function handleNoMoreTasks() {
-    activeTab.value = 'checkin'
-    timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
+  activeTab.value = 'checkin'
+  timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
 }
 
 watch(isTimerRunning, (newVal) => {
-    if (newVal) {
-        activeTab.value = 'tasks'
-    }
+  if (newVal) {
+    activeTab.value = 'tasks'
+  }
 })
 
-// mock data
-// const tasks = ref([
-//     {
-//         id: crypto.randomUUID(),
-//         text: "Buy headphone for meeting",
-//         status: "pending",
-//         order: 1,
-//         createdAt: Date.now() - 100000,
-//         updatedAt: Date.now() - 100000
-//     },
-//     {
-//         id: crypto.randomUUID(),
-//         text: "Finish website performance report",
-//         status: "pending",
-//         order: 2,
-//         createdAt: Date.now() - 90000,
-//         updatedAt: Date.now() - 50000
-//     },
-//     {
-//         id: crypto.randomUUID(),
-//         text: "Call purchasing team for hardware details",
-//         status: "pending",
-//         order: 3,
-//         createdAt: Date.now() - 80000,
-//         updatedAt: Date.now() - 80000
-//     },
-//     {
-//         id: crypto.randomUUID(),
-//         text: "Prepare slides for weekly meeting",
-//         status: "skipped",
-//         order: 4,
-//         createdAt: Date.now() - 120000,
-//         updatedAt: Date.now() - 60000
-//     },
-//     {
-//         id: crypto.randomUUID(),
-//         text: "Review UX feedback from team",
-//         status: "pending",
-//         order: 5,
-//         createdAt: Date.now() - 70000,
-//         updatedAt: Date.now() - 30000
-//     }
-// ])
 function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks.value))
+  localStorage.setItem('tasks', JSON.stringify(tasks.value))
 }
 
 function updateTaskStatus(index, newStatus) {
-    if (!tasks.value[index]) return
+  if (!tasks.value[index]) return
 
-    tasks.value[index].status = newStatus
-    tasks.value[index].updatedAt = Date.now()
-    saveTasks()
+  tasks.value[index].status = newStatus
+  tasks.value[index].updatedAt = Date.now()
+  saveTasks()
 }
 
 function clear() {
-    console.log('fy');
-
-    tasks.value = tasks.value.filter(task => task.status !== 'completed')
-    saveTasks()
+  tasks.value = tasks.value.filter(task => task.status !== 'completed')
+  saveTasks()
 }
 </script>
 
