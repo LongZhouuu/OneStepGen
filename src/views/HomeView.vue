@@ -1,25 +1,8 @@
 <template>
   <div class="home-page">
     <!-- HERO -->
-    <section class="hero" id="hero-section">
-      <div class="hero-content">
-        <p class="hero-eyebrow">Designed for ADHD Minds</p>
-        <h1 class="hero-title"><em>One step</em> at a time</h1>
-        <p class="hero-sub">
-          A simple tool designed for people with ADHD to break down tasks,
-          reduce overwhelm, and get started.
-        </p>
-
-        <div class="hero-ctas">
-          <button class="btn-primary" @click="scrollToSection('intro-section')">
-            See How It Works ↓
-          </button>
-
-          <button class="btn-ghost" @click="enterWorkspace">
-            Quick Start →
-          </button>
-        </div>
-      </div>
+    <section class="hero-wrapper" id="hero-section">
+      <HeroSection scroll-target="intro-section" />
     </section>
 
     <!-- INTRO -->
@@ -33,22 +16,72 @@
 
       <div class="pain-cards">
         <div class="pain-card">
-          <div class="pain-icon">⏰</div>
+          <div class="pain-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 4.75a7.25 7.25 0 1 0 7.25 7.25c0-.9-.16-1.75-.46-2.54"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 8.25v4.1l2.65 1.8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
           <span>You feel overwhelmed by tasks</span>
         </div>
 
         <div class="pain-card">
-          <div class="pain-icon">?</div>
+          <div class="pain-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5.75 9.5A6.25 6.25 0 0 1 18 11.25c0 4-4.25 4.25-4.25 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="13.75" cy="19" r="1" fill="currentColor" />
+            </svg>
+          </div>
           <span>You don't know where to begin</span>
         </div>
 
         <div class="pain-card">
-          <div class="pain-icon">⌛</div>
+          <div class="pain-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="4.75" y="6.75" width="14.5" height="10.5" rx="3" stroke="currentColor" stroke-width="1.8" />
+              <path
+                d="M19.25 9.5 14.5 12l4.75 2.5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
           <span>You keep delaying even simple work</span>
         </div>
 
         <div class="pain-card">
-          <div class="pain-icon">↻</div>
+          <div class="pain-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 4.75c4.1 0 7.25 3.15 7.25 7.25S16.1 19.25 12 19.25 4.75 16.1 4.75 12"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path d="m9.25 9.75 5.5 5.5M14.75 9.75l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </div>
           <span>You lose focus easily once you start</span>
         </div>
       </div>
@@ -108,42 +141,45 @@
       <p class="flow-back-note">
         You can always go back to any previous step to adjust your ideas, plan, or tasks.
       </p>
+
+      <button class="scroll-hint flow-scroll-hint" @click="scrollToSection('security-section')">
+        ↓ See how we keep it private
+      </button>
     </section>
 
     <!-- PRIVACY -->
-    <section class="section-privacy">
-      <div class="privacy-card">
-        <div class="privacy-text">
-          <p class="eyebrow privacy-eyebrow">Privacy &amp; Security</p>
-          <h2 class="privacy-headline">
-            Built to feel safe when your brain already has enough to carry
-          </h2>
-          <p class="privacy-desc">
-            We don't store any of your information. Everything stays on your device,
-            private and secure.
+    <section class="security-section" id="security-section">
+      <div class="security-card">
+        <div class="security-copy">
+          <p class="security-kicker">Privacy &amp; security</p>
+          <h2 class="security-title">Built to feel safe when your brain already has enough to carry</h2>
+          <p class="security-text">
+            We don't store any of your information. Everything stays on your device, private and secure.
           </p>
-
-          <div class="privacy-tags">
-            <span class="privacy-tag">No stored personal information</span>
-            <span class="privacy-tag">Private by default</span>
-            <span class="privacy-tag">Keeps planning and reflection local</span>
+          <div class="security-points">
+            <div class="security-point">No stored personal Information</div>
+            <div class="security-point">Private by default</div>
+            <div class="security-point">Keeps planning and reflection local</div>
           </div>
         </div>
-
-        <div class="privacy-image">
-          <div class="privacy-img-placeholder">🔒</div>
+        <div class="security-visual">
+          <div class="security-image">
+            <img src="/security-bg.png" alt="Privacy and Security" />
+          </div>
         </div>
       </div>
     </section>
 
     <!-- CTA -->
     <section class="section-cta">
-      <h2>Ready to take the first step?</h2>
-      <p>Start small. Start messy. Just start.</p>
+      <div class="section-cta-card">
+        <h2>Ready to take your first step?</h2>
+        <p>Start small. Start messy. Just start.</p>
 
-      <button class="btn-cta-big" @click="enterWorkspace">
-        Enter Workspace →
-      </button>
+        <button class="btn-cta-big" @click="enterWorkspace">
+          Enter Workspace →
+        </button>
+      </div>
     </section>
   </div>
 </template>
@@ -151,6 +187,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
+import HeroSection from '@/components/HeroSection.vue'
 
 const router = useRouter()
 
@@ -158,9 +195,12 @@ function scrollToSection(id) {
   const el = document.getElementById(id)
   if (!el) return
 
-  el.scrollIntoView({
+  const navOffset = 60
+  const targetTop = el.getBoundingClientRect().top + window.scrollY - navOffset
+
+  window.scrollTo({
+    top: targetTop,
     behavior: 'smooth',
-    block: 'start',
   })
 }
 
@@ -178,90 +218,43 @@ function enterWorkspace() {
 :global(body) {
   margin: 0;
   padding: 0;
-  background: #fdf6f0;
+  background: transparent;
   overflow-x: hidden;
 }
 
 .home-page {
-  --sand-100: #fdf6f0;
-  --sand-200: #f5e8d8;
-  --sand-300: #e8cdb0;
-  --terracotta: #c1714f;
-  --terracotta-light: #d4956e;
-  --terracotta-dark: #a05840;
-  --brown-dark: #2d1f14;
-  --brown-mid: #5c3d28;
-  --brown-text: #3d2a1a;
+  --sand-100: #fffaf6;
+  --sand-200: #f8f1ea;
+  --sand-300: #f3ebe3;
+  --terracotta: #b46a2d;
+  --terracotta-light: #c98b58;
+  --terracotta-dark: #9b5f3f;
+  --brown-dark: #333333;
+  --brown-mid: #6a5238;
+  --brown-text: #555555;
+  --card-warm: linear-gradient(135deg, rgba(248, 241, 234, 0.94) 0%, rgba(255, 250, 246, 0.98) 100%);
+  --card-soft: linear-gradient(135deg, rgba(246, 239, 232, 0.94) 0%, rgba(255, 250, 245, 0.98) 100%);
   --radius-btn: 50px;
-  --shadow-card: 0 8px 40px rgba(193, 113, 79, 0.13);
-  --shadow-float: 0 12px 48px rgba(193, 113, 79, 0.25);
+  --shadow-card: 0 16px 36px rgba(97, 75, 52, 0.08);
+  --shadow-float: 0 18px 40px rgba(97, 75, 52, 0.12);
 
   min-height: 100vh;
-  font-family: 'Baloo 2', cursive;
   color: var(--brown-text);
+  background: transparent;
 }
 
-/* HERO */
-.hero {
+.hero-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #d4956e 0%, #c8856a 30%, #e8b89a 65%, #f5d8c0 100%);
+}
+
+.section-intro,
+.section-flow,
+.security-section {
+  min-height: calc(100vh - 72px);
   display: flex;
-  align-items: center;
-  padding: 120px 80px 80px;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-content {
-  max-width: 680px;
-  position: relative;
-  z-index: 1;
-}
-
-.hero-eyebrow {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: rgba(45, 31, 20, 0.65);
-  text-transform: uppercase;
-  margin-bottom: 20px;
-}
-
-.hero-title {
-  font-family: 'Baloo 2', cursive;
-  font-size: clamp(52px, 6vw, 80px);
-  line-height: 1.12;
-  font-weight: 700;
-  color: var(--brown-dark);
-  margin-bottom: 24px;
-}
-
-.hero-title em {
-  font-style: normal;
-  font-weight: 700;
-  color: #2d1f14;
-}
-
-.hero-sub {
-  font-size: 18px;
-  line-height: 1.6;
-  color: rgba(45, 31, 20, 0.75);
-  margin-bottom: 48px;
-  max-width: 480px;
-}
-
-.hero-ctas {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.btn-primary,
-.btn-ghost,
-.btn-cta-big,
-.scroll-hint {
-  font-family: 'Baloo 2', cursive;
+  flex-direction: column;
+  justify-content: center;
+  scroll-margin-block: 72px;
 }
 
 .btn-primary {
@@ -277,15 +270,15 @@ function enterWorkspace() {
 }
 
 .btn-primary:hover {
-  background: var(--brown-mid);
+  background: #4d3c2d;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(45, 31, 20, 0.25);
 }
 
 .btn-ghost {
-  background: rgba(253, 246, 240, 0.7);
+  background: rgba(255, 250, 245, 0.78);
   color: var(--brown-dark);
-  border: 1.5px solid rgba(45, 31, 20, 0.25);
+  border: 1.5px solid rgba(180, 106, 45, 0.18);
   border-radius: var(--radius-btn);
   padding: 15px 32px;
   font-size: 16px;
@@ -295,19 +288,19 @@ function enterWorkspace() {
 }
 
 .btn-ghost:hover {
-  background: rgba(253, 246, 240, 0.95);
+  background: rgba(255, 250, 245, 0.94);
   transform: translateY(-2px);
 }
 
 /* INTRO */
 .section-intro {
   padding: 100px 80px;
-  background: linear-gradient(180deg, #f5e8d8 0%, #fdf6f0 100%);
+  background: transparent;
   text-align: center;
 }
 
 .eyebrow {
-  font-size: 11px;
+  font-size: 15px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--terracotta);
@@ -316,7 +309,6 @@ function enterWorkspace() {
 }
 
 .section-intro h2 {
-  font-family: 'Baloo 2', cursive;
   font-size: clamp(28px, 3.5vw, 42px);
   font-weight: 700;
   color: var(--brown-dark);
@@ -327,15 +319,15 @@ function enterWorkspace() {
 }
 
 .section-intro p {
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.7;
-  color: rgba(45, 31, 20, 0.7);
+  color: #555;
   max-width: 560px;
   margin: 0 auto 56px;
 }
 
 .section-intro .eyebrow {
-    font-size: 11px;
+    font-size: 15px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--terracotta);
@@ -345,81 +337,104 @@ function enterWorkspace() {
 
 .pain-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto 40px;
 }
 
 .pain-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px 24px;
+  background: var(--card-warm);
+  border: 1px solid rgba(180, 106, 45, 0.08);
+  border-radius: 22px;
+  padding: 22px 30px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 16px rgba(193, 113, 79, 0.08);
+  box-shadow: 0 12px 28px rgba(97, 75, 52, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .pain-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(193, 113, 79, 0.15);
+  box-shadow: 0 16px 32px rgba(97, 75, 52, 0.1);
 }
 
 .pain-icon {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: rgba(193, 113, 79, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 106, 45, 0.12);
+  box-shadow: 0 8px 18px rgba(97, 75, 52, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 20px;
+  color: var(--terracotta);
+}
+
+.pain-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .pain-card span {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--brown-text);
+  white-space: nowrap;
 }
 
 .not-alone {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--brown-dark);
-  margin-top: 32px;
+  max-width: none;
+  width: max-content;
+  margin: 32px auto 0;
+  white-space: nowrap;
 }
 
 .scroll-hint {
   display: inline-flex;
+  align-self: center;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--terracotta);
   margin-top: 18px;
   cursor: pointer;
-  border: 1.5px solid rgba(193, 113, 79, 0.35);
+  border: 1px solid rgba(180, 106, 45, 0.16);
   border-radius: 50px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   transition: all 0.2s;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 24px rgba(97, 75, 52, 0.06);
+  width: fit-content;
   position: relative;
   top: -40px;
 }
 
 .scroll-hint:hover {
-  background: rgba(193, 113, 79, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 26px rgba(97, 75, 52, 0.1);
+}
+
+.flow-scroll-hint {
+  top: 0;
+  margin-top: 28px;
 }
 
 /* FLOW */
 .section-flow {
-  padding: 100px 80px;
-  background: var(--sand-100);
+  padding: 80px 80px 60px;
+  background: transparent;
+  justify-content: flex-start;
 }
 
 .section-flow .eyebrow {
@@ -427,12 +442,11 @@ function enterWorkspace() {
 }
 
 .section-flow h2 {
-  font-family: 'Baloo 2', cursive;
-  font-size: clamp(26px, 3vw, 38px);
+  font-size: clamp(28px, 3vw, 38px);
   text-align: center;
   color: var(--brown-dark);
-  margin-bottom: 60px;
-  font-weight: 700;
+  margin-bottom: 48px;
+  font-weight: 600;
 }
 
 .flow-steps {
@@ -440,12 +454,13 @@ function enterWorkspace() {
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   max-width: 1000px;
-  margin: 0 auto 60px;
+  margin: 0 auto 40px;
 }
 
 .flow-step {
-  background: white;
-  border-radius: 18px;
+  background: var(--card-warm);
+  border: 1px solid rgba(180, 106, 45, 0.08);
+  border-radius: 24px;
   padding: 32px 24px;
   box-shadow: var(--shadow-card);
   position: relative;
@@ -458,158 +473,172 @@ function enterWorkspace() {
   box-shadow: var(--shadow-float);
 }
 
-.flow-step::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: var(--terracotta-light);
-}
-
 .flow-num {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: rgba(193, 113, 79, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 106, 45, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Baloo 2', cursive;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--terracotta);
   margin-bottom: 16px;
 }
 
 .flow-step h3 {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--brown-dark);
   margin-bottom: 10px;
 }
 
 .flow-step p {
-  font-size: 13.5px;
+  font-size: 18px;
   line-height: 1.6;
-  color: rgba(45, 31, 20, 0.6);
+  color: #555;
 }
 
 .flow-back-note {
   text-align: center;
-  font-size: 13.5px;
-  color: rgba(193, 113, 79, 0.75);
-  font-style: italic;
-  margin-top: 28px;
-  max-width: 480px;
+  font-size: 20px;
+  color: rgba(180, 106, 45, 0.8);
+  /* margin-top: 0px; */
+  max-width: none;
+  width: max-content;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+  white-space: nowrap;
 }
 
 /* PRIVACY */
-.section-privacy {
-  padding: 60px 80px;
-  background: linear-gradient(180deg, var(--sand-100) 0%, #f5e8d8 100%);
+.security-section {
+  min-height: auto;
+  display: block;
+  padding: 80px 80px 70px;
+  background: transparent;
 }
 
-.privacy-card {
-  max-width: 960px;
+.security-card {
+  max-width: 1000px;
   margin: 0 auto;
-  background: white;
-  border-radius: 28px;
-  padding: 56px 64px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  display: flex;
   align-items: center;
-  box-shadow: var(--shadow-card);
+  gap: 56px;
+  padding: 50px;
+  border-radius: 32px;
+  background: linear-gradient(135deg, #f6efe8 0%, #fffaf5 55%, #f3ede7 100%);
+  box-shadow: 0 18px 48px rgba(97, 75, 52, 0.08);
 }
 
-.privacy-eyebrow {
-  text-align: left;
-  margin-bottom: 14px;
+.security-copy {
+  flex: 1;
+  max-width: 460px;
 }
 
-.privacy-headline {
-  font-family: 'Baloo 2', cursive;
-  font-size: clamp(22px, 2.5vw, 32px);
-  font-weight: 700;
-  color: var(--brown-dark);
-  line-height: 1.25;
-  margin-bottom: 16px;
+.security-kicker {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b46a2d;
+  margin: 0 0 18px;
 }
 
-.privacy-desc {
-  font-size: 15px;
+.security-title {
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: #333;
+  margin: 0 0 22px;
+}
+
+.security-text {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #555;
   line-height: 1.7;
-  color: rgba(45, 31, 20, 0.6);
-  margin-bottom: 24px;
+  max-width: 420px;
+  margin: 0 0 28px;
 }
 
-.privacy-tags {
+.security-points {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
-.privacy-tag {
-  padding: 8px 16px;
-  border-radius: 50px;
-  border: 1.5px solid rgba(45, 31, 20, 0.15);
-  font-size: 13px;
+.security-point {
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(180, 106, 45, 0.16);
+  font-size: 0.95rem;
   font-weight: 500;
-  color: var(--brown-text);
-  background: var(--sand-100);
+  color: #6a5238;
 }
 
-.privacy-image {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.security-visual {
+  flex: 1;
 }
 
-.privacy-img-placeholder {
+.security-image {
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 420px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+}
+
+.security-image img {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #e8cdb0 0%, #f5dfc8 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 64px;
+  height: 100%;
+  display: block;
+  min-height: 420px;
+  object-fit: cover;
 }
 
 /* CTA */
 .section-cta {
-  padding: 100px 80px;
+  padding: 60px 80px 100px;
+  /* min-height: auto; */
+  /* display: block; */
   text-align: center;
-  background: linear-gradient(135deg, #e8cdb0 0%, #d4956e 50%, #c1714f 100%);
+  background: linear-gradient(135deg, #d59a72 0%, #e7c2a2 45%, #f1dfcf 100%);
   position: relative;
   overflow: hidden;
 }
 
+.section-cta-card {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0;
+}
+
 .section-cta h2 {
-  font-family: 'Baloo 2', cursive;
   font-size: clamp(32px, 4vw, 52px);
-  font-weight: 700;
-  color: var(--brown-dark);
+  font-weight: 600;
+  color: #2d1f14;
   margin-bottom: 16px;
 }
 
 .section-cta p {
   font-size: 17px;
-  color: rgba(45, 31, 20, 0.7);
+  color: rgba(14, 8, 5, 0.78);
   margin-bottom: 40px;
 }
 
 .btn-cta-big {
-  background: var(--brown-dark);
+  background: #2d1f14;
   color: var(--sand-100);
   border: none;
   border-radius: var(--radius-btn);
-  padding: 20px 56px;
+  padding: 25px 56px;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.25s;
 }
@@ -639,7 +668,7 @@ function enterWorkspace() {
 
   .section-intro,
   .section-flow,
-  .section-privacy,
+  .security-section,
   .section-cta {
     padding-left: 24px;
     padding-right: 24px;
@@ -651,11 +680,53 @@ function enterWorkspace() {
     padding-top: 70px;
     padding-bottom: 70px;
   }
+
+  .section-cta-card {
+    padding: 0;
+  }
 }
 
 @media (max-width: 640px) {
+  .pain-cards {
+    grid-template-columns: 1fr;
+  }
+
   .flow-steps {
     grid-template-columns: 1fr;
+  }
+
+  .security-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 32px 24px;
+    border-radius: 24px;
+  }
+
+  .security-copy {
+    max-width: none;
+  }
+
+  .security-title {
+    font-size: 2rem;
+  }
+
+  .security-text {
+    font-size: 1.05rem;
+    max-width: none;
+  }
+
+  .security-visual {
+    width: 100%;
+  }
+
+  .security-image {
+    min-height: 280px;
+    border-radius: 20px;
+  }
+
+  .security-image img {
+    min-height: 280px;
   }
 
   .hero-title {

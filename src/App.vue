@@ -7,7 +7,7 @@
     </main>
 
     <BottomNav v-if="isWorkflowPage" />
-    <SiteFooter v-else-if="!isHomePage" />
+    <SiteFooter v-else />
   </div>
 </template>
 
@@ -20,7 +20,6 @@ import BottomNav from './components/BottomNav.vue'
 
 const route = useRoute()
 
-const isHomePage = computed(() => route.path === '/')
 const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
 </script>
 

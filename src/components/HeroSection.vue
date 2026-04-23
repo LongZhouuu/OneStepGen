@@ -8,17 +8,50 @@
       <p class="hero-subtitle">
         A simple tool designed for people with ADHD to break down tasks,<br /> reduce overwhelm, and get started.
       </p>
-    </div>
-    <div class="hero-cta">
-      <RouterLink to="/workflow/ai-dump" class="cta-button">
-        Start Your First Step <span class="cta-arrow">&gt;</span>
-      </RouterLink>
+
+      <div class="hero-cta">
+        <button class="btn-primary" @click="scrollToTarget">
+          See How It Works ↓
+        </button>
+
+        <button class="btn-ghost" @click="enterWorkspace">
+          Quick Start →
+        </button>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { startWorkflow } from '@/router/workflow'
+
+const props = defineProps({
+  scrollTarget: {
+    type: String,
+    default: 'intro-section',
+  },
+})
+
+const router = useRouter()
+
+function scrollToTarget() {
+  const el = document.getElementById(props.scrollTarget)
+  if (!el) return
+
+  const navOffset = 60
+  const targetTop = el.getBoundingClientRect().top + window.scrollY - navOffset
+
+  window.scrollTo({
+    top: targetTop,
+    behavior: 'smooth',
+  })
+}
+
+function enterWorkspace() {
+  startWorkflow()
+  router.push({ name: 'AIDump' })
+}
 </script>
 
 <style scoped>
@@ -66,46 +99,50 @@ import { RouterLink } from 'vue-router'
   line-height: 1.7;
   color: #333;
   font-weight: 400;
+  margin-bottom: 48px;
+  max-width: none;
 }
 
 .hero-cta {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.cta-button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  color: #333;
-  font-size: clamp(1rem, 2.8vw, 1.7rem);
-  font-weight: 500;
-  text-decoration: none;
-  padding: 0.75rem 1.4rem;
-  border: 2px solid rgba(76, 74, 74, 0);
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-ghost {
+  font-size: 20px;
+  cursor: pointer;
   border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.cta-button:hover {
-  color: #b46a2d;
-  border-color: #33333300;
-  background-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-1px);
+.btn-primary {
+  background: #333;
+  color: #fffaf6;
+  border: none;
+  padding: 16px 36px;
+  font-weight: 600;
 }
 
-.cta-arrow {
-  font-size: 1.3rem;
-  transition: transform 0.3s ease;
+.btn-primary:hover {
+  background: #4d3c2d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45, 31, 20, 0.25);
 }
 
-.cta-button:hover .cta-arrow {
-  transform: translateX(4px);
+.btn-ghost {
+  background: rgba(255, 250, 245, 0.78);
+  color: #333;
+  border: 1.5px solid rgba(180, 106, 45, 0.18);
+  padding: 15px 32px;
+  font-weight: 500;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 250, 245, 0.94);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
@@ -135,12 +172,16 @@ import { RouterLink } from 'vue-router'
   }
 
   .hero-cta {
-    position: static;
-    transform: none;
     width: 100%;
-    display: flex;
-    justify-content: center;
     margin-top: 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    width: 100%;
   }
 }
 </style>
