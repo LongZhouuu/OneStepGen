@@ -13,12 +13,8 @@
           <p class="how-it-works-kicker">How it works</p>
           <h2 class="how-it-works-title">Turn a messy to-do list into one clear next step.</h2>
         </div>
-        <button
-          type="button"
-          class="how-it-works-toggle"
-          :aria-expanded="howItWorksOpen"
-          @click="howItWorksOpen = !howItWorksOpen"
-        >
+        <button type="button" class="how-it-works-toggle" :aria-expanded="howItWorksOpen"
+          @click="howItWorksOpen = !howItWorksOpen">
           {{ howItWorksOpen ? 'Hide' : 'Show' }}
           <span class="how-it-works-toggle-icon" :class="{ open: howItWorksOpen }">&gt;</span>
         </button>
@@ -49,7 +45,8 @@
           <span class="step-number">4</span>
           <div class="step-copy">
             <h3 class="step-title">Adjust anytime</h3>
-            <p class="step-text">Go back to add new tasks whenever you need, or move skipped tasks back into your task list.</p>
+            <p class="step-text">Go back to add new tasks whenever you need, or move skipped tasks back into your task
+              list.</p>
           </div>
         </div>
       </div>
@@ -59,40 +56,18 @@
       <!-- Input Area -->
       <div class="input-wrapper">
         <div class="search-box" :class="{ focused: inputFocused }">
-          <input
-            ref="taskInputRef"
-            v-model="newTaskText"
-            class="task-input"
-            type="text"
-            placeholder="Enter a task (e.g. reply to emails)"
-            :aria-invalid="newTaskInvalid"
-            aria-describedby="task-input-help"
-            @focus="inputFocused = true"
-            @blur="inputFocused = false"
-            @keyup.enter="addTask"
-          />
-          <button
-            type="button"
-            class="voice-btn"
-            :class="{ listening: isListening }"
-            :aria-label="isListening ? 'Stop voice input' : 'Start voice input'"
-            :aria-pressed="isListening"
-            :disabled="!speechSupported"
-            @click="toggleVoiceInput"
-          >
+          <input ref="taskInputRef" v-model="newTaskText" class="task-input" type="text"
+            placeholder="Enter a task (e.g. reply to emails)" :aria-invalid="newTaskInvalid"
+            aria-describedby="task-input-help" @focus="inputFocused = true" @blur="inputFocused = false"
+            @keyup.enter="addTask" />
+          <button type="button" class="voice-btn" :class="{ listening: isListening }"
+            :aria-label="isListening ? 'Stop voice input' : 'Start voice input'" :aria-pressed="isListening"
+            :disabled="!speechSupported" @click="toggleVoiceInput">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 4.75a2.75 2.75 0 0 1 2.75 2.75v4.5a2.75 2.75 0 1 1-5.5 0V7.5A2.75 2.75 0 0 1 12 4.75Z"
-                stroke="currentColor"
-                stroke-width="1.8"
-              />
-              <path
-                d="M7.75 11.75a4.25 4.25 0 1 0 8.5 0M12 16v3.25M9 19.25h6"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+              <path d="M12 4.75a2.75 2.75 0 0 1 2.75 2.75v4.5a2.75 2.75 0 1 1-5.5 0V7.5A2.75 2.75 0 0 1 12 4.75Z"
+                stroke="currentColor" stroke-width="1.8" />
+              <path d="M7.75 11.75a4.25 4.25 0 1 0 8.5 0M12 16v3.25M9 19.25h6" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
           <button class="add-btn" :disabled="newTaskInvalid" :class="{ 'btn-disabled': newTaskInvalid }"
@@ -162,6 +137,10 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
+import {
+  guardWorkflowStep,
+  unlockStep
+} from '../router/workflow'
 
 const router = useRouter()
 
@@ -313,11 +292,15 @@ reorderTasks()
 saveTasks()
 
 onMounted(() => {
+  if (!guardWorkflowStep(2, router)) return
   initSpeechRecognition()
 })
 
 onBeforeUnmount(() => {
   if (!speechRecognition.value) return
+  if (isListening.value) {
+    stopVoiceInput()
+  }
   speechRecognition.value.onstart = null
   speechRecognition.value.onresult = null
   speechRecognition.value.onerror = null
@@ -403,14 +386,15 @@ function clearAll() {
 // ── Create Planner ────────────────────────────────────────────────────────────
 function createPlanner() {
   if (activeTasks.value.length === 0) return
+
   const now = Date.now()
   activeTasks.value.forEach(t => {
     t.status = (t.order === 0) ? 'doing' : 'pending'
     t.updatedAt = now
   })
-  console.log(activeTasks.value);
 
   saveTasks()
+  unlockStep(3)
   router.push({ name: 'TaskSwipper' })
 }
 </script>
@@ -864,42 +848,42 @@ function createPlanner() {
 
 @media (max-width: 768px) {
   .search-box {
-  flex-wrap: wrap;
-  gap: 10px;
-}
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 
-.task-input {
-  min-width: 100%;
-}
+  .task-input {
+    min-width: 100%;
+  }
 
-.add-btn {
-  width: 100%;
-}
+  .add-btn {
+    width: 100%;
+  }
 
-.task-row {
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
+  .task-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
 
-.task-actions {
-  width: 100%;
-  justify-content: flex-end;
-}
+  .task-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 
-.create-planner-wrapper {
-  flex-direction: column;
-  gap: 12px;
-}
+  .create-planner-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
 
-.create-planner-btn {
-  width: 100%;
-  justify-content: center;
-}
+  .create-planner-btn {
+    width: 100%;
+    justify-content: center;
+  }
 
-.clear-all-btn {
-  position: static;
-  width: 100%;
-}
+  .clear-all-btn {
+    position: static;
+    width: 100%;
+  }
 
   .page-container {
     padding: 72px 20px 96px;

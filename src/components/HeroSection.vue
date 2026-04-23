@@ -10,7 +10,7 @@
       </p>
     </div>
     <div class="hero-cta">
-      <RouterLink to="/tools/planner" class="cta-button">
+      <RouterLink to="/workflow/ai-dump" class="cta-button">
         Start Your First Step <span class="cta-arrow">&gt;</span>
       </RouterLink>
     </div>
