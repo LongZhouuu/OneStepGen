@@ -7,12 +7,14 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
 import RewardView from '../views/RewardView.vue'
 import AboutView from '../views/AboutView.vue'
 import PlannerView from '../views/PlannerView.vue'
-import PrioritizerView from '../views/tools/PrioritizerView.vue'
-import SupportView from '../views/tools/SupportView.vue'
+// import PrioritizerView from '../views/tools/PrioritizerView.vue'
+// import SupportView from '../views/tools/SupportView.vue'
 import TipsView from '../views/tools/TipsAndTemplatesView.vue'
-import TaskSwipper from '@/views/TaskSwipper.vue'
-import AIDump from '@/views/AIDump.vue'
-import PlanView from '@/views/PlanView.vue'
+import TaskSwipper from '../views/TaskSwipper.vue'
+import AIDump from '../views/AIDump.vue'
+import PlanView from '../views/PlanView.vue'
+import PrivacyView from '../views/PrivacyView.vue'
+import TermsView from '../views/TermsView.vue'
 
 const routes = [
   {
@@ -49,16 +51,26 @@ const routes = [
   //   name: 'Support',
   //   component: SupportView
   // },
-  {
-    path: '/tools/tips',
-    name: 'Tips',
-    component: TipsView
-  },
+  // {
+  //   path: '/tools/tips',
+  //   name: 'Tips',
+  //   component: TipsView
+  // },
   {
     path: '/reward',
     name: 'Reward',
     component: RewardView
-  }
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: PrivacyView
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: TermsView
+  } 
 ]
 
 const router = createRouter({
