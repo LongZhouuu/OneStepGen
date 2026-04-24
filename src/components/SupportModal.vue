@@ -5,94 +5,44 @@
       <!-- Close Button -->
       <button class="close-btn" @click="$emit('close')">✕</button>
 
-      <!-- Menu Title -->
-      <h2 class="support-title">
-        <svg
-          class="title-icon"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z"
-          />
-        </svg>
-
-        <span>Support</span>
-      </h2>
-      <p class="sub">Choose what you need right now</p>
-
-      <button class="support-card" type="button">
-        <span class="support-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
-          </svg>
-        </span>
-        <span class="support-text">
-          <span class="support-heading">Australian Helplines</span>
-          <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
-        </span>
-      </button>
-
-      <button class="support-card" type="button">
-        <span class="support-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 8.5h10.5a2.5 2.5 0 1 0-2.5-2.5" />
-            <path d="M3 12.5h14a2.5 2.5 0 1 1-2.5 2.5" />
-            <path d="M3 16.5h7" />
-          </svg>
-        </span>
-        <span class="support-text">
-          <span class="support-heading">Box Breathing</span>
-          <span class="support-sub">Calm your nervous system with a guided breathing exercise</span>
-        </span>
-      </button>
-
-      <button class="support-card" type="button">
-        <span class="support-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 18a9 9 0 0 1 18 0" />
-            <path d="M6 18a6 6 0 0 1 12 0" />
-            <path d="M9 18a3 3 0 0 1 6 0" />
-          </svg>
-        </span>
-        <span class="support-text">
-          <span class="support-heading">Rainbow Grounding</span>
-          <span class="support-sub">5-4-3-2-1 technique to bring you back to the present moment</span>
-        </span>
-      </button>
-
-      <!-- Footer -->
-      <div class="support-footer">
-        <p class="support-footer-text">
-          <span class="support-footer-text-bold">Note:</span> These resources are provided for general information only and should not replace professional advice. Always seek professional help if you are in crisis.
-        </p>
-      </div>
+      <component
+        :is="currentComponent"
+        @goBox="currentView='breathing'"
+        @goRainbow="currentView='rainbow'"
+        @goHelpline="currentView='helpline'"
+        @back="currentView='menu'"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+
+import SupportMenu from './SupportMenu.vue'
+import BoxBreathingPanel from './BoxBreathingPanel.vue'
+import RainbowPanel from './RainbowPanel.vue'
+import HelplinePanel from './HelplinePanel.vue'
+
 defineEmits(['close'])
+
+const currentView = ref('menu')
+
+const currentComponent = computed(() => {
+  switch (currentView.value) {
+    case 'breathing':
+      return BoxBreathingPanel
+    case 'rainbow':
+      return RainbowPanel
+    case 'helpline':
+      return HelplinePanel
+    default:
+      return SupportMenu
+  }
+})
 </script>
 
 <style scoped>
-.support-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  font-size: 30px;
-  color: #4d2a1d;
-}
-
-.title-icon {
-  width: 26px;
-  height: 26px;
-  color: #b66a48;
-  flex-shrink: 0;
-}
-
 .support-overlay{
   position:fixed;
   inset:0;
@@ -117,78 +67,6 @@ defineEmits(['close'])
   position:absolute;
   top:18px;
   right:18px;
-}
-
-.sub {
-  color: #7b6a5c;
-  margin: 6px 0 22px;
-  font-size: 15px;
-}
-
-.support-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  width: 100%;
-  text-align: left;
-  background: #fdf5f1;
-  border: 1px solid rgba(180, 106, 45, 0.12);
-  border-radius: 18px;
-  padding: 18px 22px;
-  margin-bottom: 14px;
-  cursor: pointer;
-  font-family: inherit;
-  color: inherit;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-}
-
-.support-card:last-child {
-  margin-bottom: 0;
-}
-
-.support-card:hover {
-  border-color: #b66a48;
-  background: #fff9f7;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(97, 75, 52, 0.1);
-}
-
-.support-icon {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #c88667;
-}
-
-.support-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.support-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.support-heading {
-  font-size: 17px;
-  font-weight: 600;
-  color: #2a180f;
-  line-height: 1.3;
-}
-
-.support-sub {
-  font-size: 14.5px;
-  line-height: 1.45;
-  color: #7b6a5c;
-}
-
-.close-btn {
   width: 36px;
   height: 36px;
   border: none;
