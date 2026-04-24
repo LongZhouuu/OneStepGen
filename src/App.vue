@@ -2,25 +2,42 @@
   <div class="app-wrapper">
     <NavBar />
 
+    <!-- AI supported based workflow content -->
     <main class="main-content" :class="{ 'workflow-main': isWorkflowPage }">
       <RouterView />
     </main>
 
+    <!-- if not workflow page, show bottom navigation -->
     <BottomNav v-if="isWorkflowPage" />
     <SiteFooter v-else />
+
+    <!-- Global Floating Support Button -->
+    <FloatingSupportButton @open="openSupport = true" />
+
+    <!-- Support Modal -->
+    <SupportModal
+      v-if="openSupport"
+      @close="openSupport = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
+
 import NavBar from './components/NavBar.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import BottomNav from './components/BottomNav.vue'
 
+import FloatingSupportButton from './components/FloatingSupportButton.vue'
+import SupportModal from './components/SupportModal.vue'
+
 const route = useRoute()
 
 const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
+
+const openSupport = ref(false)
 </script>
 
 <style>
