@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
 import RewardView from '../views/RewardView.vue'
 import AboutView from '../views/AboutView.vue'
 import PlannerView from '../views/PlannerView.vue'
@@ -59,7 +63,15 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (!from || from === to || from.fullPath === to.fullPath) {
+      return { top: 0, left: 0 }
+    }
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    return { top: 0, left: 0 }
+  }
 })
 
 export default router
