@@ -164,8 +164,12 @@
       <div class="footer-bottom fade-up" :style="{ '--delay': '240ms' }">
         <span class="copyright">© 2026 OneStepGen</span>
         <div class="legal-links">
-          <a href="#">Privacy policy</a>
-          <a href="#">Terms of use</a>
+          <RouterLink :to="{ name: 'Privacy' }">
+            Privacy Policy
+          </RouterLink>
+          <RouterLink :to="{ name: 'Terms' }">
+            Terms of Use
+          </RouterLink>
         </div>
       </div>
     </div>
