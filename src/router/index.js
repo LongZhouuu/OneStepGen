@@ -12,9 +12,10 @@ import PlannerView from '../views/PlannerView.vue'
 import TipsView from '../views/tools/TipsAndTemplatesView.vue'
 import TaskSwipper from '../views/TaskSwipper.vue'
 import AIDump from '../views/AIDump.vue'
-import PlanView from '../views/PlanView.vue'
+// import PlanView from '../views/PlanView.vue'
 import PrivacyView from '../views/PrivacyView.vue'
 import TermsView from '../views/TermsView.vue'
+import CompleteView from '@/views/CompleteView.vue'
 
 const routes = [
   {
@@ -23,9 +24,10 @@ const routes = [
     component: HomeView
   },
   { path: '/workflow/ai-dump', name: 'AIDump', component: AIDump },
-  { path: '/workflow/plan', name: 'Plan', component: PlanView },
+  // { path: '/workflow/plan', name: 'Plan', component: PlanView },
   { path: '/workflow/planner', name: 'Planner', component: PlannerView },
   { path: '/workflow/swiper', name: 'TaskSwipper', component: TaskSwipper },
+  { path: '/workflow/complete', name: 'Complete', component: CompleteView },
   {
     path: '/about',
     name: 'About',
@@ -70,7 +72,7 @@ const routes = [
     path: '/terms',
     name: 'Terms',
     component: TermsView
-  } 
+  }
 ]
 
 const router = createRouter({

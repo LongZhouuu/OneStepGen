@@ -9,11 +9,7 @@
     <section class="section-intro" id="intro-section">
       <div class="intro-container">
         <div class="intro-visual">
-          <img
-            src="@/assets/work-person.png"
-            alt="A person working calmly at their desk"
-            class="intro-illustration"
-          />
+          <img src="@/assets/work-person.png" alt="A person working calmly at their desk" class="intro-illustration" />
         </div>
 
         <div class="intro-content">
@@ -28,20 +24,10 @@
             <div class="pain-card">
               <div class="pain-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 4.75a7.25 7.25 0 1 0 7.25 7.25c0-.9-.16-1.75-.46-2.54"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M12 8.25v4.1l2.65 1.8"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M12 4.75a7.25 7.25 0 1 0 7.25 7.25c0-.9-.16-1.75-.46-2.54" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M12 8.25v4.1l2.65 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                    stroke-linejoin="round" />
                 </svg>
               </div>
               <span>You feel overwhelmed by tasks</span>
@@ -50,13 +36,8 @@
             <div class="pain-card">
               <div class="pain-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M5.75 9.5A6.25 6.25 0 0 1 18 11.25c0 4-4.25 4.25-4.25 6"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M5.75 9.5A6.25 6.25 0 0 1 18 11.25c0 4-4.25 4.25-4.25 6" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                   <circle cx="13.75" cy="19" r="1" fill="currentColor" />
                 </svg>
               </div>
@@ -67,13 +48,8 @@
               <div class="pain-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none">
                   <rect x="4.75" y="6.75" width="14.5" height="10.5" rx="3" stroke="currentColor" stroke-width="1.8" />
-                  <path
-                    d="M19.25 9.5 14.5 12l4.75 2.5"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M19.25 9.5 14.5 12l4.75 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                    stroke-linejoin="round" />
                 </svg>
               </div>
               <span>You keep delaying even simple work</span>
@@ -82,14 +58,10 @@
             <div class="pain-card">
               <div class="pain-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 4.75c4.1 0 7.25 3.15 7.25 7.25S16.1 19.25 12 19.25 4.75 16.1 4.75 12"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path d="m9.25 9.75 5.5 5.5M14.75 9.75l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M12 4.75c4.1 0 7.25 3.15 7.25 7.25S16.1 19.25 12 19.25 4.75 16.1 4.75 12"
+                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="m9.25 9.75 5.5 5.5M14.75 9.75l-5.5 5.5" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" />
                 </svg>
               </div>
               <span>You lose focus easily once you start</span>
@@ -228,7 +200,7 @@
     <button v-if="showBackTop" class="back-top-btn" @click="scrollToTop" title="Click to Return to Top">
       ↑
     </button>
-    
+
   </div>
 </template>
 
