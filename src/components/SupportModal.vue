@@ -26,7 +26,14 @@ import HelplinePanel from './HelplinePanel.vue'
 
 defineEmits(['close'])
 
-const currentView = ref('menu')
+const props = defineProps({
+  initialView: {
+    type: String,
+    default: 'menu',
+  },
+})
+
+const currentView = ref(props.initialView)
 
 const currentComponent = computed(() => {
   switch (currentView.value) {

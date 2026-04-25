@@ -12,18 +12,19 @@
     <SiteFooter v-else />
 
     <!-- Global Floating Support Button -->
-    <FloatingSupportButton @open="openSupport = true" />
+    <FloatingSupportButton @open="openSupportFromButton" />
 
     <!-- Support Modal -->
     <SupportModal
       v-if="openSupport"
+      :initial-view="supportView"
       @close="openSupport = false"
     />
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 
 import NavBar from './components/NavBar.vue'
@@ -37,7 +38,41 @@ const route = useRoute()
 
 const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
 
+/* ---------- Support Modal ---------- */
+// Two ways to open the SupportModal:
+//   1) Floating heart button (global, always visible) -> opens at the menu
+//   2) "Take a breath instead" link inside TipsPanel  -> opens directly at a specific view
+//
+// Because TipsPanel lives several layers deep in the component tree, we use a
+// browser-native CustomEvent on `window` instead of bubbling props/emits up.
+
 const openSupport = ref(false)
+// Which sub-view SupportModal should open on: 'menu' | 'breathing' | 'rainbow' | 'helpline'
+const supportView = ref('menu')
+
+// Path 1: floating button -> always start from the menu so the user can pick
+function openSupportFromButton() {
+  supportView.value = 'menu'
+  openSupport.value = true
+}
+
+// Path 2: anywhere in the app can dispatch:
+//   window.dispatchEvent(new CustomEvent('open-support', { detail: { view: 'breathing' } }))
+// We read the requested view from `event.detail.view` and fall back to 'menu' if missing.
+function handleOpenSupportEvent(e) {
+  supportView.value = e?.detail?.view ?? 'menu'
+  openSupport.value = true
+}
+
+// Subscribe to the global event while App is alive; unsubscribe on teardown
+// to avoid leaking listeners (especially relevant in dev with HMR).
+onMounted(() => {
+  window.addEventListener('open-support', handleOpenSupportEvent)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('open-support', handleOpenSupportEvent)
+})
 </script>
 
 <style>

@@ -61,14 +61,12 @@
 
                 <button v-if="!isTipsOpen" class="tipsExpand" @click="isTipsOpen = true">
                     <i class="bi bi-lightbulb"></i>
-                    Tips &amp; Templates
+                    Stuck on this step? Try a tactic
                 </button>
 
+                <!-- tips panel -->
                 <section v-else class="tipsPanel">
-                    <div class="tipsHeader">
-                        <button class="tipsBack" @click="isTipsOpen = false">×</button>
-                        <h2>Tips &amp; Templates</h2>
-                    </div>
+                    <TipsPanel @close="isTipsOpen = false" />
                 </section>
             </section>
         </div>
@@ -78,6 +76,7 @@
 <script setup>
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
+import TipsPanel from '@/components/TipsPanel.vue'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { guardWorkflowStep } from '../router/workflow'
@@ -211,14 +210,14 @@ function updateTaskStatus(index, newStatus) {
     width: 90%;
     padding: 12px 16px;
     background: white;
-    border: 1.5px solid rgba(193, 113, 79, 0.25);
+    border: 1.5px solid rgba(91, 127, 138, 0.28);
     border-radius: 14px;
     font-size: 14.8px;
     font-weight: 700;
-    color: #c1714f;
+    color: #7fb3c9;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
+    font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -227,9 +226,9 @@ function updateTaskStatus(index, newStatus) {
 }
 
 .tipsExpand:hover {
-    border-color: #c1714f;
-    color: #c1714f;
-    /* border:  2.5px solid #c1714f; */
+    border-color: #7fb3c9;
+    color: #3f5f69;
+    background: #f4f9ff;
 }
 
 .taskItemContainer {
