@@ -178,7 +178,7 @@ import { RouterLink } from 'vue-router'
 
 .toc {
   position: sticky;
-  top: 24px;
+  top: 80px;
   align-self: start;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(180, 106, 45, 0.12);
