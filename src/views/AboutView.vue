@@ -44,30 +44,39 @@
     <!-- problem state + employment -->
     <div class="problem problem-employment">
       <div class="card shadow-sm mb-4 problem-main-card">
-        <div class="card-body">
+        <div class="card-body" style="height: 44.4rem;">
           <h3 class="card-title mb-3">Our Focused Problem & Challenges</h3>
+          <div style="display: flex; flex-direction: column; justify-content: space-evenly; height: 80%;">
+            <div>
+              <p class="fw-semibold">Key challenges:</p>
+              <ul>
+                <li>Difficulty <strong>organising tasks</strong></li>
+                <li>Struggles with <strong>time management</strong></li>
+                <li>Challenges maintaining focus</li>
+                <li>Difficulty following <strong>unclear instructions</strong></li>
+              </ul>
+            </div>
 
-          <p class="fw-semibold">Key challenges:</p>
-          <ul>
-            <li>Difficulty <strong>organising tasks</strong></li>
-            <li>Struggles with <strong>time management</strong></li>
-            <li>Challenges maintaining focus</li>
-            <li>Difficulty following <strong>unclear instructions</strong></li>
-          </ul>
+            <div>
+              <p class="fw-semibold">Impact:</p>
+              <ul>
+                <li>Increased <strong>stress</strong></li>
+                <li>Reduced <strong>productivity</strong></li>
+                <li>Lower <strong>confidence</strong></li>
+              </ul>
+            </div>
 
-          <p class="fw-semibold">Impact:</p>
-          <ul>
-            <li>Increased <strong>stress</strong></li>
-            <li>Reduced <strong>productivity</strong></li>
-            <li>Lower <strong>confidence</strong></li>
-          </ul>
+            <div>
+              <p class="fw-semibold">Workplace factors:</p>
+              <ul>
+                <li>More <strong>distractions</strong></li>
+                <li>Tighter <strong>deadlines</strong></li>
+                <li>Less <strong>flexibility</strong></li>
+              </ul>
+            </div>
 
-          <p class="fw-semibold">Workplace factors:</p>
-          <ul>
-            <li>More <strong>distractions</strong></li>
-            <li>Tighter <strong>deadlines</strong></li>
-            <li>Less <strong>flexibility</strong></li>
-          </ul>
+          </div>
+
         </div>
       </div>
 
@@ -114,7 +123,8 @@
                 <strong>Australian Adults (DSM-5):</strong><br>
                 No exact local data.<br>
                 Estimated prevalence: <strong>2% – 6%</strong>,
-                similar to international levels. <br> (Simon, Czobor, Bálint, Mészáros, & Bitter, 2009; Song et al., 2021;
+                similar to international levels. <br> (Simon, Czobor, Bálint, Mészáros, & Bitter, 2009; Song et al.,
+                2021;
                 Willcutt, 2012).
               </p>
 
