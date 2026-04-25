@@ -6,7 +6,8 @@
     </section>
 
     <!-- INTRO -->
-    <section class="section-intro" id="intro-section">
+    <section class="section-intro">
+      <div id="intro-section" style="height: 20px;"></div>
       <p class="eyebrow">When Getting Started Feels Hard</p>
       <h2>Struggling to get started?</h2>
       <p>
@@ -18,20 +19,10 @@
         <div class="pain-card">
           <div class="pain-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 4.75a7.25 7.25 0 1 0 7.25 7.25c0-.9-.16-1.75-.46-2.54"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M12 8.25v4.1l2.65 1.8"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+              <path d="M12 4.75a7.25 7.25 0 1 0 7.25 7.25c0-.9-.16-1.75-.46-2.54" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 8.25v4.1l2.65 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
           </div>
           <span>You feel overwhelmed by tasks</span>
@@ -40,13 +31,8 @@
         <div class="pain-card">
           <div class="pain-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M5.75 9.5A6.25 6.25 0 0 1 18 11.25c0 4-4.25 4.25-4.25 6"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+              <path d="M5.75 9.5A6.25 6.25 0 0 1 18 11.25c0 4-4.25 4.25-4.25 6" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round" />
               <circle cx="13.75" cy="19" r="1" fill="currentColor" />
             </svg>
           </div>
@@ -57,13 +43,8 @@
           <div class="pain-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
               <rect x="4.75" y="6.75" width="14.5" height="10.5" rx="3" stroke="currentColor" stroke-width="1.8" />
-              <path
-                d="M19.25 9.5 14.5 12l4.75 2.5"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+              <path d="M19.25 9.5 14.5 12l4.75 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
           </div>
           <span>You keep delaying even simple work</span>
@@ -72,14 +53,10 @@
         <div class="pain-card">
           <div class="pain-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 4.75c4.1 0 7.25 3.15 7.25 7.25S16.1 19.25 12 19.25 4.75 16.1 4.75 12"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path d="m9.25 9.75 5.5 5.5M14.75 9.75l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <path d="M12 4.75c4.1 0 7.25 3.15 7.25 7.25S16.1 19.25 12 19.25 4.75 16.1 4.75 12" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="m9.25 9.75 5.5 5.5M14.75 9.75l-5.5 5.5" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" />
             </svg>
           </div>
           <span>You lose focus easily once you start</span>
@@ -96,7 +73,8 @@
     </section>
 
     <!-- FLOW -->
-    <section class="section-flow" id="flow-section">
+    <section class="section-flow">
+      <div style="height: 20px;" id="flow-section"></div>
       <p class="eyebrow">Guided Flow Overview</p>
       <h2>Four simple steps to get things done</h2>
 
@@ -142,7 +120,8 @@
         You can always go back to any previous step to adjust your ideas, plan, or tasks.
       </p>
 
-      <button class="scroll-hint flow-scroll-hint" @click="scrollToSection('security-section')">
+      <button class="scroll-hint flow-scroll-hint" @click="scrollToSection('security-section')"
+        style="margin-top: 0px;">
         ↓ See how we keep it private
       </button>
     </section>
@@ -181,6 +160,12 @@
         </button>
       </div>
     </section>
+
+    <!-- BACK TO TOP -->
+    <button v-if="showBackTop" class="back-top-btn" @click="scrollToTop" title="Click to Return to Top">
+      ↑
+    </button>
+    
   </div>
 </template>
 
@@ -188,6 +173,28 @@
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
 import HeroSection from '@/components/HeroSection.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const showBackTop = ref(false)
+
+function handleScroll() {
+  showBackTop.value = window.scrollY > 100
+}
+
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 const router = useRouter()
 
@@ -327,12 +334,12 @@ function enterWorkspace() {
 }
 
 .section-intro .eyebrow {
-    font-size: 15px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--terracotta);
-    font-weight: 600;
-    margin-bottom: 16px;
+  font-size: 15px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  font-weight: 600;
+  margin-bottom: 16px;
 }
 
 .pain-cards {
@@ -749,5 +756,31 @@ function enterWorkspace() {
   .btn-cta-big {
     width: 100%;
   }
+}
+
+.back-top-btn {
+  position: fixed;
+  /* right: 32px; */
+  bottom: 110px;
+  right: 26px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: #11182700;
+  color: #b66a48;
+  border: 1.2px #b66a48 solid;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 999;
+  transition: all .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-top-btn:hover {
+  background-color: #b66a48;
+  color: white;
 }
 </style>
