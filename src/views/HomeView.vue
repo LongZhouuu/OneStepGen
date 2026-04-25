@@ -92,16 +92,16 @@
             <p class="flow-back-note">
               You can always go back to any previous step to adjust your ideas, plan, or tasks.
             </p>
-          </div>
 
-          <div class="flow-aside">
             <div class="flow-support-note">
               <p class="flow-support-title">Need a reset moment?</p>
               <p class="flow-support-text">
                 Use the floating Support button on the right anytime for emotional support tools.
               </p>
             </div>
+          </div>
 
+          <div class="flow-aside">
             <button class="scroll-hint flow-scroll-hint" @click="scrollToSection('security-section')">
               ↓ See how we keep it private
             </button>
@@ -208,7 +208,7 @@
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
 import HeroSection from '@/components/HeroSection.vue'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 
 const showBackTop = ref(false)
 
@@ -223,12 +223,42 @@ function scrollToTop() {
   })
 }
 
+let flowObserver = null
+
+function setupFlowReveal() {
+  if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
+
+  const targets = document.querySelectorAll(
+    '.section-flow .flow-intro, .section-flow .flow-aside, .section-flow .flow-row'
+  )
+  if (!targets.length) return
+
+  flowObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          flowObserver.unobserve(entry.target)
+        }
+      })
+    },
+    { threshold: 0.18, rootMargin: '0px 0px -8% 0px' }
+  )
+
+  targets.forEach((el) => flowObserver.observe(el))
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  nextTick(setupFlowReveal)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  if (flowObserver) {
+    flowObserver.disconnect()
+    flowObserver = null
+  }
 })
 
 const router = useRouter()
@@ -300,8 +330,7 @@ function enterWorkspace() {
 
 @media (min-height: 760px) and (min-width: 961px) {
   .section-intro,
-  .section-flow,
-  .security-section {
+  .section-flow {
     min-height: calc(100svh - 72px);
   }
 }
@@ -688,6 +717,7 @@ function enterWorkspace() {
   flex-direction: column;
   gap: 4px;
   max-width: 340px;
+  margin-top: 18px;
 }
 
 .flow-support-title {
@@ -702,6 +732,96 @@ function enterWorkspace() {
   line-height: 1.55;
   color: #6b5f54;
   margin: 0;
+}
+
+/* Flow section reveal & micro-interactions */
+.section-flow .flow-intro,
+.section-flow .flow-aside,
+.section-flow .flow-row {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  will-change: opacity, transform;
+}
+
+.section-flow .flow-intro.is-visible,
+.section-flow .flow-aside.is-visible,
+.section-flow .flow-row.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-flow .flow-row:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.section-flow .flow-row:nth-child(2) {
+  transition-delay: 0.18s;
+}
+.section-flow .flow-row:nth-child(3) {
+  transition-delay: 0.32s;
+}
+.section-flow .flow-row:nth-child(4) {
+  transition-delay: 0.46s;
+}
+
+.flow-num {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+@keyframes flow-num-glow {
+  0%,
+  100% {
+    box-shadow: 0 6px 14px rgba(180, 106, 45, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 8px 20px rgba(180, 106, 45, 0.35),
+      0 0 0 8px rgba(180, 106, 45, 0.08);
+  }
+}
+
+.flow-row.is-visible .flow-num {
+  animation: flow-num-glow 3.4s ease-in-out infinite;
+}
+
+.flow-text {
+  transition: transform 0.35s ease;
+}
+
+.flow-row:hover .flow-text {
+  transform: translateY(-3px);
+}
+
+.flow-row:hover .flow-num {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 10px 22px rgba(180, 106, 45, 0.4);
+}
+
+.flow-pill {
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.flow-row:hover .flow-pill {
+  transform: translateY(-2px);
+  background: rgba(180, 106, 45, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-flow .flow-intro,
+  .section-flow .flow-aside,
+  .section-flow .flow-row {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .flow-row.is-visible .flow-num {
+    animation: none;
+  }
+  .flow-row:hover .flow-text,
+  .flow-row:hover .flow-num,
+  .flow-row:hover .flow-pill {
+    transform: none;
+  }
 }
 
 /* PRIVACY */

@@ -116,12 +116,12 @@ import { RouterLink } from 'vue-router'
 }
 
 .nav-link:hover {
-  color: #000;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 6px;
+  color: #ce752d;
+  /* background-color: rgba(255, 255, 255, 0.5); */
+  /* border-radius: 6px; */
 }
 
-.dropdown-menu {
+/* .dropdown-menu {
   border: none;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
@@ -129,27 +129,34 @@ import { RouterLink } from 'vue-router'
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   padding: 0.5rem 0;
-}
+} */
 
-.dropdown-item {
+/* .dropdown-item {
   font-size: 1.2rem;
   padding: 0.5rem 1.5rem;
   color: #333;
-}
+} */
 
 .nav-status {
-  margin-left: 6px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #b46a2d;
+  background-color: #f8dabd;
+  /* border: 1px solid rgba(180, 106, 45, 0.18); */
+  border-radius: 10px;
+  line-height: 1.2;
+  vertical-align: middle;
 }
 
-.dropdown-item:hover {
+/* .dropdown-item:hover {
   background-color: rgba(239, 150, 66, 0.683);
   color: #333;
-}
+} */
 
 @media (max-width: 991px) {
   .navbar .container {
@@ -167,9 +174,9 @@ import { RouterLink } from 'vue-router'
     align-items: flex-start !important;
     gap: 4px;
   }
-  .nav-link,
-  .dropdown-item {
+  /* .nav-link, */
+  /* .dropdown-item {
     font-size: 1rem;
-  }
+  } */
 }
 </style>
