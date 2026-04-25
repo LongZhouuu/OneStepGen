@@ -187,7 +187,6 @@
           </li>
         </ol>
       </div>
-    </section>
 
     <!-- PRIVACY -->
     <section class="security-section" id="security-section">
@@ -223,6 +222,12 @@
         </button>
       </div>
     </section>
+
+    <!-- BACK TO TOP -->
+    <button v-if="showBackTop" class="back-top-btn" @click="scrollToTop" title="Click to Return to Top">
+      ↑
+    </button>
+    
   </div>
 </template>
 
@@ -230,6 +235,28 @@
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
 import HeroSection from '@/components/HeroSection.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const showBackTop = ref(false)
+
+function handleScroll() {
+  showBackTop.value = window.scrollY > 100
+}
+
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 const router = useRouter()
 
@@ -1049,5 +1076,31 @@ function enterWorkspace() {
   .btn-cta-big {
     width: 100%;
   }
+}
+
+.back-top-btn {
+  position: fixed;
+  /* right: 32px; */
+  bottom: 110px;
+  right: 26px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: #11182700;
+  color: #b66a48;
+  border: 1.2px #b66a48 solid;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 999;
+  transition: all .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-top-btn:hover {
+  background-color: #b66a48;
+  color: white;
 }
 </style>

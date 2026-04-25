@@ -1,5 +1,5 @@
 <template>
-    <section class="timerCard">
+    <section class="timerCard" :class="{ collapsed: props.collapsed }">
         <div v-if="!isEditing" class="timerText" @dblclick="!isAllTasksFinished && startEdit()">
             {{ currentMin }}:{{ currentSec }}
         </div>
@@ -11,19 +11,20 @@
             <input ref="secondInput" v-model="editSec" class="timerInput" type="text" maxlength="2" inputmode="numeric"
                 @input="handleSecInput" @keyup.enter="finishEdit" @blur="handleBlur" />
         </div>
-
-        <div class="timerLabel">
-            {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
+        <div v-if="!props.collapsed">
+            <div class="timerLabel">
+                {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
+            </div>
+            <div v-show="!isRunning" class="timerSubLabel">
+                {{
+                    isAllTasksFinished ?
+                        'You have completed all listed tasks.' :
+                        'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
+                }}
+            </div>
         </div>
-        <div v-show="!isRunning" class="timerSubLabel">
-            {{
-                isAllTasksFinished ?
-                    'You have completed all listed tasks.' :
-                    'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
-            }}
-        </div>
 
-        <div class="timerButtonGroup">
+        <div v-if="!props.collapsed" class="timerButtonGroup">
             <button class="timerButton" @click="startTimer" :disabled="isRunning || isAllTasksFinished">
                 {{ isRunning ? 'Checked-In' : 'Check-In' }}
             </button>
@@ -75,6 +76,13 @@ let timerId = null
 
 const isDefaultTime = computed(() => {
     return savedMin.value === defaultMin && savedSec.value === defaultSec
+})
+
+const props = defineProps({
+    collapsed: {
+        type: Boolean,
+        default: false
+    }
 })
 
 async function requestNotificationPermission() {
@@ -302,12 +310,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .timerCard {
+
+    height: 70%;
     width: 100%;
-    background: #f4f4f4;
-    border-radius: 20px;
-    padding: 14px 20px;
+    padding: 40px 24px 24px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    /* box-shadow: 0 0px 18px rgba(0, 0, 0, 0.06); */
+    background: #c3b7b700;
+    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    /* border: 2px black solid; */
 }
 
 .timerText {
@@ -344,14 +359,14 @@ onBeforeUnmount(() => {
 
 .timerLabel {
     margin-top: 6px;
-    font-size: 12px;
+    font-size: 12.8px;
     letter-spacing: 2px;
     color: #8a8a8a;
 }
 
 .timerSubLabel {
     margin-top: 4px;
-    font-size: 10px;
+    font-size: 12.6px;
     letter-spacing: 2px;
     color: #8a8a8a;
 }
@@ -384,5 +399,25 @@ onBeforeUnmount(() => {
 .timerButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.timerCard {
+    transition: all 0.35s ease;
+}
+
+.timerCard.collapsed {
+    /* height: 100%; */
+    padding: 0;
+    justify-content: center;
+}
+
+.timerCard.collapsed .timerText {
+    font-size: 34px;
+}
+
+.timerCard.collapsed .timerEditor,
+.timerCard.collapsed .timerColon,
+.timerCard.collapsed .timerInput {
+    font-size: 34px;
 }
 </style>

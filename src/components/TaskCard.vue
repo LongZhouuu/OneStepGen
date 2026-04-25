@@ -6,7 +6,7 @@
             by dragging it to the right.
         </h2> -->
 
-        <div class="task-board">
+        <!-- <div class="task-board">
             <div class="task-note" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
                 @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
                 @pointermove="currentTaskItem && props.canSwipe && onDrag($event)"
@@ -21,17 +21,38 @@
                 <span class="task-text">{{ currentTaskText }}</span>
                 <div class="note-corner"></div>
             </div>
+        </div> -->
+        <div class="task-board">
+            <div class="memo-card-wrapper" id="memo-wrapper">
+                <div class="memo-card-shadow"></div>
+                <div class="memo-card" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
+                    @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
+                    @pointermove="currentTaskItem && props.canSwipe && onDrag($event)"
+                    @pointerup="currentTaskItem && props.canSwipe && endDrag()"
+                    @pointerleave="currentTaskItem && props.canSwipe && endDrag()"
+                    @pointercancel="currentTaskItem && props.canSwipe && endDrag()"
+                    :title="props.canSwipe ? '' : 'Click Check-In to begin the swipe.'">
+                    <div class="memo-task-num" id="memo-num">{{ currentTaskOrder }}</div>
+                    <span class="task-text" id="memo-text">
+                        {{ currentTaskText }}
+                    </span>
+                    <p class="memo-swipe-hint">Hold &amp; drag, or use the buttons below</p>
+                </div>
+            </div>
         </div>
+
 
         <div class="swipe-hints">
             <button class="hintBtn completeHintBtn" @click="swipeByClick('left')"
-                :disabled="!currentTaskItem || isDragging || !props.canSwipe">
+                :disabled="!currentTaskItem || isDragging || !props.canSwipe"
+                :title="props.canSwipe ? '' : 'Click Check-In to begin the task.'">
                 <p style="font-weight: bold;">Complete this task</p>
                 <p style="font-size: 11px;color: #eaeaea;;">or try hold and swipe to Left⬅️</p>
             </button>
 
             <button class="hintBtn skipHintBtn" @click="swipeByClick('right')"
-                :disabled="!currentTaskItem || isDragging || !props.canSwipe">
+                :disabled="!currentTaskItem || isDragging || !props.canSwipe"
+                :title="props.canSwipe ? '' : 'Click Check-In to begin the task.'">
                 <p style="font-weight: bold;">Skip this task</p>
                 <p style="font-size: 11px;color: #eaeaea;;">➡️or try hold and swipe to Right</p>
             </button>
@@ -231,6 +252,77 @@ function swipeOut(direction) {
 </script>
 
 <style scoped>
+.memo-task-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #ffcf5a;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 10px rgba(193, 113, 79, 0.3);
+}
+
+.memo-card-wrapper {
+    width: 100%;
+    margin: 0 0 14px;
+}
+
+.swipe-buttons {
+    width: 100%;
+}
+
+.swipe-direction-hints {
+    margin-bottom: 10px;
+    padding: 0;
+}
+
+.memo-card-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 0 0 14px;
+    cursor: grab;
+    user-select: none;
+}
+
+.memo-card-shadow {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: -8px;
+    bottom: -8px;
+    background: rgba(193, 113, 79, 0.1);
+    border-radius: 18px;
+}
+
+.memo-card {
+    position: relative;
+    background: #fdf2e8;
+    border-radius: 18px;
+    padding: 22px 18px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 24px rgba(193, 113, 79, 0.16);
+    border: 1px solid rgba(193, 113, 79, 0.14);
+    transition: transform 0.12s;
+    background-image: repeating-linear-gradient(transparent, transparent 29px, rgba(193, 113, 79, 0.07) 29px, rgba(193, 113, 79, 0.07) 30px);
+    background-position: 0 44px;
+}
+
+.memo-swipe-hint {
+    font-size: 12px;
+    color: rgba(45, 31, 20, 0.28);
+    margin-top: 14px;
+    letter-spacing: 0.04em;
+}
+
+
 .planner-card {
     background: #f8f8f8;
     border-radius: 28px;
@@ -239,6 +331,9 @@ function swipeOut(direction) {
     width: 106%;
     position: relative;
     left: -3%;
+    /* border: 1px solid black; */
+    /* height: 500px; */
+    height: 100%;
 }
 
 .title {
@@ -310,11 +405,20 @@ function swipeOut(direction) {
 }
 
 .task-text {
-    white-space: pre-line;
-    backface-visibility: hidden;
-    font-size: 1.3rem;
-    font-weight: 800;
-    max-width: 200px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: black;
+    flex: 1;
+    max-height: 20vh;
+    align-items: center;
+    /* border: 2px black solid; */
+    justify-content: center;
+    display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* white-space: normal; */
+    /* word-break: break-word; */
 }
 
 .note-corner {
