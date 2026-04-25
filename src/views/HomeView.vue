@@ -187,6 +187,7 @@
           </li>
         </ol>
       </div>
+    </section>
 
     <!-- PRIVACY -->
     <section class="security-section" id="security-section">
@@ -313,17 +314,24 @@ function enterWorkspace() {
 }
 
 .hero-wrapper {
-  min-height: 100vh;
+  min-height: 100svh;
 }
 
 .section-intro,
 .section-flow,
 .security-section {
-  min-height: calc(100vh - 72px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   scroll-margin-block: 72px;
+}
+
+@media (min-height: 760px) and (min-width: 961px) {
+  .section-intro,
+  .section-flow,
+  .security-section {
+    min-height: calc(100svh - 72px);
+  }
 }
 
 .btn-primary {
@@ -363,7 +371,7 @@ function enterWorkspace() {
 
 /* INTRO */
 .section-intro {
-  padding: 60px 80px;
+  padding: clamp(40px, 6vh, 80px) clamp(20px, 6vw, 80px);
   background: transparent;
   text-align: left;
 }
@@ -390,7 +398,8 @@ function enterWorkspace() {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-left: -40px;
+  margin-left: clamp(-40px, -2vw, 0px);
+  min-width: 0;
 }
 
 .intro-illustration {
@@ -485,15 +494,14 @@ function enterWorkspace() {
 }
 
 .not-alone {
-  font-size: 19px;
+  font-size: clamp(15px, 2vw, 19px);
   font-weight: 600;
   color: var(--brown-dark);
-  max-width: none;
-  width: max-content;
+  max-width: min(100%, 720px);
   margin: 24px auto 32px;
   text-align: center;
-  white-space: nowrap;
   line-height: 1.55;
+  padding: 0 16px;
 }
 
 .scroll-hint {
@@ -506,7 +514,7 @@ function enterWorkspace() {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--terracotta);
-  margin-top: 25px;
+  margin-top: 8px;
   cursor: pointer;
   border: 1px solid rgba(180, 106, 45, 0.16);
   border-radius: 50px;
@@ -515,8 +523,6 @@ function enterWorkspace() {
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 10px 24px rgba(97, 75, 52, 0.06);
   width: fit-content;
-  position: relative;
-  top: -40px;
 }
 
 .scroll-hint:hover {
@@ -531,17 +537,18 @@ function enterWorkspace() {
 
 /* FLOW */
 .section-flow {
-  padding: 80px 80px 60px;
+  padding: clamp(48px, 8vh, 80px) clamp(20px, 6vw, 80px) clamp(40px, 6vh, 60px);
   background: transparent;
   justify-content: flex-start;
 }
 
 .flow-container {
   max-width: 1120px;
+  width: 100%;
   margin: 0 auto 40px;
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) 1.4fr;
-  gap: 64px;
+  grid-template-columns: minmax(240px, 0.9fr) 1.4fr;
+  gap: clamp(32px, 5vw, 64px);
   align-items: stretch;
 }
 
@@ -727,9 +734,8 @@ function enterWorkspace() {
 
 /* PRIVACY */
 .security-section {
-  min-height: auto;
   display: block;
-  padding: 80px 80px 70px;
+  padding: clamp(48px, 8vh, 80px) clamp(20px, 6vw, 80px) clamp(48px, 7vh, 70px);
   background: transparent;
 }
 
@@ -738,8 +744,8 @@ function enterWorkspace() {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 56px;
-  padding: 50px;
+  gap: clamp(28px, 4vw, 56px);
+  padding: clamp(28px, 4vw, 50px);
   border-radius: 32px;
   background: linear-gradient(135deg, #f6efe8 0%, #fffaf5 55%, #f3ede7 100%);
   box-shadow: 0 18px 48px rgba(97, 75, 52, 0.08);
@@ -814,9 +820,7 @@ function enterWorkspace() {
 
 /* CTA */
 .section-cta {
-  padding: 60px 80px 100px;
-  /* min-height: auto; */
-  /* display: block; */
+  padding: clamp(48px, 7vh, 60px) clamp(20px, 6vw, 80px) clamp(60px, 10vh, 100px);
   text-align: center;
   background: linear-gradient(135deg, #d59a72 0%, #e7c2a2 45%, #f1dfcf 100%);
   position: relative;
@@ -861,6 +865,25 @@ function enterWorkspace() {
 }
 
 /* RESPONSIVE */
+@media (max-width: 1024px) {
+  .security-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 32px;
+  }
+
+  .security-copy,
+  .security-visual {
+    max-width: none;
+    width: 100%;
+  }
+
+  .security-image,
+  .security-image img {
+    min-height: 320px;
+  }
+}
+
 @media (max-width: 960px) {
   .flow-container {
     grid-template-columns: 1fr;
@@ -1000,6 +1023,71 @@ function enterWorkspace() {
 
   .section-cta-card {
     padding: 0;
+  }
+}
+
+@media (max-height: 720px) {
+  .section-intro,
+  .section-flow,
+  .security-section,
+  .section-cta {
+    min-height: 0;
+    justify-content: flex-start;
+  }
+
+  .section-intro {
+    padding-top: clamp(32px, 5vh, 56px);
+    padding-bottom: clamp(24px, 4vh, 48px);
+  }
+
+  .section-flow {
+    padding-top: clamp(32px, 5vh, 56px);
+    padding-bottom: clamp(24px, 4vh, 48px);
+  }
+
+  .security-section {
+    padding-top: clamp(32px, 5vh, 56px);
+    padding-bottom: clamp(32px, 5vh, 56px);
+  }
+
+  .section-cta {
+    padding-top: clamp(32px, 5vh, 48px);
+    padding-bottom: clamp(40px, 7vh, 72px);
+  }
+
+  .intro-illustration {
+    max-width: clamp(220px, 30vh, 380px);
+  }
+
+  .pain-cards {
+    gap: clamp(10px, 1.6vh, 18px);
+  }
+
+  .pain-card {
+    padding: clamp(8px, 1.4vh, 14px) 18px;
+  }
+
+  .flow-timeline {
+    gap: clamp(20px, 3.5vh, 44px);
+  }
+
+  .not-alone {
+    margin: clamp(12px, 2vh, 24px) auto clamp(16px, 2.5vh, 32px);
+  }
+
+  .scroll-hint {
+    margin-top: clamp(4px, 1vh, 12px);
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  .btn-cta-big {
+    padding: clamp(14px, 2.4vh, 22px) clamp(32px, 5vw, 56px);
+    font-size: 17px;
+  }
+
+  .section-cta p {
+    margin-bottom: clamp(20px, 3vh, 36px);
   }
 }
 

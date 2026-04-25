@@ -56,7 +56,7 @@ function enterWorkspace() {
 
 <style scoped>
 .hero-section {
-  min-height: 100vh;
+  min-height: 100svh;
   background-image: url('/hero-bg.JPG');
   background-size: cover;
   background-position: center;
@@ -145,9 +145,52 @@ function enterWorkspace() {
   transform: translateY(-2px);
 }
 
+@media (max-height: 720px) {
+  .hero-section {
+    min-height: 0;
+    height: auto;
+    padding: clamp(48px, 8vh, 80px) 8%;
+    justify-content: flex-start;
+  }
+
+  .hero-title {
+    margin-bottom: clamp(0.8rem, 2vh, 1.4rem);
+    line-height: 1.1;
+  }
+
+  .hero-subtitle {
+    margin-bottom: clamp(16px, 3vh, 28px);
+    line-height: 1.5;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: clamp(0.5rem, 1.2vh, 1rem);
+  }
+}
+
+@media (max-height: 520px) {
+  .hero-title {
+    font-size: clamp(2rem, 6vh, 3rem);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.95rem, 2.4vh, 1.15rem);
+  }
+
+  .hero-subtitle br {
+    display: none;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    padding: 10px 22px;
+    font-size: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-section {
-    min-height: calc(100vh - 68px);
+    min-height: calc(100svh - 68px);
     padding: 20px 20px 28px;
     justify-content: space-between;
   }
