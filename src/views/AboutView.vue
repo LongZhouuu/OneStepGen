@@ -48,25 +48,25 @@
           <h3 class="card-title mb-3">Our Focused Problem & Challenges</h3>
 
           <p class="fw-semibold">Key challenges:</p>
-          <ul class="list-group list-group-flush mb-3">
-            <li class="list-group-item">Difficulty organising tasks</li>
-            <li class="list-group-item">Struggles with time management</li>
-            <li class="list-group-item">Challenges maintaining focus</li>
-            <li class="list-group-item">Difficulty following unclear instructions</li>
+          <ul>
+            <li>Difficulty <strong>organising tasks</strong></li>
+            <li>Struggles with <strong>time management</strong></li>
+            <li>Challenges maintaining focus</li>
+            <li>Difficulty following <strong>unclear instructions</strong></li>
           </ul>
 
           <p class="fw-semibold">Impact:</p>
-          <ul class="list-group list-group-flush mb-3">
-            <li class="list-group-item">Increased stress</li>
-            <li class="list-group-item">Reduced productivity</li>
-            <li class="list-group-item">Lower confidence</li>
+          <ul>
+            <li>Increased <strong>stress</strong></li>
+            <li>Reduced <strong>productivity</strong></li>
+            <li>Lower <strong>confidence</strong></li>
           </ul>
 
           <p class="fw-semibold">Workplace factors:</p>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item">More distractions</li>
-            <li class="list-group-item">Tighter deadlines</li>
-            <li class="list-group-item">Less flexibility</li>
+          <ul>
+            <li>More <strong>distractions</strong></li>
+            <li>Tighter <strong>deadlines</strong></li>
+            <li>Less <strong>flexibility</strong></li>
           </ul>
         </div>
       </div>
