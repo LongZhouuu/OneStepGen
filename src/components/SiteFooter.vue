@@ -4,7 +4,7 @@
       <div class="footer-left">
         © 2026 OneStepGen. A simple tool designed for focus, for a calmer, more organised day. |
         <a target="_blank" href="https://icons8.com/icon/ulGWjC9dcyIM/tea">Tea</a> icon by
-        <a target="_blank" href="https://icons8.com">Icons8</a> | 
+        <a target="_blank" href="https://icons8.com">Icons8</a> |
         Sound Effect by <a
           href="https://pixabay.com/users/liecio-3298866/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=190265">LIECIO</a>
         from <a
@@ -27,6 +27,7 @@ import { RouterLink } from 'vue-router'
 <style scoped>
 .site-footer {
   margin-top: auto;
+  background-color: rgba(45, 31, 20, 0.96);
 }
 
 .footer-content {
@@ -37,10 +38,13 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   gap: 24px;
   font-size: 14.6px;
-  background-color: rgba(45, 31, 20, 0.96);
+  
   backdrop-filter: blur(20px);
   padding: 20px 40px;
   min-height: 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 14px 24px;
 }
 
 .footer-left {

@@ -2,18 +2,21 @@
     <div class="page">
 
         <div class="phone-frame">
-            <button class="back-btn" @click="goBackToPlanner">
+            <!-- back button -->
+            <!-- <button class="back-btn" @click="goBackToPlanner">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7"></path>
                 </svg>
                 Back to Task Planner
-            </button>
+            </button> -->
+
+            <!-- task card -->
             <div class="taskCardWrapper" :class="{ expanded: isTimerRunning }">
                 <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" @updateTaskState="updateTaskStatus"
                     @noMoreTasks="handleNoMoreTasks" />
             </div>
-
-            <section class="status" :class="{ compressed: isTimerRunning }">
+            <!-- status -->
+            <!-- <section class="status" :class="{ compressed: isTimerRunning }">
                 <nav class="tabs">
                     <button class="tab" :class="{ active: activeTab === 'checkin' }" @click="activeTab = 'checkin'">
                         Check In
@@ -47,6 +50,26 @@
                 <section v-show="activeTab === 'checkin'" class="checkIn">
                     <SwipingTimer ref="timerRef" @countingState="isTimerRunning = $event" />
                 </section>
+            </section> -->
+            <!-- timer -->
+            <section class="status" :class="{ compressed: isTimerRunning, tipsOpen: isTipsOpen }">
+                <div class="timerArea">
+                    <SwipingTimer ref="timerRef" :collapsed="isTipsOpen" @countingState="isTimerRunning = $event" />
+                </div>
+
+                <hr v-if="!isTipsOpen" style="width: 90%; height: 1px; margin-top: 0; margin-bottom: 0;">
+
+                <button v-if="!isTipsOpen" class="tipsExpand" @click="isTipsOpen = true">
+                    <i class="bi bi-lightbulb"></i>
+                    Tips &amp; Templates
+                </button>
+
+                <section v-else class="tipsPanel">
+                    <div class="tipsHeader">
+                        <button class="tipsBack" @click="isTipsOpen = false">×</button>
+                        <h2>Tips &amp; Templates</h2>
+                    </div>
+                </section>
             </section>
         </div>
     </div>
@@ -61,52 +84,53 @@ import { guardWorkflowStep } from '../router/workflow'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
+const isTipsOpen = ref(false)
 const router = useRouter()
 
 onMounted(() => {
-  guardWorkflowStep(3, router)
+    guardWorkflowStep(3, router)
 })
 
-function goBackToPlanner() {
-  router.push({ name: 'Planner' })
-}
+// function goBackToPlanner() {
+//     router.push({ name: 'Planner' })
+// }
 
 const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
 const timerRef = ref(null)
 
 const hasRemainingTasks = computed(() => {
-  return tasks.value.some(task =>
-    task.status !== 'completed' && task.status !== 'skipped'
-  )
+    return tasks.value.some(task =>
+        task.status !== 'completed' && task.status !== 'skipped'
+    )
 })
 
 function handleNoMoreTasks() {
-  activeTab.value = 'checkin'
-  timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
+    activeTab.value = 'checkin'
+    timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
 }
 
 watch(isTimerRunning, (newVal) => {
-  if (newVal) {
-    activeTab.value = 'tasks'
-  }
+    if (newVal) {
+        activeTab.value = 'tasks'
+    }
 })
 
 function saveTasks() {
-  localStorage.setItem('tasks', JSON.stringify(tasks.value))
+    localStorage.setItem('tasks', JSON.stringify(tasks.value))
 }
 
 function updateTaskStatus(index, newStatus) {
-  if (!tasks.value[index]) return
+    if (!tasks.value[index]) return
 
-  tasks.value[index].status = newStatus
-  tasks.value[index].updatedAt = Date.now()
-  saveTasks()
+    tasks.value[index].status = newStatus
+    tasks.value[index].updatedAt = Date.now()
+    saveTasks()
 }
 
-function clear() {
-  tasks.value = tasks.value.filter(task => task.status !== 'completed')
-  saveTasks()
-}
+// function clear() {
+//     tasks.value = tasks.value.filter(task => task.status !== 'completed')
+//     saveTasks()
+// }
 </script>
 
 <style scoped>
@@ -115,10 +139,10 @@ function clear() {
 }
 
 .page {
-    min-height: 100vh;
+    /* min-height: 100vh; */
     display: flex;
     justify-content: center;
-    padding: 100px 24px 120px;
+    padding: 132px 24px 0px;
     font-family: inherit;
     color: #2d2d2d;
 }
@@ -130,16 +154,16 @@ function clear() {
 
 .phone-frame {
     width: 100%;
-    max-width: 380px;
+    max-width: 980px;
+    display: grid;
+    grid-template-columns: minmax(0, 460px) minmax(0, 460px);
+    grid-template-rows: minmax(0, 420px);
+    gap: 34px;
+    align-items: stretch;
+    justify-content: center;
+    /* align-items: center; */
 }
 
-.status {
-    /* border: 1px solid black; */
-    /* min-height: 200px; */
-    display: flex;
-    flex-direction: column;
-    padding: 0 12px 12px;
-}
 
 .tabs {
     display: flex;
@@ -183,6 +207,31 @@ function clear() {
     min-height: 0;
 }
 
+.tipsExpand {
+    width: 90%;
+    padding: 12px 16px;
+    background: white;
+    border: 1.5px solid rgba(193, 113, 79, 0.25);
+    border-radius: 14px;
+    font-size: 14.8px;
+    font-weight: 700;
+    color: #c1714f;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.tipsExpand:hover {
+    border-color: #c1714f;
+    color: #c1714f;
+    /* border:  2.5px solid #c1714f; */
+}
+
 .taskItemContainer {
     height: 150px;
     overflow-y: auto;
@@ -210,7 +259,7 @@ function clear() {
     padding: 12px 16px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     font-size: 1rem;
-    font-weight:500;
+    font-weight: 500;
     display: flex;
     align-items: center;
     flex-shrink: 0;
@@ -312,6 +361,7 @@ function clear() {
     margin-bottom: 32px;
     position: absolute;
     left: 200px;
+
 }
 
 .back-btn:hover {
@@ -333,7 +383,10 @@ function clear() {
 }
 
 .taskCardWrapper {
-    margin-top: 40px;
+    /* margin-top: 40px; */
+    /* height: 100%; */
+    width: 100%;
+    max-width: 460px;
     transition: transform 0.35s ease;
     transform-origin: top center;
 }
@@ -343,9 +396,18 @@ function clear() {
 }
 
 .status {
+    /* margin-top: 40px; */
+    /* width: 100%; */
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 28px;
+    max-width: 460px;
     display: flex;
     flex-direction: column;
-    padding: 0 12px 12px;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
     transition: transform 0.35s ease, opacity 0.35s ease, margin-top 0.35s ease;
     transform-origin: top center;
 }
@@ -354,5 +416,73 @@ function clear() {
     transform: scale(0.92);
     opacity: 0.92;
     margin-top: 30px;
+}
+
+.status {
+    overflow: hidden;
+}
+
+.status.tipsOpen {
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.timerArea {
+    width: 100%;
+    height: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: height 0.35s ease;
+}
+
+.status.tipsOpen .timerArea {
+    height: 14%;
+}
+
+.tipsPanel {
+    width: 100%;
+    height: 90%;
+    background: #fffaf7;
+    border-top: 1.5px solid rgba(193, 113, 79, 0.18);
+    border-radius: 24px 24px 28px 28px;
+    padding: 10px;
+    animation: slideUp 0.35s ease;
+}
+
+.tipsHeader {
+    position: relative;
+    text-align: center;
+}
+
+.tipsHeader h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #2f2f2f;
+}
+
+.tipsBack {
+    position: absolute;
+    left: 0;
+    top: -4px;
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    font-weight: 600;
+    color: #c1714f;
+    cursor: pointer;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 </style>
