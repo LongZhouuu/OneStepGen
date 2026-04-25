@@ -25,7 +25,7 @@ defineEmits(['open'])
 .float-support {
   position: fixed;
   right: 26px;
-  bottom: 24px;
+  bottom: 200px;
   width: 56px;
   height: 56px;
   border: none;
