@@ -23,10 +23,16 @@
 
                 <div class="completed-pill" style="font-size: 16.8px;">
                     <span>✓</span>
-                    <span>7 COMPLETED</span>
+                    <span>{{ completedCount }} COMPLETED</span>
                 </div>
 
-                <h2 style="font-size: 16.8px;">Perfect Session! All 7 tasks completed!</h2>
+                <h2 style="font-size: 16.8px; color: #61b99f;">
+                    Perfect Session! {{ completedCount }} out of {{ totalTaskCount }} tasks completed!
+                </h2>
+                <h2 style="font-size: 14px; color: #e74c3c;">
+                    There are still {{ skippedCount }} tasks that have been skipped.
+                    Do you want to continue with them?
+                </h2>
 
                 <!-- <p class="hint"> -->
                 <!-- Complete sessions to collect all animals in your Rewards page! -->
@@ -34,14 +40,19 @@
 
                 <div class="button-row">
                     <button class="btn primary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        Continue with Skipped
+                    </button>
+
+                    <button class="btn primary" @click="handleStartNewSession">
                         <span><i class="bi bi-star"></i></span>
                         Start New Session
                     </button>
 
-                    <RouterLink class="btn secondary" to="/">
+                    <button class="btn secondary" @click="handleExitToHome">
                         <span><i class="bi bi-house"></i></span>
                         Exit to Home
-                    </RouterLink>
+                    </button>
                 </div>
             </div>
         </section>
@@ -49,6 +60,56 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+    getCurrentSession,
+    guardWorkflowStep,
+    deleteSession,
+    resetWorkflow,
+} from '../router/workflow'
+
+const router = useRouter()
+const session = ref(null)
+
+onMounted(() => {
+    const canEnter = guardWorkflowStep(4, router)
+
+    if (!canEnter) return
+
+    session.value = getCurrentSession()
+})
+
+const completedCount = computed(() => {
+    return session.value?.tasks?.filter(task => task.status === 'completed').length || 0
+})
+
+const totalTaskCount = computed(() => {
+    return session.value?.tasks?.length || 0
+})
+
+const skippedCount = computed(() => {
+    return session.value?.tasks?.filter(task => task.status === 'skipped').length || 0
+})
+
+function clearCurrentSession() {
+    if (!session.value?.sessionId) return
+
+    deleteSession(session.value.sessionId)
+    session.value = null
+}
+
+function handleExitToHome() {
+    clearCurrentSession()
+    resetWorkflow()
+    router.push('/')
+}
+
+function handleStartNewSession() {
+    clearCurrentSession()
+    resetWorkflow()
+    router.push({ name: 'AIDump' })
+}
 </script>
 
 <style scoped>
@@ -171,7 +232,7 @@ h1 {
 .card-body h2 {
     margin: 22px 0 0;
     font-size: 15px;
-    color: #61b99f;
+    /* color: #61b99f; */
     font-weight: 800;
 }
 
@@ -188,7 +249,7 @@ h1 {
 }
 
 .btn {
-    height: 46px;
+    height: 40px;
     border-radius: 999px;
     padding: 0 24px;
     border: none;
