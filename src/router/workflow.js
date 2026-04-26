@@ -221,6 +221,20 @@ export function deleteSession(sessionId) {
   return true
 }
 
+// mark specific session as completed by update completedAt field
+// input: session uid
+export function completeCurrentSession(sessionId) {
+  const session = getCurrentSession()
+
+  if (!session || session.sessionId !== sessionId) return null
+
+  session.completedAt = Date.now()
+
+  saveCurrentSession(session)
+
+  return session
+}
+
 // REWARDS
 // var example = [
 //   {

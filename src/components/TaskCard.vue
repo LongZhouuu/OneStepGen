@@ -140,7 +140,8 @@ const currentTaskText = computed(() => {
 
 const currentTaskOrder = computed(() => {
     return currentTaskItem.value?.order != null
-        ? currentTaskItem.value.order + 1
+    // +1 ?
+        ? currentTaskItem.value.order
         : '🥳'
 })
 
@@ -465,7 +466,7 @@ function swipeOut(direction) {
 }
 
 .completeHintBtn {
-    background: #4caf50;
+    background: #61b99f;
 }
 
 .hintBtn:hover:not(:disabled) {
