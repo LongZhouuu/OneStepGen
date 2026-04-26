@@ -140,7 +140,8 @@ const currentTaskText = computed(() => {
 
 const currentTaskOrder = computed(() => {
     return currentTaskItem.value?.order != null
-        ? currentTaskItem.value.order + 1
+    // +1 ?
+        ? currentTaskItem.value.order
         : '🥳'
 })
 

@@ -69,6 +69,7 @@
                     <TipsPanel @close="isTipsOpen = false" />
                 </section>
             </section>
+            <mockmockmock />
         </div>
     </div>
 </template>
@@ -79,23 +80,42 @@ import SwipingTimer from '@/components/SwipingTimer.vue'
 import TipsPanel from '@/components/TipsPanel.vue'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { guardWorkflowStep } from '../router/workflow'
+import {
+    guardWorkflowStep, 
+    unlockStep, 
+    getCurrentSession,
+    updateTaskInSession,
+    completeCurrentSession
+} from '../router/workflow'
+import mockmockmock from '@/components/mockmockmock.vue'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
 const isTipsOpen = ref(false)
 const router = useRouter()
 
+const timerRef = ref(null)
+const session = ref(null)
+const tasks = ref([])
+
 onMounted(() => {
     guardWorkflowStep(3, router)
+    loadSession()
 })
 
-// function goBackToPlanner() {
-//     router.push({ name: 'Planner' })
-// }
+function loadSession() {
+    const currentSession = getCurrentSession()
 
-const tasks = ref(JSON.parse(localStorage.getItem('tasks') || '[]'))
-const timerRef = ref(null)
+    if (!currentSession) {
+        console.warn('No current session found.')
+        session.value = null
+        tasks.value = []
+        return
+    }
+
+    session.value = currentSession
+    tasks.value = currentSession.tasks || []
+}
 
 const hasRemainingTasks = computed(() => {
     return tasks.value.some(task =>
@@ -106,6 +126,15 @@ const hasRemainingTasks = computed(() => {
 function handleNoMoreTasks() {
     activeTab.value = 'checkin'
     timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
+
+    if (!hasRemainingTasks.value) {
+        if (session.value) {
+            session.value = completeCurrentSession(session.value.sessionId)
+        }
+
+        unlockStep(4)
+        router.push({ name: 'Complete' })
+    }
 }
 
 watch(isTimerRunning, (newVal) => {
@@ -114,22 +143,22 @@ watch(isTimerRunning, (newVal) => {
     }
 })
 
-function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks.value))
-}
-
 function updateTaskStatus(index, newStatus) {
+    if (!session.value) return
     if (!tasks.value[index]) return
 
-    tasks.value[index].status = newStatus
-    tasks.value[index].updatedAt = Date.now()
-    saveTasks()
-}
+    const task = tasks.value[index]
 
-// function clear() {
-//     tasks.value = tasks.value.filter(task => task.status !== 'completed')
-//     saveTasks()
-// }
+    task.status = newStatus
+    task.updatedAt = Date.now()
+
+    updateTaskInSession(session.value.sessionId, task.id, {
+        status: newStatus,
+    })
+
+    session.value = getCurrentSession()
+    tasks.value = session.value?.tasks || []
+}
 </script>
 
 <style scoped>
