@@ -466,7 +466,7 @@ function swipeOut(direction) {
 }
 
 .completeHintBtn {
-    background: #4caf50;
+    background: #61b99f;
 }
 
 .hintBtn:hover:not(:disabled) {
