@@ -3,15 +3,12 @@
     <div class="support-modal">
 
       <!-- Close Button -->
-      <button class="close-btn" @click="$emit('close')">✕</button>
+      <!-- <button class="close-btn" @click="$emit('close')">✕</button> -->
+      <button type="button" class="btn-close" aria-label="Close" @click="$emit('close')"
+        style="position: absolute; top: 18px; right: 18px;"></button>
 
-      <component
-        :is="currentComponent"
-        @goBox="currentView='breathing'"
-        @goRainbow="currentView='rainbow'"
-        @goHelpline="currentView='helpline'"
-        @back="currentView='menu'"
-      />
+      <component :is="currentComponent" @goBox="currentView = 'breathing'" @goRainbow="currentView = 'rainbow'"
+        @goHelpline="currentView = 'helpline'" @back="currentView = 'menu'" />
     </div>
   </div>
 </template>
@@ -50,30 +47,30 @@ const currentComponent = computed(() => {
 </script>
 
 <style scoped>
-.support-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.18);
-  backdrop-filter:blur(8px);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
+.support-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .18);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
-.support-modal{
-  width:520px;
-  max-width:92%;
-  background:white;
-  border-radius:28px;
-  padding:34px;
-  position:relative;
+.support-modal {
+  width: 520px;
+  max-width: 92%;
+  background: white;
+  border-radius: 28px;
+  padding: 34px;
+  position: relative;
 }
 
-.close-btn{
-  position:absolute;
-  top:18px;
-  right:18px;
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
   width: 36px;
   height: 36px;
   border: none;
