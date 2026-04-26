@@ -307,6 +307,30 @@ export function deleteSession(sessionId) {
   return true
 }
 
+// Reorder all tasks after drag-and-drop
+// Input: sessionId, reorderedTasks — full tasks array in new order
+// Each task's order will be reassigned as 1-N based on array position
+// priorityGroup is also updated to match where the task was dropped
+export function reorderTasksInSession(sessionId, reorderedTasks) {
+  const session = getCurrentSession()
+
+  if (!session || session.sessionId !== sessionId) return null
+
+  const timestamp = Date.now()
+
+  // Reassign order 1-N based on the new array position
+  // Also update priorityGroup in case task was dragged across groups
+  session.tasks = reorderedTasks.map((task, index) => ({
+    ...task,
+    order: index + 1,
+    updatedAt: timestamp,
+  }))
+
+  saveCurrentSession(session)
+
+  return session
+}
+
 // mark specific session as completed by update completedAt field
 // input: session uid
 export function completeCurrentSession(sessionId) {
