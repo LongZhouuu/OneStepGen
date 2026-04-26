@@ -140,8 +140,50 @@ export function createSession({
   return newSession
 }
 
-// add task to exist session
-// input: session uid, task text, priority group
+// Bulk add AI-generated tasks to an existing session
+// Replaces any existing tasks in the session with the AI results
+// Input:
+//   sessionId: string — must match the current session
+//   aiTasks: array of { text, priorityGroup, order } from backend response
+// Returns: updated session object, or null if session not found
+export function addAITasksToSession(sessionId, aiTasks) {
+  const session = getCurrentSession()
+
+  // Guard: ensure session exists and matches the given sessionId
+  if (!session || session.sessionId !== sessionId) return null
+
+  const timestamp = Date.now()
+
+  // Map backend task format to our internal task format
+  // Each task gets a new unique id, default status 'pending',
+  // and timestamps set to now
+  const newTasks = aiTasks.map(t => ({
+    id: generateId('task'),
+    text: t.text,
+    status: 'pending',
+    priorityGroup: t.priorityGroup,
+    order: t.order,           // use the order provided by AI
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  }))
+
+  // Replace session tasks entirely with AI-generated tasks
+  session.tasks = newTasks
+  saveCurrentSession(session)
+
+  return session
+}
+
+// Add a single task manually to an existing session
+// The new task is inserted at the END of its priorityGroup
+// All tasks that come after the insertion point have their order shifted up by 1
+// Input:
+//   sessionId: string — must match the current session
+//   taskText: string — the task description
+//   priorityGroup: string — one of:
+//     'urgent-important' | 'not-urgent-important' |
+//     'urgent-not-important' | 'not-urgent-not-important'
+// Returns: the newly created task object, or null if session not found
 export function addTaskToSession(sessionId, taskText, priorityGroup = null) {
   const session = getCurrentSession()
 
@@ -149,12 +191,56 @@ export function addTaskToSession(sessionId, taskText, priorityGroup = null) {
 
   const timestamp = Date.now()
 
+  // Fixed group priority order — determines where each group sits globally
+  const GROUP_ORDER = [
+    'urgent-important',
+    'not-urgent-important',
+    'urgent-not-important',
+    'not-urgent-not-important',
+  ]
+
+  // Find all tasks that belong to the same priorityGroup
+  const groupTasks = session.tasks.filter(t => t.priorityGroup === priorityGroup)
+
+  let insertOrder
+
+  if (groupTasks.length > 0) {
+    // Group already has tasks — insert after the last one in this group
+    insertOrder = Math.max(...groupTasks.map(t => t.order)) + 1
+  } else {
+    // Group is empty — find the correct position based on group hierarchy
+    // Look for the last task that belongs to a group that comes BEFORE this group
+    const currentGroupIndex = GROUP_ORDER.indexOf(priorityGroup)
+
+    // Get all tasks belonging to groups that come before the target group
+    const precedingGroups = GROUP_ORDER.slice(0, currentGroupIndex)
+    const precedingTasks = session.tasks.filter(t =>
+      precedingGroups.includes(t.priorityGroup)
+    )
+
+    if (precedingTasks.length > 0) {
+      // Insert right after the last task of the preceding groups
+      insertOrder = Math.max(...precedingTasks.map(t => t.order)) + 1
+    } else {
+      // No tasks in any preceding group either — insert at the very beginning
+      insertOrder = 1
+    }
+  }
+
+  // Shift all tasks at or after the insertion point up by 1
+  session.tasks = session.tasks.map(t => ({
+    ...t,
+    order: t.order >= insertOrder ? t.order + 1 : t.order,
+    updatedAt: timestamp,
+  }))
+
+  // Build the new task object
   const newTask = {
     id: generateId('task'),
     text: taskText,
     status: 'pending',
     priorityGroup,
-    order: session.tasks.length + 1,
+    order: insertOrder,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
