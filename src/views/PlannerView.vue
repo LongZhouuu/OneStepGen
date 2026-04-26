@@ -1,925 +1,586 @@
 <template>
-  <div class="page-container">
-    <div class="page-header">
-      <h1 class="page-title">Planner</h1>
-      <p class="page-subtitle">Have a lot to do today? No pressure, just list your tasks here.<br>
-        We’ll guide you through them, one step at a time.
-      </p>
-    </div>
-
-    <div class="how-it-works">
-      <div class="how-it-works-header">
-        <div class="how-it-works-heading">
-          <p class="how-it-works-kicker">How it works</p>
-          <h2 class="how-it-works-title">Turn a messy to-do list into one clear next step.</h2>
+  <div class="planner-page">
+    <div class="workspace-panel" id="panel-2">
+      <div class="panel-header-band band-2">
+        <div class="phb-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 6h13M8 12h13M8 18h13" />
+            <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+          </svg>
         </div>
-        <button type="button" class="how-it-works-toggle" :aria-expanded="howItWorksOpen"
-          @click="howItWorksOpen = !howItWorksOpen">
-          {{ howItWorksOpen ? 'Hide' : 'Show' }}
-          <span class="how-it-works-toggle-icon" :class="{ open: howItWorksOpen }">&gt;</span>
-        </button>
-      </div>
-      <div v-show="howItWorksOpen" class="how-it-works-steps">
-        <div class="how-it-works-step">
-          <span class="step-number">1</span>
-          <div class="step-copy">
-            <h3 class="step-title">Add your tasks</h3>
-            <p class="step-text">Write down everything you need to do, even if it feels too much right now.</p>
-          </div>
-        </div>
-        <div class="how-it-works-step">
-          <span class="step-number">2</span>
-          <div class="step-copy">
-            <h3 class="step-title">Reorder what matters</h3>
-            <p class="step-text">Drag tasks into the order that makes the most sense for today.</p>
-          </div>
-        </div>
-        <div class="how-it-works-step">
-          <span class="step-number">3</span>
-          <div class="step-copy">
-            <h3 class="step-title">Start one task at a time</h3>
-            <p class="step-text">Create your planner and focus on the next step instead of the whole list.</p>
-          </div>
-        </div>
-        <div class="how-it-works-step">
-          <span class="step-number">4</span>
-          <div class="step-copy">
-            <h3 class="step-title">Adjust anytime</h3>
-            <p class="step-text">Go back to add new tasks whenever you need, or move skipped tasks back into your task
-              list.</p>
-          </div>
+        <div>
+          <div class="phb-title">Plan your tasks</div>
+          <div class="phb-desc">Review, edit and reorder. Tasks are sorted by priority.</div>
         </div>
       </div>
-    </div>
 
-    <div class="content-area">
-      <!-- Input Area -->
-      <div class="input-wrapper">
-        <div class="search-box" :class="{ focused: inputFocused }">
-          <input ref="taskInputRef" v-model="newTaskText" class="task-input" type="text"
-            placeholder="Enter a task (e.g. reply to emails)" :aria-invalid="newTaskInvalid"
-            aria-describedby="task-input-help" @focus="inputFocused = true" @blur="inputFocused = false"
-            @keyup.enter="addTask" />
-          <button type="button" class="voice-btn" :class="{ listening: isListening }"
-            :aria-label="isListening ? 'Stop voice input' : 'Start voice input'" :aria-pressed="isListening"
-            :disabled="!speechSupported" @click="toggleVoiceInput">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 4.75a2.75 2.75 0 0 1 2.75 2.75v4.5a2.75 2.75 0 1 1-5.5 0V7.5A2.75 2.75 0 0 1 12 4.75Z"
-                stroke="currentColor" stroke-width="1.8" />
-              <path d="M7.75 11.75a4.25 4.25 0 1 0 8.5 0M12 16v3.25M9 19.25h6" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
-          <button class="add-btn" :disabled="newTaskInvalid" :class="{ 'btn-disabled': newTaskInvalid }"
-            @click="addTask">Add Task</button>
+      <div class="panel-card panel-card-2-plan">
+        <div class="task-list-header">
+          <div>
+            <h2 class="panel-title">Your Tasks</h2>
+            <p class="panel-sub">Drag to reorder · tap edit to change</p>
+          </div>
+          <div class="task-header-actions">
+            <span class="task-count-badge">{{ tasks.length }} tasks</span>
+            <button class="btn-add-task" type="button" @click="showModal = true">+ Add</button>
+          </div>
         </div>
-        <p id="task-input-help" class="voice-status" aria-live="polite">{{ voiceStatusMessage }}</p>
-        <p v-if="newTaskOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
-        <p v-else-if="newTaskInvalidChars" class="char-limit-error">Only English characters are allowed</p>
-      </div>
 
-      <!-- Active Tasks -->
-      <draggable v-model="activeTasks" item-key="id" class="task-list" handle=".task-dot" @end="onDragEnd">
-        <template #item="{ element: task }">
-          <div class="task-row">
-            <span class="task-dot" :class="task.status" title="Drag to reorder"></span>
-            <div class="task-info">
-              <template v-if="editingId === task.id">
-                <input v-model="editingText" class="task-edit-input" @keyup.enter="confirmEdit(task)"
-                  @blur="confirmEdit(task)" @keyup.escape="cancelEdit" />
-                <p v-if="editOverLimit" class="char-limit-error">Task cannot exceed 50 characters</p>
-                <p v-else-if="editInvalidChars" class="char-limit-error">Only English characters are allowed</p>
-              </template>
-              <template v-else>
-                <span class="task-text">{{ task.text }}</span>
-                <span class="task-status">{{ task.status }}</span>
-              </template>
+        <div id="task-list-container">
+          <div class="eisen-category" v-for="group in groupDefs" :key="group.key">
+            <div class="eisen-label" :class="group.labelClass">
+              <span class="eisen-dot"></span>{{ group.title }}
+              <span class="eisen-hint">{{ group.hint }}</span>
             </div>
-            <div class="task-actions">
-              <span class="action-edit" @click="startEdit(task)">Edit</span>
-              <span class="action-delete" @click="deleteTask(task.id)">Delete</span>
+
+            <div class="eisen-tasks">
+              <div class="task-item" v-for="task in groupedTasks[group.key]" :key="task.id">
+                <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+                <span class="task-num">{{ task.order }}</span>
+
+                <template v-if="editingId === task.id">
+                  <input
+                    v-model="editingText"
+                    class="task-edit-input"
+                    @keyup.enter="confirmEdit(task)"
+                    @blur="confirmEdit(task)"
+                    @keyup.escape="cancelEdit"
+                  />
+                </template>
+                <template v-else>
+                  <span class="task-text">{{ task.text }}</span>
+                </template>
+
+                <div class="task-actions">
+                  <button class="task-btn" type="button" aria-label="Edit task" @click="startEdit(task)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                  </button>
+                  <button class="task-btn danger" type="button" aria-label="Delete task" @click="deleteTask(task.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M6 6l1 16h10l1-16" />
+                      <path d="M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </template>
-      </draggable>
+        </div>
 
-      <!-- Drag hint -->
-      <p v-if="activeTasks.length > 0" class="drag-hint">· Hold and drag to reorder</p>
+        <button class="btn-start-swipe" type="button" :disabled="tasks.length === 0" @click="startFocusMode">
+          Start Focus Mode →
+        </button>
+      </div>
+    </div>
 
-      <!-- Skipped Tasks -->
-      <div v-if="skippedTasks.length > 0" class="skipped-section">
-        <h3 class="skipped-title">Skipped Tasks</h3>
-        <div v-for="task in skippedTasks" :key="task.id" class="task-row">
-          <span class="task-dot skipped"></span>
-          <div class="task-info">
-            <span class="task-text">{{ task.text }}</span>
-            <span class="task-status">{{ task.status }}</span>
-          </div>
-          <div class="task-actions">
-            <span class="action-edit" @click="moveBack(task.id)">Move back</span>
+    <div class="modal-overlay open" v-if="showModal" @click.self="showModal = false">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="Add a task">
+        <div class="modal-title">Add a Task</div>
+        <div class="modal-sub">Tell us about this task so we can place it correctly.</div>
+
+        <div class="modal-field">
+          <label for="new-task-text">What's the task?</label>
+          <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+        </div>
+
+        <div class="modal-field">
+          <label>Is it important?</label>
+          <div class="modal-toggle-row">
+            <button type="button" class="modal-toggle" :class="{ selected: newTaskImportant }" @click="newTaskImportant = true">
+              <div class="tgl-label">Yes</div>
+              <div class="tgl-sub">Matters for goals/outcomes</div>
+            </button>
+            <button type="button" class="modal-toggle" :class="{ selected: !newTaskImportant }" @click="newTaskImportant = false">
+              <div class="tgl-label">No</div>
+              <div class="tgl-sub">Won't affect much</div>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Create Planner + Clear All -->
-      <div class="create-planner-wrapper">
-        <button class="create-planner-btn" :disabled="activeTasks.length === 0"
-          :class="{ 'btn-disabled': activeTasks.length === 0 }" @click="createPlanner">
-          Create Planner
-        </button>
-        <button v-if="activeTasks.length > 0" class="clear-all-btn" @click="clearAll">Clear All</button>
+        <div class="modal-field">
+          <label>Is it urgent?</label>
+          <div class="modal-toggle-row">
+            <button type="button" class="modal-toggle" :class="{ selected: newTaskUrgent }" @click="newTaskUrgent = true">
+              <div class="tgl-label">Yes</div>
+              <div class="tgl-sub">Needs to happen soon</div>
+            </button>
+            <button type="button" class="modal-toggle" :class="{ selected: !newTaskUrgent }" @click="newTaskUrgent = false">
+              <div class="tgl-label">No</div>
+              <div class="tgl-sub">Can wait a while</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" type="button" @click="showModal = false">Cancel</button>
+          <button class="btn-modal-add" type="button" @click="addMockTask" :disabled="!newTaskText.trim()">Add Task</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import draggable from 'vuedraggable'
-import {
-  guardWorkflowStep,
-  unlockStep
-} from '../router/workflow'
+<script>
+import { guardWorkflowStep, unlockStep } from '../router/workflow'
 
-const router = useRouter()
-
-// ── UI state ──────────────────────────────────────────────────────────────────
-const newTaskText = ref('')
-const inputFocused = ref(false)
-const editingId = ref(null)
-const editingText = ref('')
-const taskInputRef = ref(null)
-const speechRecognition = ref(null)
-const speechSupported = ref(false)
-const isListening = ref(false)
-const voiceStatusMessage = ref('Checking voice input support...')
-const voiceStopRequested = ref(false)
-const howItWorksOpen = ref(true)
-
-const TASK_MAX_LEN = 50
-const ALLOWED_CHARS = /^[a-zA-Z0-9\s.,!?;:'"()\-_@#$%&*+=/<>]*$/
-
-const newTaskOverLimit = computed(() => newTaskText.value.length > TASK_MAX_LEN)
-const newTaskInvalidChars = computed(() => !newTaskOverLimit.value && !ALLOWED_CHARS.test(newTaskText.value))
-const newTaskInvalid = computed(() => newTaskOverLimit.value || newTaskInvalidChars.value)
-
-const editOverLimit = computed(() => editingText.value.length > TASK_MAX_LEN)
-const editInvalidChars = computed(() => !editOverLimit.value && !ALLOWED_CHARS.test(editingText.value))
-const editInvalid = computed(() => editOverLimit.value || editInvalidChars.value)
-
-function updateVoiceStatus(message) {
-  voiceStatusMessage.value = message
-}
-
-function initSpeechRecognition() {
-  if (typeof window === 'undefined') return
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-  if (!SpeechRecognition) {
-    speechSupported.value = false
-    updateVoiceStatus('Voice input is not supported in this browser.')
-    return
-  }
-
-  const recognition = new SpeechRecognition()
-  recognition.lang = navigator.language?.startsWith('en') ? navigator.language : 'en-US'
-  recognition.interimResults = false
-  recognition.maxAlternatives = 1
-
-  recognition.onstart = () => {
-    isListening.value = true
-    voiceStopRequested.value = false
-    updateVoiceStatus('Listening... Speak your task now.')
-  }
-
-  recognition.onresult = (event) => {
-    const transcript = Array.from(event.results)
-      .slice(event.resultIndex)
-      .map(result => result[0]?.transcript ?? '')
-      .join(' ')
-      .trim()
-
-    if (!transcript) return
-
-    newTaskText.value = [newTaskText.value.trim(), transcript].filter(Boolean).join(' ')
-    updateVoiceStatus('Voice input added to the task field.')
-    taskInputRef.value?.focus()
-  }
-
-  recognition.onerror = (event) => {
-    isListening.value = false
-
-    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-      updateVoiceStatus('Microphone access was blocked. Please allow microphone access and try again.')
-      return
+export default {
+  name: 'PlannerView',
+  data() {
+    return {
+      tasks: [
+        { id: '1', text: 'Complete the main report', priorityGroup: 'urgent-important', order: 1, status: 'pending' },
+        { id: '2', text: 'Review upcoming deadlines', priorityGroup: 'urgent-important', order: 2, status: 'pending' },
+        { id: '3', text: 'Reply to important emails', priorityGroup: 'not-urgent-important', order: 3, status: 'pending' },
+        { id: '4', text: 'Plan tomorrow priorities', priorityGroup: 'not-urgent-important', order: 4, status: 'pending' },
+        { id: '5', text: 'Organise your workspace', priorityGroup: 'urgent-not-important', order: 5, status: 'pending' },
+        { id: '6', text: 'Forward invoice to accounting', priorityGroup: 'urgent-not-important', order: 6, status: 'pending' },
+        { id: '7', text: 'Reorganise the filing cabinet', priorityGroup: 'not-urgent-not-important', order: 7, status: 'pending' },
+        { id: '8', text: 'Research new tools', priorityGroup: 'not-urgent-not-important', order: 8, status: 'pending' },
+      ],
+      showModal: false,
+      newTaskText: '',
+      newTaskImportant: true,
+      newTaskUrgent: true,
+      editingId: null,
+      editingText: '',
     }
+  },
+  computed: {
+    groupedTasks() {
+      const sorted = [...this.tasks].sort((a, b) => a.order - b.order)
+      return {
+        'urgent-important': sorted.filter(t => t.priorityGroup === 'urgent-important'),
+        'not-urgent-important': sorted.filter(t => t.priorityGroup === 'not-urgent-important'),
+        'urgent-not-important': sorted.filter(t => t.priorityGroup === 'urgent-not-important'),
+        'not-urgent-not-important': sorted.filter(t => t.priorityGroup === 'not-urgent-not-important'),
+      }
+    },
+    groupDefs() {
+      return [
+        { key: 'urgent-important', title: 'DO FIRST', hint: 'Important & Urgent', labelClass: 'eisen-do' },
+        { key: 'not-urgent-important', title: 'SCHEDULE', hint: 'Important, Not Urgent', labelClass: 'eisen-schedule' },
+        { key: 'urgent-not-important', title: 'DELEGATE', hint: 'Urgent, Not Important', labelClass: 'eisen-delegate' },
+        { key: 'not-urgent-not-important', title: 'MAYBE LATER', hint: 'Not Urgent or Important', labelClass: 'eisen-maybe' },
+      ]
+    },
+  },
+  mounted() {
+    guardWorkflowStep(2, this.$router)
+    const raw = localStorage.getItem('tasks')
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed) && parsed.length) {
+          const normalized = parsed
+            .map((t, idx) => ({
+              ...t,
+              id: String(t.id ?? crypto.randomUUID()),
+              text: String(t.text ?? '').trim(),
+              order: Number.isFinite(t.order) ? t.order : idx + 1,
+              status: t.status ?? 'pending',
+              // if old tasks don't have priorityGroup, keep them visible by defaulting
+              priorityGroup: t.priorityGroup ?? 'urgent-important',
+            }))
+            .filter(t => t.text)
+            .sort((a, b) => a.order - b.order)
+            .map((t, i) => ({ ...t, order: i + 1 }))
 
-    if (event.error === 'no-speech') {
-      updateVoiceStatus('No speech detected. Try again when you are ready.')
-      return
+          if (normalized.length) {
+            this.tasks = normalized
+            localStorage.setItem('tasks', JSON.stringify(this.tasks))
+          }
+        }
+      } catch {}
+    } else {
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
     }
-
-    updateVoiceStatus('Voice input could not be completed. Please try again.')
-  }
-
-  recognition.onend = () => {
-    isListening.value = false
-    if (voiceStopRequested.value) {
-      voiceStopRequested.value = false
-      updateVoiceStatus('Voice input stopped.')
-    }
-  }
-
-  speechRecognition.value = recognition
-  speechSupported.value = true
-  updateVoiceStatus('Use the microphone to speak a task into the input field.')
-}
-
-function stopVoiceInput() {
-  if (!speechRecognition.value || !isListening.value) return
-  voiceStopRequested.value = true
-  speechRecognition.value.stop()
-}
-
-function toggleVoiceInput() {
-  if (!speechSupported.value || !speechRecognition.value) return
-
-  if (isListening.value) {
-    stopVoiceInput()
-    return
-  }
-
-  speechRecognition.value.start()
-}
-
-// ── Task lists ────────────────────────────────────────────────────────────────
-const activeTasks = ref([])
-const skippedTasks = ref([])
-const completedTasks = ref([])
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function reorderTasks() {
-  activeTasks.value.forEach((t, i) => { t.order = i })
-  skippedTasks.value.forEach(t => { t.order = null })
-  completedTasks.value.forEach(t => { t.order = null })
-
-  console.log('=== reorderTasks ===')
-  console.log('activeTasks:', activeTasks.value.map(t => ({ text: t.text, status: t.status, order: t.order })))
-  console.log('skippedTasks:', skippedTasks.value.map(t => ({ text: t.text, status: t.status, order: t.order })))
-}
-
-function saveTasks() {
-  const allTasks = [...activeTasks.value, ...skippedTasks.value, ...completedTasks.value]
-  localStorage.setItem('tasks', JSON.stringify(allTasks))
-}
-
-// ── Load from localStorage ────────────────────────────────────────────────────
-function loadTasks() {
-  const raw = localStorage.getItem('tasks')
-  if (!raw) return
-
-  const all = JSON.parse(raw)
-  activeTasks.value = all
-    .filter(t => t.status === 'pending' || t.status === 'doing')
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-  skippedTasks.value = all.filter(t => t.status === 'skipped')
-  completedTasks.value = all.filter(t => t.status === 'completed')
-}
-
-loadTasks()
-reorderTasks()
-saveTasks()
-
-onMounted(() => {
-  if (!guardWorkflowStep(2, router)) return
-  initSpeechRecognition()
-})
-
-onBeforeUnmount(() => {
-  if (!speechRecognition.value) return
-  if (isListening.value) {
-    stopVoiceInput()
-  }
-  speechRecognition.value.onstart = null
-  speechRecognition.value.onresult = null
-  speechRecognition.value.onerror = null
-  speechRecognition.value.onend = null
-  speechRecognition.value.abort()
-})
-
-// ── Add task ──────────────────────────────────────────────────────────────────
-function addTask() {
-  const text = newTaskText.value.trim()
-  if (!text || newTaskInvalid.value) return
-
-  activeTasks.value.push({
-    id: crypto.randomUUID(),
-    text,
-    status: 'pending',
-    order: activeTasks.value.length,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  })
-  newTaskText.value = ''
-  reorderTasks()
-  saveTasks()
-}
-
-// ── Edit task ─────────────────────────────────────────────────────────────────
-function startEdit(task) {
-  editingId.value = task.id
-  editingText.value = task.text
-}
-
-function confirmEdit(task) {
-  if (editingId.value !== task.id) return
-  if (editInvalid.value) return
-  const text = editingText.value.trim()
-  if (text && text !== task.text) {
-    task.text = text
-    task.updatedAt = Date.now()
-    saveTasks()
-  }
-  cancelEdit()
-}
-
-function cancelEdit() {
-  editingId.value = null
-  editingText.value = ''
-}
-
-// ── Delete task ───────────────────────────────────────────────────────────────
-function deleteTask(id) {
-  activeTasks.value = activeTasks.value.filter(t => t.id !== id)
-  reorderTasks()
-  saveTasks()
-}
-
-// ── Drag end ──────────────────────────────────────────────────────────────────
-function onDragEnd() {
-  reorderTasks()
-  saveTasks()
-}
-
-// ── Move back ─────────────────────────────────────────────────────────────────
-function moveBack(id) {
-  const idx = skippedTasks.value.findIndex(t => t.id === id)
-  if (idx === -1) return
-  const [task] = skippedTasks.value.splice(idx, 1)
-  task.status = 'pending'
-  task.updatedAt = Date.now()
-  activeTasks.value.push(task)
-  reorderTasks()
-  saveTasks()
-}
-
-// ── Clear All ─────────────────────────────────────────────────────────────────
-function clearAll() {
-  activeTasks.value = []
-  skippedTasks.value = []
-  completedTasks.value = []
-  saveTasks()
-  console.log('=== After Clear All ===', localStorage.getItem('tasks'))
-}
-
-// ── Create Planner ────────────────────────────────────────────────────────────
-function createPlanner() {
-  if (activeTasks.value.length === 0) return
-
-  const now = Date.now()
-  activeTasks.value.forEach(t => {
-    t.status = (t.order === 0) ? 'doing' : 'pending'
-    t.updatedAt = now
-  })
-
-  saveTasks()
-  unlockStep(3)
-  router.push({ name: 'TaskSwipper' })
+  },
+  methods: {
+    startEdit(task) {
+      this.editingId = task.id
+      this.editingText = task.text
+    },
+    cancelEdit() {
+      this.editingId = null
+      this.editingText = ''
+    },
+    confirmEdit(task) {
+      if (this.editingId !== task.id) return
+      const text = (this.editingText ?? '').trim()
+      if (!text) return
+      const t = this.tasks.find(x => x.id === task.id)
+      if (!t) return
+      t.text = text
+      this.cancelEdit()
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
+    },
+    deleteTask(id) {
+      this.tasks = this.tasks.filter(t => t.id !== id)
+      this.tasks = this.tasks.sort((a, b) => a.order - b.order).map((t, i) => ({ ...t, order: i + 1 }))
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
+    },
+    addMockTask() {
+      const text = (this.newTaskText ?? '').trim()
+      if (!text) return
+      const priorityGroup =
+        this.newTaskImportant && this.newTaskUrgent
+          ? 'urgent-important'
+          : this.newTaskImportant && !this.newTaskUrgent
+            ? 'not-urgent-important'
+            : !this.newTaskImportant && this.newTaskUrgent
+              ? 'urgent-not-important'
+              : 'not-urgent-not-important'
+      const nextOrder = this.tasks.length + 1
+      this.tasks.push({
+        id: crypto.randomUUID(),
+        text,
+        priorityGroup,
+        order: nextOrder,
+        status: 'pending',
+      })
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
+      this.newTaskText = ''
+      this.newTaskImportant = true
+      this.newTaskUrgent = true
+      this.showModal = false
+    },
+    startFocusMode() {
+      if (this.tasks.length === 0) return
+      const sorted = [...this.tasks].sort((a, b) => a.order - b.order)
+      const now = Date.now()
+      const updated = sorted.map((t, i) => ({
+        ...t,
+        status: i === 0 ? 'doing' : 'pending',
+        updatedAt: now,
+      }))
+      this.tasks = updated
+      localStorage.setItem('tasks', JSON.stringify(this.tasks))
+      unlockStep(3)
+      this.$router.push({ name: 'TaskSwipper' })
+    },
+  },
 }
 </script>
 
 <style scoped>
-.page-container {
-  max-width: 1000px;
+.planner-page {
+  --sand-100: #fdf6f0;
+  --sand-200: #f5e8d8;
+  --terracotta: #c1714f;
+  --terracotta-dark: #a05840;
+  --brown-dark: #2d1f14;
+  --brown-mid: #5c3d28;
+  --brown-text: #3d2a1a;
+  --blue-timer: #7baec8;
+  --radius-btn: 50px;
+  --shadow-card: 0 8px 40px rgba(193, 113, 79, 0.13);
+
+  max-width: 860px;
   margin: 0 auto;
-  padding: 80px 24px 120px;
+  padding: 90px 24px 40px;
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 30px;
+.workspace-panel {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
-.page-title {
-  font-size: 3rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 16px;
+.panel-header-band {
+  background: linear-gradient(120deg, #c8a888 0%, #dbbfa0 100%);
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
 }
 
-.page-subtitle {
-  font-size: 1.3rem;
-  color: #666;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
+.phb-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(253, 246, 240, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 10px 22px rgba(45, 31, 20, 0.09);
 }
 
-/* How it works section */
-.how-it-works {
-  max-width: 600px;
-  margin: 0 auto 44px;
-  padding: 28px 32px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, rgba(248, 241, 234, 0.94) 0%, rgba(255, 250, 246, 0.98) 100%);
-  box-shadow: 0 16px 36px rgba(97, 75, 52, 0.08);
+.phb-icon svg {
+  width: 28px;
+  height: 28px;
+  color: var(--brown-dark);
 }
 
-.how-it-works-header {
+.phb-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(45, 31, 20, 0.55);
+  margin-bottom: 4px;
+}
+
+.phb-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brown-dark);
+  margin-bottom: 4px;
+  margin-top: 2px;
+}
+
+.phb-desc {
+  font-size: 13.5px;
+  color: rgba(45, 31, 20, 0.65);
+  line-height: 1.5;
+}
+
+.panel-card {
+  background: white;
+  border-radius: 0 0 20px 20px;
+  padding: 28px 36px 36px;
+}
+
+.panel-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brown-dark);
+  margin-bottom: 6px;
+}
+
+.panel-sub {
+  font-size: 13.5px;
+  color: rgba(45, 31, 20, 0.5);
+  margin-bottom: 0;
+}
+
+.task-list-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.how-it-works-heading {
-  flex: 1;
-}
-
-.how-it-works-kicker {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #b46a2d;
-  margin: 0 0 10px;
-}
-
-.how-it-works-title {
-  font-size: 1.3rem;
-  font-weight: 500;
-  line-height: 1.25;
-  color: #333;
-  margin: 0;
-}
-
-.how-it-works-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #6a5238;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.how-it-works-toggle-icon {
-  font-size: 0.9rem;
-  transform: rotate(90deg);
-  transition: transform 0.2s ease;
-}
-
-.how-it-works-toggle-icon.open {
-  transform: rotate(270deg);
-}
-
-.how-it-works-steps {
-  display: grid;
-  gap: 14px;
-}
-
-.how-it-works-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(180, 106, 45, 0.08);
-}
-
-.step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: #b46a2d;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.step-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.step-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.step-text {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #666;
-  margin: 0;
-}
-
-/* Content area centred at 600px */
-.content-area {
-  max-width: 600px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 20px;
   gap: 12px;
 }
 
-/* Input row */
-.search-box {
+.task-header-actions {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  padding: 12px 16px;
-  gap: 12px;
-  transition: all 0.3s ease;
+  gap: 10px;
 }
 
-.search-box.focused {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.task-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 1rem;
-  color: #333;
-  outline: none;
-}
-
-.task-input::placeholder {
-  color: #aaa;
-}
-
-.voice-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border: none;
-  border-radius: 999px;
-  background: rgba(180, 106, 45, 0.12);
-  color: #8d5b2b;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.voice-btn:hover:not(:disabled) {
-  background: rgba(180, 106, 45, 0.2);
-  transform: translateY(-1px);
-}
-
-.voice-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.voice-btn.listening {
-  background: #b46a2d;
-  color: #fff;
-}
-
-.voice-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.voice-status {
-  font-size: 0.82rem;
-  color: #7a6757;
-  margin: 8px 4px 0;
-  min-height: 1.3em;
-}
-
-.add-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  background: #c8e1f5;
-  color: #2f2f2f;
-  font-size: 1rem;
+.task-count-badge {
+  background: rgba(193, 113, 79, 0.1);
+  color: var(--terracotta);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
+  letter-spacing: 0.03em;
 }
 
-.add-btn:hover {
-  opacity: 0.85;
-}
-
-/* Task list */
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.task-row {
+.btn-add-task {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.7);
+  gap: 6px;
+  background: none;
+  border: 1.5px solid rgba(193, 113, 79, 0.35);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terracotta);
+  transition: all 0.2s;
+  font: inherit;
+}
+
+.btn-add-task:hover {
+  background: rgba(193, 113, 79, 0.07);
+}
+
+.eisen-category { margin-bottom: 20px; }
+.eisen-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+.eisen-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.eisen-hint { font-size: 10px; font-weight: 400; opacity: 0.6; text-transform: none; letter-spacing: 0; }
+.eisen-do { color: #c1714f; } .eisen-do .eisen-dot { background: #c1714f; }
+.eisen-schedule { color: var(--blue-timer); } .eisen-schedule .eisen-dot { background: var(--blue-timer); }
+.eisen-delegate { color: #b89470; } .eisen-delegate .eisen-dot { background: #b89470; }
+.eisen-maybe { color: rgba(45,31,20,0.4); } .eisen-maybe .eisen-dot { background: rgba(45,31,20,0.25); }
+.eisen-tasks { display: flex; flex-direction: column; gap: 10px; min-height: 36px; }
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff7f1;
   border-radius: 12px;
   padding: 14px 16px;
-  gap: 12px;
-  transition: background 0.2s ease;
+  border: 1.5px solid rgba(193, 113, 79, 0.18);
 }
 
-.task-row:hover {
-  background: rgba(255, 255, 255, 0.9);
+.drag-handle {
+  color: rgba(45,31,20,0.25);
+  font-size: 14px;
+  cursor: grab;
+  user-select: none;
 }
 
-.task-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.task-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(193,113,79,0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--terracotta);
   flex-shrink: 0;
-}
-
-.task-dot.doing {
-  background: #e57373;
-}
-
-.task-dot.pending {
-  background: #66bb6a;
-}
-
-.task-dot.skipped {
-  background: #bdbdbd;
-}
-
-.task-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 .task-text {
-  font-size: 1.1rem;
+  flex: 1;
+  font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--brown-text);
 }
 
-.task-status {
-  font-size: 1rem;
-  color: #999;
-}
-
-.task-actions {
-  display: flex;
-  gap: 12px;
+.task-actions { display: flex; gap: 8px; align-items: center; }
+.task-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(45,31,20,0.65);
+  transition: background 0.15s, color 0.15s;
+  font: inherit;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
+.task-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.task-btn:hover { background: rgba(193,113,79,0.08); color: var(--terracotta); }
+.task-btn.danger:hover { background: rgba(232,139,139,0.12); color: #e07878; }
 
-.action-edit {
-  font-size: 1rem;
-  color: #888;
+.task-edit-input {
+  flex: 1;
+  border: 1.5px solid rgba(193,113,79,0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  outline: none;
+}
+.task-edit-input:focus { border-color: var(--terracotta); }
+
+.btn-start-swipe {
+  width: 100%;
+  padding: 15px;
+  border-radius: var(--radius-btn);
+  background: var(--brown-dark);
+  color: var(--sand-100);
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.25s;
+  font: inherit;
+  margin-top: 24px;
 }
+.btn-start-swipe:hover:not(:disabled) { background: var(--brown-mid); transform: translateY(-2px); }
+.btn-start-swipe:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.action-edit:hover {
-  color: #555;
-}
-
-.action-delete {
-  font-size: 1rem;
-  color: #e57373;
-  cursor: pointer;
-}
-
-.action-delete:hover {
-  color: #c62828;
-}
-
-/* Skipped section */
-.skipped-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.skipped-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #555;
-  margin: 0 0 4px 4px;
-}
-
-/* Character limit error */
-.char-limit-error {
-  font-size: 1rem;
-  color: #e57373;
-  margin: 4px 4px 0;
-}
-
-/* Input wrapper (allows error text below search-box) */
-.input-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Drag hint */
-.drag-hint {
-  font-size: 0.85rem;
-  color: #666;
-  text-align: center;
-  margin: 0;
-}
-
-/* Create Planner button */
-.create-planner-wrapper {
-  position: relative;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(45,31,20,0.5);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 32px;
+  padding: 24px;
 }
-
-.create-planner-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  border-radius: 999px;
-  padding: 14px 32px;
-  background: #c8e1f5;
-  color: #2f2f2f;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s ease, box-shadow 0.2s ease;
-}
-
-.create-planner-btn:hover:not(:disabled) {
-  opacity: 0.85;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.create-planner-btn.btn-disabled {
-  background: #e0e0e0;
-  color: #aaa;
-  cursor: not-allowed;
-}
-
-/* Clear All button */
-.clear-all-btn {
-  position: absolute;
-  right: 16px;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  background: #ffcccc;
-  color: #2f2f2f;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-
-.clear-all-btn:hover {
-  opacity: 0.85;
-}
-
-/* disabled style for add-btn */
-.add-btn.btn-disabled {
-  background: #e0e0e0;
-  color: #aaa;
-  cursor: not-allowed;
-}
-
-.add-btn.btn-disabled:hover {
-  opacity: 1;
-}
-
-/* Inline edit input inside task row */
-.task-edit-input {
+.modal-card {
+  background: white;
+  border-radius: 24px;
+  padding: 36px;
+  max-width: 520px;
   width: 100%;
-  border: none;
-  border-bottom: 1.5px solid #c8e1f5;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
+  box-shadow: 0 24px 80px rgba(45,31,20,0.25);
+}
+.modal-title { font-size: 22px; font-weight: 800; color: var(--brown-dark); margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: rgba(45,31,20,0.5); margin-bottom: 24px; }
+.modal-field { margin-bottom: 20px; }
+.modal-field label { display:block; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--brown-text); }
+.modal-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid rgba(193,113,79,0.55);
+  border-radius: 14px;
+  font: inherit;
   outline: none;
-  padding: 2px 0;
 }
-
-/* Drag handle cursor on dot */
-.task-dot {
-  cursor: grab;
+.modal-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modal-toggle {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid rgba(193,113,79,0.18);
+  background: #fff7f1;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
 }
-
-.task-dot:active {
-  cursor: grabbing;
+.modal-toggle.selected { border-color: rgba(193,113,79,0.7); background: rgba(193,113,79,0.08); }
+.tgl-label { font-weight: 800; color: var(--brown-dark); margin-bottom: 6px; }
+.tgl-sub { font-size: 12px; color: rgba(45,31,20,0.45); }
+.modal-actions { display: flex; gap: 14px; margin-top: 10px; }
+.btn-modal-cancel {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-btn);
+  border: 2px solid rgba(193,113,79,0.2);
+  background: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
+.btn-modal-add {
+  flex: 2;
+  padding: 14px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--terracotta);
+  color: white;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn-modal-add:disabled { opacity: 0.6; cursor: not-allowed; }
 
-@media (max-width: 768px) {
-  .search-box {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .task-input {
-    min-width: 100%;
-  }
-
-  .add-btn {
-    width: 100%;
-  }
-
-  .task-row {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  .task-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .create-planner-wrapper {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .create-planner-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .clear-all-btn {
-    position: static;
-    width: 100%;
-  }
-
-  .page-container {
-    padding: 72px 20px 96px;
-  }
-
-  .page-title {
-    font-size: 2.4rem;
-  }
-
-  .page-subtitle {
-    font-size: 1.1rem;
-  }
-
-  .how-it-works {
-    margin-bottom: 32px;
-    padding: 22px 18px;
-    border-radius: 22px;
-  }
-
-  .how-it-works-title {
-    font-size: 1.45rem;
-  }
-
-  .how-it-works-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .how-it-works-step {
-    padding: 14px 14px;
-    border-radius: 16px;
-  }
-
-  .voice-btn {
-    width: 40px;
-    height: 40px;
-  }
+@media (max-width: 520px) {
+  .planner-page { padding: 90px 16px 40px; }
+  .panel-card { padding: 24px 18px 24px; }
+  .modal-card { padding: 24px 18px; }
 }
 </style>
