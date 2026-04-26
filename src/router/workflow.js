@@ -309,22 +309,25 @@ export function deleteSession(sessionId) {
 
 // Reorder all tasks after drag-and-drop
 // Input: sessionId, reorderedTasks — full tasks array in new order
-// Each task's order will be reassigned as 1-N based on array position
-// priorityGroup is also updated to match where the task was dropped
+//   - active tasks (pending/doing): order reassigned 1-N based on array position
+//   - skipped tasks: order set to null
+// Note: priorityGroup should be updated by the caller before passing in
 export function reorderTasksInSession(sessionId, reorderedTasks) {
   const session = getCurrentSession()
 
   if (!session || session.sessionId !== sessionId) return null
 
   const timestamp = Date.now()
+  let activeCounter = 0
 
-  // Reassign order 1-N based on the new array position
-  // Also update priorityGroup in case task was dragged across groups
-  session.tasks = reorderedTasks.map((task, index) => ({
-    ...task,
-    order: index + 1,
-    updatedAt: timestamp,
-  }))
+  session.tasks = reorderedTasks.map(task => {
+    const isSkipped = task.status === 'skipped'
+    return {
+      ...task,
+      order:     isSkipped ? null : ++activeCounter,
+      updatedAt: timestamp,
+    }
+  })
 
   saveCurrentSession(session)
 
