@@ -2,15 +2,9 @@
   <div>
     <!-- Menu Title -->
     <h2 class="support-title">
-      <svg
-        class="title-icon"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-      >
+      <svg class="title-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path
-          d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z"
-        />
+          d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z" />
       </svg>
 
       <span>Support</span>
@@ -18,23 +12,12 @@
     <p class="sub">Choose what you need right now</p>
 
     <!-- Australian Helplines -->
-    <button 
-    class="support-card" 
-    type="button"
-    @click="$emit('goHelpline')"
-    >
+    <button class="support-card" type="button" @click="$emit('goHelpline')">
       <span class="support-icon" aria-hidden="true">
-        <svg 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          stroke-width="1.8" 
-          stroke-linecap="round" 
-          stroke-linejoin="round"
-          >
-          <path 
-          d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" 
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path
+            d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
         </svg>
       </span>
       <span class="support-text">
@@ -44,18 +27,9 @@
     </button>
 
     <!-- Box Breathing -->
-    <button 
-      class="support-card" 
-      type="button"
-      @click="$emit('goBox')"
-    >
+    <button class="support-card" type="button" @click="$emit('goBox')">
       <span class="support-icon" aria-hidden="true">
-        <svg 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          stroke-width="1.8" 
-          stroke-linecap="round" 
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
           stroke-linejoin="round">
           <path d="M3 8.5h10.5a2.5 2.5 0 1 0-2.5-2.5" />
           <path d="M3 12.5h14a2.5 2.5 0 1 1-2.5 2.5" />
@@ -69,18 +43,9 @@
     </button>
 
     <!-- Rainbow Grounding -->
-    <button 
-      class="support-card" 
-      type="button"
-      @click="$emit('goRainbow')"
-      >
+    <button class="support-card" type="button" @click="$emit('goRainbow')">
       <span class="support-icon" aria-hidden="true">
-        <svg 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          stroke-width="1.8" 
-          stroke-linecap="round" 
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
           stroke-linejoin="round">
           <path d="M3 18a9 9 0 0 1 18 0" />
           <path d="M6 18a6 6 0 0 1 12 0" />
@@ -89,21 +54,24 @@
       </span>
       <span class="support-text">
         <span class="support-heading">Rainbow Grounding</span>
-        <span class="support-sub">5-4-3-2-1 technique to bring you back to the present moment</span>
+        <span class="support-sub">Bring you back to the present moment</span>
       </span>
     </button>
 
     <!-- Footer -->
     <div class="support-footer">
       <p class="support-footer-text">
-        <span class="support-footer-text-bold">Note:</span> These resources are provided for general information only and should not replace professional advice. Always seek professional help if you are in crisis.
+        <span class="support-footer-text-bold">Note:</span>
+        These resources are provided <strong>for general information only</strong>
+        and <strong>should not replace professional advice</strong>.
+        Always seek professional help if you are in crisis.
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-defineEmits(['goBox','goRainbow','goHelpline'])
+defineEmits(['goBox', 'goRainbow', 'goHelpline'])
 </script>
 
 <style scoped>
