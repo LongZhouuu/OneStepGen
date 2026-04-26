@@ -16,9 +16,9 @@
         <h2>Rainbow Grounding</h2>
 
         <button ref="popoverBtnRef" type="button" class="intro-popover-btn" data-bs-toggle="popover"
-          data-bs-placement="right" data-bs-title="What is Rainbow Grounding?" data-bs-html="true" :data-bs-content="'Sometimes life is overwhelming, rainbow grounding is designed to help ' +
-            'ground yourself in the present moment, so your attention returns to the present ' +
-            'moment and bring you to a place of calm.<br><br>' +
+          data-bs-placement="right" data-bs-title="What is Rainbow Grounding?" data-bs-html="true" :data-bs-content="'Sometimes life is <strong>overwhelming</strong>, rainbow grounding is designed to help ' +
+            '<strong>ground yourself</strong> in the <strong>present moment</strong>, so your attention returns to the present ' +
+            'and bring you to a place of <strong>calm</strong>.<br><br>' +
             '<p class=&quot;quot&quot;>' +
             'To Write Love on Her Arms. (n.d.). <em>Rainbow walk grounding technique</em>[PDF]. ' +
             '<a href=&quot;https://twloha.com/content/files/rainbow-grounding-technique.pdf&quot; target=&quot;_blank&quot;>' +
@@ -65,9 +65,9 @@
       <h2>You have completed one grounding exercise</h2>
 
       <p class="completed-text">
-        Sometimes life is overwhelming, rainbow grounding is designed to help
-        ground yourself in the present moment, so your attention returns to the present
-        moment and bring you to a place of calm.<br><br>
+        Sometimes life is <strong>overwhelming</strong>, rainbow grounding is designed to help
+        <strong>ground yourself</strong> in the <strong>present moment</strong>, so your attention returns to the present
+        and bring you to a place of <strong>calm</strong>.<br><br>
       <p class='quot'>
         To Write Love on Her Arms. (n.d.). <em>Rainbow walk grounding technique</em>[PDF].
         <a href="https://twloha.com/content/files/rainbow-grounding-technique.pdf" target='_blank'>
