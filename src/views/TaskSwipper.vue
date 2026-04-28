@@ -69,7 +69,7 @@
                     <TipsPanel @close="isTipsOpen = false" />
                 </section>
             </section>
-            <mockmockmock />
+            <!-- <mockmockmock /> -->
         </div>
     </div>
 </template>
@@ -87,7 +87,7 @@ import {
     updateTaskInSession,
     completeCurrentSession
 } from '../router/workflow'
-import mockmockmock from '@/components/mockmockmock.vue'
+// import mockmockmock from '@/components/mockmockmock.vue'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)

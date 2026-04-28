@@ -1,94 +1,38 @@
 <template>
-  <button class="float-support" :style="buttonStyle" @pointerdown="startDrag" @click="handleClick">
+  <button class="float-support" @click="$emit('open')">
+    <!-- Tooltip -->
     <span class="float-tooltip">Support</span>
 
-    <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg
+      class="icon-svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
       <path
-        d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z" />
+        d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z"
+      />
     </svg>
   </button>
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue'
-
-const emit = defineEmits(['open'])
-
-const position = ref({
-  x: window.innerWidth - 82,
-  y: window.innerHeight - 260,
-})
-
-const startOffset = ref({ x: 0, y: 0 })
-const isDragging = ref(false)
-const hasMoved = ref(false)
-
-const buttonStyle = computed(() => ({
-  left: `${position.value.x}px`,
-  top: `${position.value.y}px`,
-}))
-
-function startDrag(event) {
-  isDragging.value = true
-  hasMoved.value = false
-
-  startOffset.value = {
-    x: event.clientX - position.value.x,
-    y: event.clientY - position.value.y,
-  }
-
-  window.addEventListener('pointermove', onDrag)
-  window.addEventListener('pointerup', stopDrag)
-}
-
-function onDrag(event) {
-  if (!isDragging.value) return
-
-  hasMoved.value = true
-
-  const buttonSize = 56
-
-  let newX = event.clientX - startOffset.value.x
-  let newY = event.clientY - startOffset.value.y
-
-  newX = Math.max(0, Math.min(newX, window.innerWidth - buttonSize))
-  newY = Math.max(0, Math.min(newY, window.innerHeight - buttonSize))
-
-  position.value = {
-    x: newX,
-    y: newY,
-  }
-}
-
-function stopDrag() {
-  isDragging.value = false
-
-  window.removeEventListener('pointermove', onDrag)
-  window.removeEventListener('pointerup', stopDrag)
-}
-
-function handleClick() {
-  if (hasMoved.value) return
-
-  emit('open')
-}
-
-onBeforeUnmount(() => {
-  window.removeEventListener('pointermove', onDrag)
-  window.removeEventListener('pointerup', stopDrag)
-})
+defineEmits(['open'])
 </script>
 
 <style scoped>
+/* Main Floating Button */
 .float-support {
   position: fixed;
+  right: 26px;
+  bottom: 24px;
   width: 56px;
   height: 56px;
   border: none;
   border-radius: 50%;
   background: #b66a48;
   color: white;
-  cursor: grab;
+  cursor: pointer;
   z-index: 999;
 
   display: flex;
@@ -96,17 +40,10 @@ onBeforeUnmount(() => {
   justify-content: center;
 
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
-  transition: transform 0.28s ease, box-shadow 0.28s ease;
+
+  transition: all 0.28s ease;
 
   animation: pulse 2.8s infinite;
-
-  touch-action: none;
-  user-select: none;
-}
-
-.float-support:active {
-  cursor: grabbing;
-  border: none;
 }
 
 /* Outer Hover Ring */
@@ -185,20 +122,9 @@ onBeforeUnmount(() => {
 }
 
 @keyframes heartbeat {
-
-  0%,
-  40%,
-  100% {
-    transform: scale(1);
-  }
-
-  15% {
-    transform: scale(1.12);
-  }
-
-  30% {
-    transform: scale(1.02);
-  }
+  0%, 40%, 100% { transform: scale(1); }
+  15% { transform: scale(1.12); }
+  30% { transform: scale(1.02); }
 }
 
 /* Idle Pulse Effect */

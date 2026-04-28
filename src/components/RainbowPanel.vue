@@ -66,7 +66,8 @@
 
       <p class="completed-text">
         Sometimes life is <strong>overwhelming</strong>, rainbow grounding is designed to help
-        <strong>ground yourself</strong> in the <strong>present moment</strong>, so your attention returns to the present
+        <strong>ground yourself</strong> in the <strong>present moment</strong>, so your attention returns to the
+        present
         and bring you to a place of <strong>calm</strong>.<br><br>
       <p class='quot'>
         To Write Love on Her Arms. (n.d.). <em>Rainbow walk grounding technique</em>[PDF].
