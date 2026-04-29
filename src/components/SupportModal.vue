@@ -1,6 +1,6 @@
 <template>
   <div class="support-overlay" @click.self="$emit('close')">
-    <div class="support-modal">
+    <div class="support-modal" :class="{ 'support-modal--wide': currentView === 'quiet' }">
 
       <!-- Close Button -->
       <!-- <button class="close-btn" @click="$emit('close')">✕</button> -->
@@ -69,6 +69,10 @@ const currentComponent = computed(() => {
   border-radius: 28px;
   padding: 34px;
   position: relative;
+}
+
+.support-modal--wide {
+  width: min(1100px, 94vw);
 }
 
 .close-btn {
