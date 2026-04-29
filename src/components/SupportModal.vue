@@ -7,8 +7,9 @@
       <button type="button" class="btn-close" aria-label="Close" @click="$emit('close')"
         style="position: absolute; top: 18px; right: 18px;"></button>
 
+      <!-- Listen to support menu actions and switch to the matching panel -->
       <component :is="currentComponent" @goBox="currentView = 'breathing'" @goRainbow="currentView = 'rainbow'"
-        @goHelpline="currentView = 'helpline'" @back="currentView = 'menu'" />
+        @goHelpline="currentView = 'helpline'" @goQuiet="currentView = 'quiet'" @back="currentView = 'menu'" />
     </div>
   </div>
 </template>
@@ -20,6 +21,7 @@ import SupportMenu from './SupportMenu.vue'
 import BoxBreathingPanel from './BoxBreathingPanel.vue'
 import RainbowPanel from './RainbowPanel.vue'
 import HelplinePanel from './HelplinePanel.vue'
+import QuietPlacesPanel from './QuietPlacesPanel.vue' // Nearby quiet spaces support panel
 
 defineEmits(['close'])
 
@@ -40,6 +42,8 @@ const currentComponent = computed(() => {
       return RainbowPanel
     case 'helpline':
       return HelplinePanel
+    case 'quiet':
+      return QuietPlacesPanel // Show quiet spaces content when user selects it
     default:
       return SupportMenu
   }
