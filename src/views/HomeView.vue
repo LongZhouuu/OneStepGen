@@ -453,7 +453,7 @@ function enterWorkspace() {
   background: var(--card-warm);
   border: 1px solid rgba(180, 106, 45, 0.08);
   border-radius: 18px;
-  padding: 14px 22px;
+  padding: 0.8vh 22px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -596,7 +596,7 @@ function enterWorkspace() {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 44px;
+  gap: 2vh;
 }
 
 .flow-timeline::before {
@@ -829,6 +829,8 @@ function enterWorkspace() {
   display: block;
   padding: clamp(48px, 8vh, 80px) clamp(20px, 6vw, 80px) clamp(48px, 7vh, 70px);
   background: transparent;
+  padding-bottom: 0;
+  min-height: 100vh;
 }
 
 .security-card {
