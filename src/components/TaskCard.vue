@@ -1,6 +1,16 @@
 <template>
     <section class="planner-card">
-        <h1 class="title">One-Step Planner</h1>
+        <div class="panel-header-band">
+            <div class="phb-icon" aria-hidden="true"
+                style="display: flex; justify-content: center; align-items: center;">
+                <i class="bi bi-archive" style="font-size: 1.4rem; position: relative; bottom: -0.2rem;"></i>
+            </div>
+
+            <div>
+                <div class="phb-title">One-Step Swiper</div>
+                <div class="phb-desc">Swipe tasks to complete or skip them.</div>
+            </div>
+        </div>
         <!-- <h2 class="subTitle">
             You can mark a task as completed by dragging the card to the left, or mark it as skipped
             by dragging it to the right.
@@ -23,7 +33,7 @@
             </div>
         </div> -->
         <div class="task-board">
-            <div class="memo-card-wrapper" id="memo-wrapper">
+            <div class="memo-card-wrapper" id="memo-wrapper" style="max-width: 82%;">
                 <div class="memo-card-shadow"></div>
                 <div class="memo-card" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
                     @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
@@ -140,7 +150,7 @@ const currentTaskText = computed(() => {
 
 const currentTaskOrder = computed(() => {
     return currentTaskItem.value?.order != null
-    // +1 ?
+        // +1 ?
         ? currentTaskItem.value.order
         : '🥳'
 })
@@ -327,14 +337,53 @@ function swipeOut(direction) {
 .planner-card {
     background: #f8f8f8;
     border-radius: 28px;
-    padding: 40px 24px 24px;
+    padding: 0 0 24px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
     width: 106%;
     position: relative;
     left: -3%;
-    /* border: 1px solid black; */
-    /* height: 500px; */
     height: 100%;
+    overflow: hidden;
+}
+
+.panel-header-band {
+    background: linear-gradient(120deg, #c8a888 0%, #dbbfa0 100%);
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.phb-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(253, 246, 240, 0.7);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 10px 22px rgba(45, 31, 20, 0.09);
+}
+
+.phb-icon svg {
+    width: 28px;
+    height: 28px;
+    color: #2d1f14;
+}
+
+.phb-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2d1f14;
+    margin-bottom: 4px;
+    margin-top: 2px;
+}
+
+.phb-desc {
+    font-size: 13.5px;
+    color: rgba(45, 31, 20, 0.65);
+    line-height: 1.5;
 }
 
 .title {
@@ -453,6 +502,8 @@ function swipeOut(direction) {
     justify-content: center;
     align-items: center;
     min-width: 160px;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .hintBtn p {

@@ -311,9 +311,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .timerCard {
 
-    height: 70%;
+    height: 100%;
     width: 100%;
-    padding: 40px 24px 24px;
+    padding: 0px 34px 0;
     text-align: center;
     /* box-shadow: 0 0px 18px rgba(0, 0, 0, 0.06); */
     background: #c3b7b700;
@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
 }
 
 .timerText {
-    font-size: 48px;
+    font-size: 4.4rem;
     font-weight: 800;
     color: #2f2f2f;
 }
@@ -344,7 +344,7 @@ onBeforeUnmount(() => {
     background: white;
     border-radius: 10px;
     text-align: center;
-    font-size: 48px;
+    font-size: 4.4rem;
     font-weight: 800;
     color: #2f2f2f;
     padding: 0;
@@ -359,14 +359,16 @@ onBeforeUnmount(() => {
 
 .timerLabel {
     margin-top: 6px;
-    font-size: 12.8px;
+    font-size: 1.12rem;
+    font-weight: bold;
     letter-spacing: 2px;
     color: #8a8a8a;
 }
 
 .timerSubLabel {
     margin-top: 4px;
-    font-size: 12.6px;
+    font-size: 0.86rem;
+    font-weight: bold;
     letter-spacing: 2px;
     color: #8a8a8a;
 }

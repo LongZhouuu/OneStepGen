@@ -29,7 +29,7 @@
                 <h2 style="font-size: 16.8px; color: #61b99f;">
                     Perfect Session! {{ completedCount }} out of {{ totalTaskCount }} tasks completed!
                 </h2>
-                <h2 style="font-size: 14px; color: #e74c3c;">
+                <h2 v-if="skippedCount > 0" style="font-size: 14px; color: #e74c3c;">
                     There are still {{ skippedCount }} tasks that have been skipped.
                     Do you want to continue with them?
                 </h2>
@@ -39,7 +39,7 @@
                 <!-- </p> -->
 
                 <div class="button-row">
-                    <button class="btn primary">
+                    <button v-if="skippedCount > 0" class="btn primary" @click="handleContinueWithSkipped">
                         <i class="bi bi-arrow-clockwise"></i>
                         Continue with Skipped
                     </button>
@@ -67,6 +67,7 @@ import {
     guardWorkflowStep,
     deleteSession,
     resetWorkflow,
+    unlockStep,
 } from '../router/workflow'
 
 const router = useRouter()
@@ -109,6 +110,13 @@ function handleStartNewSession() {
     clearCurrentSession()
     resetWorkflow()
     router.push({ name: 'AIDump' })
+}
+
+function handleContinueWithSkipped() {
+    resetWorkflow()
+    unlockStep(2)
+
+    router.push({ name: 'Planner' })
 }
 </script>
 
