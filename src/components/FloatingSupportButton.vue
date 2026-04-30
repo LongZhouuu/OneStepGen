@@ -1,5 +1,11 @@
 <template>
-  <button class="float-support" @click="$emit('open')">
+  <button
+    ref="buttonRef"
+    class="float-support"
+    type="button"
+    aria-label="Open support tools"
+    @click="$emit('open')"
+  >
     <!-- Tooltip -->
     <span class="float-tooltip">Support</span>
 
@@ -17,7 +23,15 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
 defineEmits(['open'])
+
+const buttonRef = ref(null)
+
+defineExpose({
+  focus: () => buttonRef.value?.focus(),
+})
 </script>
 
 <style scoped>
@@ -60,12 +74,19 @@ defineEmits(['open'])
 }
 
 /* Hover */
-.float-support:hover {
+.float-support:hover,
+.float-support:focus-visible {
   transform: translateY(-3px) scale(1.08);
   box-shadow: 0 20px 42px rgba(0, 0, 0, 0.2);
 }
 
-.float-support:hover::before {
+.float-support:focus-visible {
+  outline: 3px solid #2a180f;
+  outline-offset: 4px;
+}
+
+.float-support:hover::before,
+.float-support:focus-visible::before {
   opacity: 1;
   transform: scale(1);
 }
@@ -101,7 +122,8 @@ defineEmits(['open'])
   border-bottom: 7px solid transparent;
 }
 
-.float-support:hover .float-tooltip {
+.float-support:hover .float-tooltip,
+.float-support:focus-visible .float-tooltip {
   opacity: 1;
   transform: translateY(-50%) translateX(0);
 }
@@ -116,7 +138,8 @@ defineEmits(['open'])
   transform-origin: center;
 }
 
-.float-support:hover .icon-svg {
+.float-support:hover .icon-svg,
+.float-support:focus-visible .icon-svg {
   transform: scale(1.1);
   animation-duration: 1.1s;
 }
@@ -153,6 +176,23 @@ defineEmits(['open'])
 
   .float-tooltip {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-support,
+  .float-support::before,
+  .float-tooltip,
+  .icon-svg {
+    animation: none;
+    transition: none;
+  }
+
+  .float-support:hover,
+  .float-support:focus-visible,
+  .float-support:hover .icon-svg,
+  .float-support:focus-visible .icon-svg {
+    transform: none;
   }
 }
 </style>

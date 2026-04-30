@@ -23,6 +23,11 @@
               v-model="inputText"
               placeholder="e.g. I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances…"
             />
+            <VoiceInputButton
+              class="input-voice-button"
+              aria-label="Dictate your task dump"
+              @transcript="appendVoiceInput"
+            />
           </div>
  
           <div class="input-tools">
@@ -108,6 +113,7 @@
  
 <script>
 import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
+import VoiceInputButton from '@/components/VoiceInputButton.vue'
  
 // ─── Mock Backend ──────────────────────────────────────────────────────────────
 // TODO: Replace _mockCallBackend() with a real fetch() once the endpoint is ready.
@@ -142,6 +148,7 @@ const MIN_LOADING_MS = 2600
  
 export default {
   name: 'AIDump',
+  components: { VoiceInputButton },
   data() {
     return {
       view: 'input',          // 'input' | 'loading' | 'result' | 'error'
@@ -194,6 +201,11 @@ export default {
     removePdf() {
       this.uploadedFile     = null
       this.uploadedFileMeta = null
+    },
+
+    appendVoiceInput(transcript) {
+      const current = this.inputText?.trimEnd() ?? ''
+      this.inputText = current ? `${current} ${transcript}` : transcript
     },
  
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -385,10 +397,17 @@ export default {
   line-height: 1.75;
   color: var(--brown-text);
   min-height: 130px;
+  padding-right: 48px;
 }
  
 .input-area textarea::placeholder {
   color: rgba(45, 31, 20, 0.32);
+}
+
+.input-voice-button {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
 }
  
 .input-tools {
