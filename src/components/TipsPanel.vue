@@ -305,9 +305,11 @@ function handoffToBreathing() {
 
 .tp-tip-view {
   flex: 1;
-  min-height: 0;
+  /* min-height: 0; */
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow-y: auto;  
 }
 
 .tp-state-context {
@@ -332,11 +334,14 @@ function handoffToBreathing() {
 }
 
 .tp-tip-card {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: 160px;
+  max-width: 100%;
+  
   background: linear-gradient(135deg, #f4f9ff 0%, #dfeefa 100%);
   border: 1.5px solid rgba(83, 114, 134, 0.22);
   border-radius: 16px;
+
   padding: 22px 22px;
   display: flex;
   flex-direction: column;
