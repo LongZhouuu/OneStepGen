@@ -29,6 +29,7 @@ Run with:
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # Our utility modules (the AI pipeline)
 from utils.pdf_parser import extract_text_from_pdf
@@ -48,6 +49,14 @@ app = FastAPI(
     version="3.0.0",
 )
 
+# Allow cross-origin requests from any frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ── Request / Response models ──────────────────────────────
 
@@ -60,6 +69,7 @@ class TaskOutput(BaseModel):
     """A single task with its assigned priority, rank, and category rank."""
     task: str
     priority: str
+    priorityGroup: str
     score: int = 0
     rank: int = 0
     category_rank: int = 0

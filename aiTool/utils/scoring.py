@@ -184,9 +184,18 @@ def assign_priorities(tasks: list[dict]) -> list[dict]:
         score = _compute_score(task_text, llm_urgency, llm_importance)
         priority = _score_to_priority(score)
 
+        priority_group_map = {
+            "Do First": "urgent-important",
+            "Schedule": "not-urgent-important",
+            "Delegate": "urgent-not-important",
+            "Maybe/Later": "not-urgent-not-important"
+        }
+        priority_group = priority_group_map.get(priority, "not-urgent-not-important")
+
         results.append({
             "task": task_text,
             "priority": priority,
+            "priorityGroup": priority_group,
             "score": score,
         })
 
