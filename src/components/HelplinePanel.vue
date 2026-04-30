@@ -1,31 +1,39 @@
 <template>
-  <div class="panel">
-    <button class="back-btn" @click="$emit('back')">← Back</button>
+  <section class="panel" aria-labelledby="helpline-title">
+    <button class="back-btn" type="button" aria-label="Back to support menu" @click="$emit('back')">← Back</button>
 
-    <h2>Helpful Resources</h2>
+    <h2 id="helpline-title">Helpful Resources</h2>
     <p class="sub">Trusted ADHD and mental health support services.</p>
 
-    <div
+    <article
       v-for="resource in resources"
       :key="resource.name"
       class="resource-card"
     >
-      <strong>{{ resource.name }}</strong>
+      <h3 class="resource-title">{{ resource.name }}</h3>
       <p class="desc">{{ resource.description }}</p>
       <p v-if="resource.phone" class="phone">
         <span class="label">Phone:</span>
-        <a :href="toTelLink(resource.phone)" class="phone-link">{{ resource.phone }}</a>
+        <a
+          :href="toTelLink(resource.phone)"
+          class="phone-link"
+          :aria-label="`Call ${resource.name} at ${resource.phone}`"
+        >
+          {{ resource.phone }}
+        </a>
       </p>
       <a
         :href="resource.website"
         target="_blank"
         rel="noopener noreferrer"
         class="website"
+        :aria-label="`Open ${resource.name} website in a new tab`"
       >
-        {{ websiteLabel(resource.website) }} ->
+        {{ websiteLabel(resource.website) }}
+        <span aria-hidden="true">-&gt;</span>
       </a>
-    </div>
-  </div>
+    </article>
+  </section>
 </template>
 
 <script setup>
@@ -73,6 +81,7 @@ const websiteLabel = (website) =>
   cursor: pointer;
   margin-bottom: 18px;
   font-size: 15px;
+  border-radius: 6px;
 }
 
 .sub {
@@ -94,10 +103,11 @@ const websiteLabel = (website) =>
   box-shadow: 0 10px 20px rgba(72, 42, 20, 0.08);
 }
 
-.resource-card strong {
+.resource-title {
   display: block;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
   font-size: 16px;
+  font-weight: 700;
 }
 
 .desc {
@@ -123,7 +133,8 @@ const websiteLabel = (website) =>
   font-weight: 500;
 }
 
-.phone-link:hover {
+.phone-link:hover,
+.phone-link:focus-visible {
   text-decoration: underline;
 }
 
@@ -135,7 +146,25 @@ const websiteLabel = (website) =>
   font-weight: 500;
 }
 
-.website:hover {
+.website:hover,
+.website:focus-visible {
   text-decoration: underline;
+}
+
+.back-btn:focus-visible,
+.phone-link:focus-visible,
+.website:focus-visible {
+  outline: 3px solid #4d2a1d;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resource-card {
+    transition: none;
+  }
+
+  .resource-card:hover {
+    transform: none;
+  }
 }
 </style>

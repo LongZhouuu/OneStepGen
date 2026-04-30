@@ -1,17 +1,17 @@
 <template>
-  <section class="tips-panel">
+  <section class="tips-panel" aria-label="Quick tactics">
     <header class="tp-header">
       <button
         v-if="selectedState"
         class="tp-back"
         type="button"
         @click="backToStates"
-        aria-label="Back to states"
+        aria-label="Back to tactics list"
       >
         <i class="bi bi-arrow-left"></i>
       </button>
       <div v-else class="tp-title">
-        <i class="bi bi-lightbulb"></i>
+        <i class="bi bi-lightbulb" aria-hidden="true"></i>
         <h2>Quick Tactics</h2>
       </div>
       <button class="tp-close" type="button" @click="$emit('close')" aria-label="Close panel">×</button>
@@ -28,6 +28,7 @@
             <button
               class="tp-state"
               type="button"
+              :aria-label="`Show tactics for ${state.label}`"
               @click="selectState(state.key)"
             >
               <span class="tp-state-icon" aria-hidden="true">
@@ -41,7 +42,7 @@
       </div>
 
       <!-- Tip card -->
-      <div v-else key="tip" class="tp-tip-view">
+      <div v-else key="tip" class="tp-tip-view" aria-live="polite">
         <p class="tp-state-context">
           <span class="tp-state-icon-sm" aria-hidden="true">
             <i :class="currentStateIconClass"></i>
@@ -50,8 +51,13 @@
         </p>
 
         <Transition name="tp-card" mode="out-in">
-          <article v-if="currentTip" :key="currentTip.id" class="tp-tip-card">
-            <h3 class="tp-tip-title">{{ currentTip.title }}</h3>
+          <article
+            v-if="currentTip"
+            :key="currentTip.id"
+            class="tp-tip-card"
+            aria-labelledby="current-tip-title"
+          >
+            <h3 id="current-tip-title" ref="tipTitleRef" class="tp-tip-title" tabindex="-1">{{ currentTip.title }}</h3>
             <p class="tp-tip-body">{{ currentTip.body }}</p>
           </article>
         </Transition>
@@ -61,10 +67,11 @@
             v-if="currentTips.length > 1"
             class="tp-try-another"
             type="button"
+            aria-label="Show another tactic for this state"
             @click="tryAnother"
           >
             Try another
-            <i class="bi bi-arrow-clockwise"></i>
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
           </button>
           <button class="tp-pick-other" type="button" @click="backToStates">
             Pick another state
@@ -73,7 +80,7 @@
 
         <button class="tp-handoff" type="button" @click="handoffToBreathing">
           Still too heavy? Take a breath instead
-          <i class="bi bi-arrow-right"></i>
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
     </Transition>
@@ -81,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { tipsData } from '@/data/tips.js'
 
 const emit = defineEmits(['close'])
@@ -97,6 +104,7 @@ const states = [
 
 const selectedState = ref(null)
 const tipIndex = ref(0)
+const tipTitleRef = ref(null)
 
 const currentTips = computed(() => {
   if (!selectedState.value) return []
@@ -118,6 +126,7 @@ function selectState(key) {
   selectedState.value = key
   const tips = tipsData[key]?.tips ?? []
   tipIndex.value = tips.length > 0 ? Math.floor(Math.random() * tips.length) : 0
+  focusTipTitle()
 }
 
 function tryAnother() {
@@ -128,11 +137,18 @@ function tryAnother() {
     next = Math.floor(Math.random() * total)
   }
   tipIndex.value = next
+  focusTipTitle()
 }
 
 function backToStates() {
   selectedState.value = null
   tipIndex.value = 0
+}
+
+function focusTipTitle() {
+  nextTick(() => {
+    tipTitleRef.value?.focus()
+  })
 }
 
 // Soft handoff: when a productivity tip isn't enough (user feels overwhelmed/tired),
@@ -210,6 +226,17 @@ function handoffToBreathing() {
 .tp-close:hover {
   background: rgba(83, 114, 134, 0.14);
   color: #49707c;
+}
+
+.tp-back:focus-visible,
+.tp-close:focus-visible,
+.tp-state:focus-visible,
+.tp-try-another:focus-visible,
+.tp-pick-other:focus-visible,
+.tp-handoff:focus-visible,
+.tp-tip-title:focus-visible {
+  outline: 3px solid #49707c;
+  outline-offset: 3px;
 }
 
 .tp-picker {
@@ -476,5 +503,31 @@ function handoffToBreathing() {
 .tp-card-leave-to {
   opacity: 0;
   transform: translateY(-8px) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-back,
+  .tp-close,
+  .tp-state,
+  .tp-try-another,
+  .tp-pick-other,
+  .tp-handoff,
+  .tp-handoff i,
+  .tp-fade-enter-active,
+  .tp-fade-leave-active,
+  .tp-card-enter-active,
+  .tp-card-leave-active {
+    transition: none;
+  }
+
+  .tp-state:active,
+  .tp-try-another:active,
+  .tp-handoff:hover i,
+  .tp-fade-enter-from,
+  .tp-fade-leave-to,
+  .tp-card-enter-from,
+  .tp-card-leave-to {
+    transform: none;
+  }
 }
 </style>

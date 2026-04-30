@@ -5,11 +5,27 @@
         </div>
 
         <div v-else class="timerEditor">
-            <input ref="minuteInput" v-model="editMin" class="timerInput" type="text" maxlength="3" inputmode="numeric"
-                @input="handleMinInput" @keyup.enter="finishEdit" @blur="handleBlur" />
+            <div class="timerInputGroup">
+                <input ref="minuteInput" v-model="editMin" class="timerInput" type="text" maxlength="3" inputmode="numeric"
+                    aria-label="Timer minutes"
+                    @input="handleMinInput" @keyup.enter="finishEdit" @blur="handleBlur" />
+                <VoiceInputButton
+                    class="timerVoiceButton"
+                    aria-label="Dictate timer minutes"
+                    @transcript="setMinuteFromVoice"
+                />
+            </div>
             <span class="timerColon">:</span>
-            <input ref="secondInput" v-model="editSec" class="timerInput" type="text" maxlength="2" inputmode="numeric"
-                @input="handleSecInput" @keyup.enter="finishEdit" @blur="handleBlur" />
+            <div class="timerInputGroup">
+                <input ref="secondInput" v-model="editSec" class="timerInput" type="text" maxlength="2" inputmode="numeric"
+                    aria-label="Timer seconds"
+                    @input="handleSecInput" @keyup.enter="finishEdit" @blur="handleBlur" />
+                <VoiceInputButton
+                    class="timerVoiceButton"
+                    aria-label="Dictate timer seconds"
+                    @transcript="setSecondFromVoice"
+                />
+            </div>
         </div>
         <div v-if="!props.collapsed">
             <div class="timerLabel">
@@ -44,6 +60,7 @@
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import CountdownPop from './CountdownPop.vue'
+import VoiceInputButton from './VoiceInputButton.vue'
 import timerSound from '@/assets/timerRing.mp3'
 
 const emit = defineEmits(['countingState'])
@@ -203,6 +220,58 @@ function handleSecInput(e) {
     editSec.value = value
 }
 
+function setMinuteFromVoice(transcript) {
+    const value = speechToNumberText(transcript).slice(0, 3)
+    if (!value) return
+    editMin.value = value
+    secondInput.value?.focus()
+    secondInput.value?.select()
+}
+
+function setSecondFromVoice(transcript) {
+    const value = speechToNumberText(transcript).slice(0, 2)
+    if (!value) return
+    editSec.value = value
+}
+
+function speechToNumberText(transcript) {
+    const digitText = transcript.replace(/\D/g, '')
+    if (digitText) return digitText
+
+    const numberWords = {
+        zero: 0,
+        oh: 0,
+        one: 1,
+        two: 2,
+        three: 3,
+        four: 4,
+        five: 5,
+        six: 6,
+        seven: 7,
+        eight: 8,
+        nine: 9,
+        ten: 10,
+        eleven: 11,
+        twelve: 12,
+        thirteen: 13,
+        fourteen: 14,
+        fifteen: 15,
+        sixteen: 16,
+        seventeen: 17,
+        eighteen: 18,
+        nineteen: 19,
+        twenty: 20,
+        thirty: 30,
+        forty: 40,
+        fifty: 50,
+        sixty: 60,
+    }
+
+    const words = transcript.toLowerCase().match(/[a-z]+/g) ?? []
+    const total = words.reduce((sum, word) => sum + (numberWords[word] ?? 0), 0)
+    return total > 0 ? String(total) : ''
+}
+
 function handleBlur() {
     setTimeout(() => {
         const active = document.activeElement
@@ -335,10 +404,20 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 8px;
+}
+
+.timerInputGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    width: 34%;
 }
 
 .timerInput {
-    width: 24%;
+    width: 100%;
+    min-width: 0;
     border: none;
     outline: none;
     background: white;
@@ -348,6 +427,11 @@ onBeforeUnmount(() => {
     font-weight: 800;
     color: #2f2f2f;
     padding: 0;
+}
+
+.timerVoiceButton {
+    width: 34px;
+    height: 34px;
 }
 
 .timerColon {
@@ -421,5 +505,14 @@ onBeforeUnmount(() => {
 .timerCard.collapsed .timerColon,
 .timerCard.collapsed .timerInput {
     font-size: 34px;
+}
+
+.timerCard.collapsed .timerInputGroup {
+    width: 42%;
+}
+
+.timerCard.collapsed .timerVoiceButton {
+    width: 30px;
+    height: 30px;
 }
 </style>
