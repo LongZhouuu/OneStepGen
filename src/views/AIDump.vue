@@ -26,15 +26,15 @@
           </div>
  
           <div class="input-tools">
-            <label class="upload-btn" :class="{ 'has-file': uploadedFile }">
+            <label class="upload-btn" :class="{ 'has-file': uploadedFile || uploadedFileMeta }">
               <svg class="clip-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
               </svg>
-              {{ uploadedFile ? uploadedFile.name : 'Upload PDF' }}
+              {{ uploadedFile ? uploadedFile.name : uploadedFileMeta ? uploadedFileMeta.name : 'Upload PDF' }}
               <input type="file" accept=".pdf" style="display:none" @change="handlePdfUpload">
             </label>
-            <span v-if="!uploadedFile" class="char-count">{{ charCount }} characters</span>
-            <button v-if="uploadedFile" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
+            <span v-if="!uploadedFile && !uploadedFileMeta" class="char-count">{{ charCount }} characters</span>
+            <button v-if="uploadedFile || uploadedFileMeta" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
           </div>
  
           <div class="ai-hint">
@@ -107,7 +107,7 @@
 </template>
  
 <script>
-import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession } from '../router/workflow'
+import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
  
 // ─── Mock Backend ──────────────────────────────────────────────────────────────
 // TODO: Replace _mockCallBackend() with a real fetch() once the endpoint is ready.
@@ -158,12 +158,21 @@ export default {
     },
     canCreate() {
       const hasText = (this.inputText ?? '').trim().length > 0
-      const hasPdf  = this.uploadedFile !== null
+      const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
       return (hasText || hasPdf) && this.view === 'input'
     },
   },
   mounted() {
     guardWorkflowStep(1, this.$router)
+
+    const session = getCurrentSession()
+    if (session) {
+      if (session.inputType === 'text') {
+        this.inputText = session.rawInputText ?? ''
+      } else if (session.inputType === 'pdf') {
+        this.uploadedFileMeta = session.uploadedFileMeta ?? null
+      }
+    }
   },
   methods: {
     // ── PDF handling ──────────────────────────────────────────────────────────
@@ -199,12 +208,27 @@ export default {
  
     // ── Main flow ─────────────────────────────────────────────────────────────
     async createTasks() {
-      const hasPdf  = this.uploadedFile !== null
+      const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
       const hasText = (this.inputText ?? '').trim().length > 0
       if (!hasPdf && !hasText) return
- 
+
       const inputType = hasPdf ? 'pdf' : 'text'
- 
+
+      const existingSession = getCurrentSession()
+      const isSameText = inputType === 'text' &&
+        this.inputText.trim() === (existingSession?.rawInputText ?? '')
+      const isSamePdf = inputType === 'pdf' &&
+        this.uploadedFileMeta?.name === existingSession?.uploadedFileMeta?.name &&
+        this.uploadedFileMeta?.size === existingSession?.uploadedFileMeta?.size
+      const alreadyHasTasks = (existingSession?.tasks?.length ?? 0) > 0
+
+      if ((isSameText || isSamePdf) && alreadyHasTasks) {
+        this.taskCount = existingSession.tasks.length
+        this.view = 'result'
+        console.log('[AIDump] Same input detected, reusing existing tasks:', this.taskCount, 'tasks')
+        return
+      }
+
       // ── Phase 1: immediately save session skeleton to localStorage ──────────
       const session = createSession({
         inputType,
