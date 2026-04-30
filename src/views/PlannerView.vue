@@ -50,13 +50,20 @@
                   <span class="task-num">{{ task.order }}</span>
 
                   <template v-if="editingId === task.id">
-                    <input
-                      v-model="editingText"
-                      class="task-edit-input"
-                      @keyup.enter="confirmEdit(task)"
-                      @blur="confirmEdit(task)"
-                      @keyup.escape="cancelEdit"
-                    />
+                    <div class="task-edit-field">
+                      <input
+                        v-model="editingText"
+                        class="task-edit-input"
+                        @keyup.enter="confirmEdit(task)"
+                        @blur="confirmEdit(task)"
+                        @keyup.escape="cancelEdit"
+                      />
+                      <VoiceInputButton
+                        class="task-voice-button"
+                        aria-label="Dictate task edit"
+                        @transcript="appendEditingVoiceInput"
+                      />
+                    </div>
                   </template>
                   <template v-else>
                     <span class="task-text">{{ task.text }}</span>
@@ -124,7 +131,14 @@
 
         <div class="modal-field">
           <label for="new-task-text">What's the task?</label>
-          <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+          <div class="modal-input-field">
+            <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+            <VoiceInputButton
+              class="modal-voice-button"
+              aria-label="Dictate new task"
+              @transcript="appendNewTaskVoiceInput"
+            />
+          </div>
         </div>
 
         <div class="modal-field">
@@ -166,6 +180,7 @@
 
 <script>
 import draggable from 'vuedraggable'
+import VoiceInputButton from '@/components/VoiceInputButton.vue'
 import {
   guardWorkflowStep,
   unlockStep,
@@ -185,7 +200,7 @@ const GROUP_ORDER = [
 
 export default {
   name: 'PlannerView',
-  components: { draggable },
+  components: { draggable, VoiceInputButton },
   data() {
     return {
       sessionId: null,
@@ -284,6 +299,10 @@ export default {
       this._loadFromSession()
       this.cancelEdit()
     },
+    appendEditingVoiceInput(transcript) {
+      const current = this.editingText?.trimEnd() ?? ''
+      this.editingText = current ? `${current} ${transcript}` : transcript
+    },
 
     // ── Delete ────────────────────────────────────────────────────────────────
     deleteTask(taskId) {
@@ -321,6 +340,11 @@ export default {
       this.newTaskImportant = true
       this.newTaskUrgent    = true
       this.showModal        = false
+    },
+
+    appendNewTaskVoiceInput(transcript) {
+      const current = this.newTaskText?.trimEnd() ?? ''
+      this.newTaskText = current ? `${current} ${transcript}` : transcript
     },
 
     // ── Drag ──────────────────────────────────────────────────────────────────
@@ -638,8 +662,17 @@ export default {
 .task-btn:hover { background: rgba(193,113,79,0.08); color: var(--terracotta); }
 .task-btn.danger:hover { background: rgba(232,139,139,0.12); color: #e07878; }
 
+.task-edit-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .task-edit-input {
   flex: 1;
+  min-width: 0;
   border: 1.5px solid rgba(193,113,79,0.25);
   border-radius: 10px;
   padding: 10px 12px;
@@ -648,6 +681,11 @@ export default {
 }
 
 .task-edit-input:focus { border-color: var(--terracotta); }
+
+.task-voice-button {
+  width: 34px;
+  height: 34px;
+}
 
 /* ── Skipped section ─────────────────────────────────────────────────────── */
 .skipped-section {
@@ -757,13 +795,26 @@ export default {
 .modal-field { margin-bottom: 20px; }
 .modal-field label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--brown-text); }
 
+.modal-input-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .modal-input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   padding: 14px 16px;
   border: 2px solid rgba(193,113,79,0.55);
   border-radius: 14px;
   font: inherit;
   outline: none;
+}
+
+.modal-voice-button {
+  width: 42px;
+  height: 42px;
 }
 
 .modal-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

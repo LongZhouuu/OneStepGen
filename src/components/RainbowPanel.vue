@@ -50,9 +50,16 @@
         Find an object near you that is this colour, or as close as possible.
       </p>
 
-      <input v-model="answer" class="input" type="text"
-        :placeholder="isInfiniteMode ? 'Type the object name...' : `Type the ${currentColor.name} object name...`"
-        @keyup.enter="goNext" />
+      <div class="voice-input-field rainbow-input-field">
+        <input v-model="answer" class="input" type="text"
+          :placeholder="isInfiniteMode ? 'Type the object name...' : `Type the ${currentColor.name} object name...`"
+          @keyup.enter="goNext" />
+        <VoiceInputButton
+          class="rainbow-voice-button"
+          aria-label="Dictate the object name"
+          @transcript="appendVoiceAnswer"
+        />
+      </div>
 
       <button class="next-btn" :disabled="!answer.trim()" @click="goNext"
         :title="!answer.trim() ? 'Please enter at least one object' : ''">
@@ -69,12 +76,12 @@
         <strong>ground yourself</strong> in the <strong>present moment</strong>, so your attention returns to the
         present
         and bring you to a place of <strong>calm</strong>.<br><br>
-      <p class='quot'>
+      </p>
+      <p class="quot">
         To Write Love on Her Arms. (n.d.). <em>Rainbow walk grounding technique</em>[PDF].
-        <a href="https://twloha.com/content/files/rainbow-grounding-technique.pdf" target='_blank'>
+        <a href="https://twloha.com/content/files/rainbow-grounding-technique.pdf" target="_blank">
           https://twloha.com/content/files/rainbow-grounding-technique.pdf
         </a>
-      </p>
       </p>
 
       <p class="completed-question">
@@ -97,6 +104,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { Popover } from 'bootstrap'
+import VoiceInputButton from '@/components/VoiceInputButton.vue'
 
 defineEmits(['back'])
 
@@ -257,6 +265,11 @@ function goNext() {
   } else {
     screen.value = 'completed'
   }
+}
+
+function appendVoiceAnswer(transcript) {
+  const current = answer.value.trimEnd()
+  answer.value = current ? `${current} ${transcript}` : transcript
 }
 
 function continueRandomRound() {
@@ -442,7 +455,16 @@ h2 {
   line-height: 1.5;
 }
 
+.voice-input-field {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   padding: 15px 16px;
   border-radius: 16px;
@@ -455,6 +477,12 @@ h2 {
 
 .input:focus {
   border-color: rgba(47, 38, 31, 0.45);
+}
+
+.rainbow-voice-button {
+  border-color: rgba(47, 38, 31, 0.28);
+  color: currentColor;
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .next-btn {
