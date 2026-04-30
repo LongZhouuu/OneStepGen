@@ -94,17 +94,14 @@ const statusMessage = ref('')
 const isLocating = ref(false)
 const isSearching = ref(false)
 const isLoadingData = ref(false)
-const activeTab = ref('all')
+const activeTab = ref(focusMapSources[0]?.id || '')
 
 const placeMarkers = ref([])
 const userMarker = ref(null)
 const userRadius = ref(null)
 const allPlaces = ref([])
 
-const tabs = computed(() => [
-  { id: 'all', label: 'All' },
-  ...focusMapSources.map((source) => ({ id: source.id, label: source.label })),
-])
+const tabs = computed(() => focusMapSources.map((source) => ({ id: source.id, label: source.label })))
 
 const placesWithDistance = computed(() => {
   if (!userLocation.value) return []
@@ -123,11 +120,10 @@ const placesWithDistance = computed(() => {
 })
 
 const visiblePlaces = computed(() => {
-  const places =
-    activeTab.value === 'all'
-      ? placesWithDistance.value
-      : placesWithDistance.value.filter((place) => place.sourceId === activeTab.value)
-  return places.slice(0, 20)
+  if (!activeTab.value) return []
+  return placesWithDistance.value
+    .filter((place) => place.sourceId === activeTab.value)
+    .slice(0, 20)
 })
 
 async function loadAllPlaces() {
@@ -371,7 +367,16 @@ function renderMarkers() {
   }
 
   visiblePlaces.value.forEach((place) => {
+    const markerColor = getCategoryMarkerColor(place)
+    const placeIcon = L.divIcon({
+      className: 'place-marker-icon-wrapper',
+      html: `<span class="place-marker-dot" style="background:${markerColor};"></span>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    })
+
     const marker = L.marker([place.lat, place.lng])
+      .setIcon(placeIcon)
       .addTo(map.value)
       .bindPopup(
         `<strong>${escapeHtml(place.name)}</strong><br/>${escapeHtml(place.category || place.sourceLabel || 'Place')}<br/>Opening: ${escapeHtml(place.openingHours || 'Not provided')}<br/>Distance from you: ${formatDistance(place.distanceKm)}`
@@ -383,6 +388,13 @@ function renderMarkers() {
 function setActiveTab(tabId) {
   activeTab.value = tabId
   renderMarkers()
+}
+
+function getCategoryMarkerColor(place) {
+  if (place.sourceId === 'libraries') return '#2f80ed'
+  if (place.sourceId === 'coworking') return '#e74c3c'
+  if (place.sourceId === 'landmarks') return '#27ae60'
+  return '#8e8e8e'
 }
 
 function formatDistance(km) {
@@ -605,6 +617,15 @@ h2 {
   box-shadow:
     0 0 0 6px rgba(47, 128, 237, 0.2),
     0 2px 10px rgba(24, 84, 163, 0.35);
+}
+
+:deep(.place-marker-dot) {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
 }
 
 @media (max-width: 960px) {
