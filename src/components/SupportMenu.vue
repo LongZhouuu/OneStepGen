@@ -11,7 +11,7 @@
     </h2>
     <p class="sub">Choose what you need right now</p>
 
-    <!-- Australian Helplines -->
+    <!-- Helpful Resources -->
     <button class="support-card" type="button" @click="$emit('goHelpline')">
       <span class="support-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
@@ -21,7 +21,7 @@
         </svg>
       </span>
       <span class="support-text">
-        <span class="support-heading">Australian Helplines</span>
+        <span class="support-heading">Helpful Resources</span>
         <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
       </span>
     </button>
