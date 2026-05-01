@@ -3,7 +3,7 @@
     <button class="back-btn" type="button" @click="$emit('back')">
       ← Back
     </button>
-    <h2>Melbourne Focus Map</h2>
+    <h2>Melbourne CDB Focus Map</h2>
     <p class="sub">Find nearby work/reset spots with opening times and distance.</p>
 
     <div class="controls">
@@ -24,6 +24,10 @@
         </button>
       </div>
     </div>
+
+    <p v-if="selectedAddress" class="selected-address">
+      Selected address: {{ selectedAddress }}
+    </p>
 
     <p v-if="statusMessage" class="status-message">{{ statusMessage }}</p>
 
@@ -49,7 +53,7 @@
       <div ref="mapEl" class="map"></div>
 
       <div class="results">
-        <h3>Nearby Places</h3>
+        <h3>{{ nearbyHeading }}</h3>
         <div v-if="selectedPlace" class="selected-place-row">
           <p class="selected-place-text">
             Selected: <strong>{{ selectedPlace.name }}</strong>
@@ -147,6 +151,7 @@ const isLoadingData = ref(false)
 const activeTab = ref(focusMapSources[0]?.id || '')
 const selectedPlace = ref(null)
 const showNavigationPopup = ref(false)
+const selectedAddress = ref('')
 
 const placeMarkers = ref([])
 const placeMarkerById = ref({})
@@ -155,6 +160,11 @@ const userRadius = ref(null)
 const allPlaces = ref([])
 
 const tabs = computed(() => focusMapSources.map((source) => ({ id: source.id, label: source.label })))
+const nearbyHeading = computed(() => {
+  const activeSource = focusMapSources.find((source) => source.id === activeTab.value)
+  return activeSource ? `Nearby ${activeSource.label}` : 'Nearby Places'
+})
+
 const activeTabMessage = computed(() => {
   if (activeTab.value === 'libraries') {
     return 'Blue = quiet structure. Great for low-distraction deep work.'
@@ -387,6 +397,7 @@ async function searchLocation() {
       return
     }
 
+    selectedAddress.value = first.display_name || locationQuery.value
     setUserLocation(Number(first.lat), Number(first.lon))
     statusMessage.value = 'Location set from search.'
   } catch {
@@ -398,9 +409,24 @@ async function searchLocation() {
 
 function setUserLocation(lat, lng) {
   userLocation.value = { lat, lng }
+  void updateSelectedAddress(lat, lng)
   renderMarkers()
   if (map.value) {
     map.value.setView([lat, lng], 14)
+  }
+}
+
+async function updateSelectedAddress(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`
+    const res = await fetch(url)
+    if (!res.ok) return
+    const data = await res.json()
+    if (data?.display_name) {
+      selectedAddress.value = data.display_name
+    }
+  } catch {
+    // Keep location usable even if reverse geocoding fails.
   }
 }
 
@@ -652,6 +678,16 @@ h2 {
   margin: 10px 0 0;
   color: #6d422d;
   font-size: 14px;
+}
+
+.selected-address {
+  margin: 10px 0 0;
+  color: #6d422d;
+  font-size: 13.5px;
+  background: #f9f1eb;
+  border: 1px solid #e9ddd4;
+  border-radius: 10px;
+  padding: 8px 10px;
 }
 
 .category-message {
