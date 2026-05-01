@@ -34,11 +34,16 @@
         type="button"
         class="tab-btn"
         :class="{ 'tab-btn--active': activeTab === tab.id }"
+        :style="getTabStyle(tab.id, activeTab === tab.id)"
         @click="setActiveTab(tab.id)"
       >
         {{ tab.label }}
       </button>
     </div>
+
+    <p v-if="activeTabMessage" class="category-message">
+      {{ activeTabMessage }}
+    </p>
 
     <div class="content-grid">
       <div ref="mapEl" class="map"></div>
@@ -53,7 +58,16 @@
         </p>
 
         <ul v-else class="places-list">
-          <li v-for="place in visiblePlaces" :key="place.id" class="place-card">
+          <li
+            v-for="place in visiblePlaces"
+            :key="place.id"
+            class="place-card"
+            role="button"
+            tabindex="0"
+            @click="focusPlaceOnMap(place)"
+            @keydown.enter.prevent="focusPlaceOnMap(place)"
+            @keydown.space.prevent="focusPlaceOnMap(place)"
+          >
             <p class="place-name">{{ place.name }}</p>
             <p class="place-meta">
               <span class="place-pin" aria-hidden="true">📍</span>
@@ -97,11 +111,24 @@ const isLoadingData = ref(false)
 const activeTab = ref(focusMapSources[0]?.id || '')
 
 const placeMarkers = ref([])
+const placeMarkerById = ref({})
 const userMarker = ref(null)
 const userRadius = ref(null)
 const allPlaces = ref([])
 
 const tabs = computed(() => focusMapSources.map((source) => ({ id: source.id, label: source.label })))
+const activeTabMessage = computed(() => {
+  if (activeTab.value === 'libraries') {
+    return 'Blue = quiet structure. Great for low-distraction deep work.'
+  }
+  if (activeTab.value === 'coworking') {
+    return 'Red = social focus. Good for body-doubling and momentum.'
+  }
+  if (activeTab.value === 'relax') {
+    return 'Green = sensory reset. Ideal for short breathing and regulation breaks.'
+  }
+  return ''
+})
 
 const placesWithDistance = computed(() => {
   if (!userLocation.value) return []
@@ -335,6 +362,7 @@ function renderMarkers() {
 
   placeMarkers.value.forEach((marker) => marker.remove())
   placeMarkers.value = []
+  placeMarkerById.value = {}
 
   if (userMarker.value) {
     userMarker.value.remove()
@@ -382,6 +410,7 @@ function renderMarkers() {
         `<strong>${escapeHtml(place.name)}</strong><br/>${escapeHtml(place.category || place.sourceLabel || 'Place')}<br/>Opening: ${escapeHtml(place.openingHours || 'Not provided')}<br/>Distance from you: ${formatDistance(place.distanceKm)}`
       )
     placeMarkers.value.push(marker)
+    placeMarkerById.value[place.id] = marker
   })
 }
 
@@ -390,11 +419,42 @@ function setActiveTab(tabId) {
   renderMarkers()
 }
 
+function focusPlaceOnMap(place) {
+  if (!map.value) return
+  const marker = placeMarkerById.value[place.id]
+  map.value.setView([place.lat, place.lng], 16, { animate: true })
+  if (marker) {
+    marker.openPopup()
+  }
+}
+
 function getCategoryMarkerColor(place) {
   if (place.sourceId === 'libraries') return '#2f80ed'
   if (place.sourceId === 'coworking') return '#e74c3c'
-  if (place.sourceId === 'landmarks') return '#27ae60'
+  if (place.sourceId === 'relax') return '#27ae60'
   return '#8e8e8e'
+}
+
+function getTabStyle(tabId, isActive) {
+  const palette = {
+    libraries: { bg: '#e9f2ff', border: '#2f80ed', text: '#1f5fae' },
+    coworking: { bg: '#ffeeea', border: '#e74c3c', text: '#b13a2c' },
+    relax: { bg: '#ecf9ef', border: '#27ae60', text: '#1c8448' },
+  }
+
+  const colors = palette[tabId] || { bg: '#fff2e9', border: '#b66a48', text: '#5f351f' }
+  if (isActive) {
+    return {
+      background: colors.bg,
+      borderColor: colors.border,
+      color: colors.text,
+    }
+  }
+  return {
+    borderColor: '#d7c7bb',
+    color: '#6a4a38',
+    background: '#fff',
+  }
 }
 
 function formatDistance(km) {
@@ -515,6 +575,16 @@ h2 {
   font-size: 14px;
 }
 
+.category-message {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: #6f5a4b;
+  background: #f9f1eb;
+  border: 1px solid #e9ddd4;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
 .tabs {
   margin-top: 12px;
   display: flex;
@@ -534,9 +604,7 @@ h2 {
 }
 
 .tab-btn--active {
-  border-color: #b66a48;
-  background: #fff2e9;
-  color: #5f351f;
+  font-weight: 600;
 }
 
 .content-grid {
@@ -589,6 +657,19 @@ h2 {
   border-radius: 10px;
   background: white;
   padding: 10px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.place-card:hover {
+  transform: translateY(-1px);
+  border-color: #dcc8ba;
+  box-shadow: 0 4px 14px rgba(97, 75, 52, 0.1);
+}
+
+.place-card:focus-visible {
+  outline: 2px solid #b66a48;
+  outline-offset: 2px;
 }
 
 .place-name {

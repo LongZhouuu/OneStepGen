@@ -32,8 +32,8 @@ export const focusMapSources = [
     defaultOpeningHours: 'See library website',
   },
   {
-    id: 'landmarks',
-    label: 'Landmarks (Filtered)',
+    id: 'relax',
+    label: 'Relax Areas',
     // Copy file to: public/focus-data/landmarks.csv
     url: '/focus-data/landmarks.csv',
     format: 'csv',
