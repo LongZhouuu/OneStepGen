@@ -16,9 +16,16 @@ export function getMaxReachedStep() {
 }
 
 export function setMaxReachedStep(step) {
-  const safeStep = Math.min(Math.max(step, 1), WORKFLOW_STEPS.length)
-  if (safeStep > maxReachedStep.value) {
-    maxReachedStep.value = safeStep
+  const safeStep = normalizeStep(step)
+
+  if (safeStep <= maxReachedStep.value) return
+
+  maxReachedStep.value = safeStep
+
+  const session = getCurrentSession()
+  if (session) {
+    session.maxReachedStep = safeStep
+    saveCurrentSession(session)
   }
 }
 
@@ -55,6 +62,8 @@ export function getHighestUnlockedRouteName() {
 }
 
 export function guardWorkflowStep(stepId, router) {
+  syncWorkflowFromSession()
+
   if (canAccessStep(stepId)) return true
 
   router.replace({ name: getHighestUnlockedRouteName() })
@@ -97,10 +106,17 @@ function generateId(prefix) {
 //   ],
 //   "reward": "Fox",
 //   "startedAt": 1713940000000,
-//   "completedAt": null
+//   "completedAt": null,
+//   "reachedStep": null
 // }
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
+
+function normalizeStep(step) {
+  const numberStep = Number(step)
+  if (!Number.isFinite(numberStep)) return 1
+  return Math.min(Math.max(numberStep, 1), WORKFLOW_STEPS.length)
+}
 
 // get session and parse
 export function getCurrentSession() {
@@ -124,6 +140,8 @@ export function createSession({
 } = {}) {
   const timestamp = Date.now()
 
+  resetWorkflow()
+
   const newSession = {
     sessionId: generateId('session'),
     inputType,
@@ -133,12 +151,35 @@ export function createSession({
     reward,
     startedAt: timestamp,
     completedAt: null,
+    maxReachedStep: 1,
   }
 
   saveCurrentSession(newSession)
 
   return newSession
 }
+
+
+export function syncWorkflowFromSession() {
+  const session = getCurrentSession()
+
+  if (!session) {
+    resetWorkflow()
+    return null
+  }
+
+  const storedStep = session.maxReachedStep ?? session.reachedStep ?? 1
+  const safeStep = normalizeStep(storedStep)
+
+  session.maxReachedStep = safeStep
+  delete session.reachedStep
+
+  maxReachedStep.value = safeStep
+  saveCurrentSession(session)
+
+  return session
+}
+
 
 // Bulk add AI-generated tasks to an existing session
 // Replaces any existing tasks in the session with the AI results
@@ -303,6 +344,7 @@ export function deleteSession(sessionId) {
   if (!session || session.sessionId !== sessionId) return null
 
   localStorage.removeItem(CURRENT_SESSION_KEY)
+  resetWorkflow()
 
   return true
 }
@@ -324,7 +366,7 @@ export function reorderTasksInSession(sessionId, reorderedTasks) {
     const isSkipped = task.status === 'skipped'
     return {
       ...task,
-      order:     isSkipped ? null : ++activeCounter,
+      order: isSkipped ? null : ++activeCounter,
       updatedAt: timestamp,
     }
   })

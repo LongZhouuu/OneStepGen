@@ -1,6 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
+import {
+  getStepByRouteName,
+  getHighestUnlockedRouteName,
+  syncWorkflowFromSession,
+} from './workflow'
+
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
@@ -9,7 +15,7 @@ import AboutView from '../views/AboutView.vue'
 import PlannerView from '../views/PlannerView.vue'
 // import PrioritizerView from '../views/tools/PrioritizerView.vue'
 // import SupportView from '../views/tools/SupportView.vue'
-import TipsView from '../views/tools/TipsAndTemplatesView.vue'
+// import TipsView from '../views/tools/TipsAndTemplatesView.vue'
 import TaskSwipper from '../views/TaskSwipper.vue'
 import AIDump from '../views/AIDump.vue'
 // import PlanView from '../views/PlanView.vue'
@@ -86,6 +92,30 @@ const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return { top: 0, left: 0 }
   }
+})
+
+router.beforeEach((to) => {
+  const targetStep = getStepByRouteName(to.name)
+
+  // nothing happend if not to workspace
+  if (!targetStep) return true
+
+  const session = syncWorkflowFromSession()
+
+  // enter Step 1 AI Dump if no session set
+  if (!session) {
+    if (targetStep.id === 1) return true
+    return { name: 'AIDump', replace: true }
+  }
+
+  // jump to maxReachedStep if field exist
+  const highestRouteName = getHighestUnlockedRouteName()
+
+  if (to.name !== highestRouteName) {
+    return { name: highestRouteName, replace: true }
+  }
+
+  return true
 })
 
 export default router
