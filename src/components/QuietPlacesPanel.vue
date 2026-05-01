@@ -50,6 +50,14 @@
 
       <div class="results">
         <h3>Nearby Places</h3>
+        <div v-if="selectedPlace" class="selected-place-row">
+          <p class="selected-place-text">
+            Selected: <strong>{{ selectedPlace.name }}</strong>
+          </p>
+          <button class="directions-btn" type="button" @click="openNavigationPopup">
+            Get directions
+          </button>
+        </div>
         <p v-if="!userLocation" class="empty-text">Set your location to see nearby places.</p>
         <p v-else-if="isLoadingData" class="empty-text">Loading places from your datasets...</p>
         <p v-else-if="!visiblePlaces.length" class="empty-text">
@@ -74,10 +82,38 @@
               {{ place.category || 'Workspace' }}
             </p>
             <p class="place-meta">Distance from you: {{ formatDistance(place.distanceKm) }}</p>
-            <p class="place-meta">Opening: {{ place.openingHours || 'Not provided' }}</p>
+            <p v-if="place.website" class="place-meta">
+              Website:
+              <a :href="place.website" target="_blank" rel="noopener noreferrer" @click.stop>Visit site</a>
+            </p>
             <p v-if="place.address" class="place-meta">{{ place.address }}</p>
           </li>
         </ul>
+      </div>
+    </div>
+
+    <div v-if="showNavigationPopup && selectedPlace" class="nav-popup-overlay" @click.self="closeNavigationPopup">
+      <div class="nav-popup">
+        <h3>Navigate to {{ selectedPlace.name }}</h3>
+        <p class="nav-popup-sub">Choose how you want to travel:</p>
+
+        <div class="nav-mode-actions">
+          <button type="button" class="nav-mode-btn" @click="openDirections('walk')">
+            Walk
+          </button>
+          <button type="button" class="nav-mode-btn" @click="openDirections('car')">
+            Drive
+          </button>
+          <button type="button" class="nav-mode-btn" @click="openDirections('transit')">
+            Public transport
+          </button>
+        </div>
+
+        <p class="nav-google-note">This will take you to Google Maps for turn-by-turn directions.</p>
+
+        <button type="button" class="nav-exit-btn" @click="closeNavigationPopup">
+          Exit navigation mode
+        </button>
       </div>
     </div>
   </div>
@@ -109,6 +145,8 @@ const isLocating = ref(false)
 const isSearching = ref(false)
 const isLoadingData = ref(false)
 const activeTab = ref(focusMapSources[0]?.id || '')
+const selectedPlace = ref(null)
+const showNavigationPopup = ref(false)
 
 const placeMarkers = ref([])
 const placeMarkerById = ref({})
@@ -210,7 +248,7 @@ function normalizePlace(row, source, index) {
     name,
     lat,
     lng,
-    openingHours: getField(row, source.fieldMap.openingHours) || source.defaultOpeningHours || '',
+    website: normalizeWebsite(getField(row, source.fieldMap.website)),
     category: getField(row, source.fieldMap.category) || source.label,
     address: getField(row, source.fieldMap.address),
   }
@@ -236,6 +274,15 @@ function getCoordinates(row, fieldMap) {
 function getField(obj, key) {
   if (!obj || !key) return ''
   return obj[key]
+}
+
+function normalizeWebsite(rawValue) {
+  if (!rawValue) return ''
+  const trimmed = String(rawValue).trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  if (trimmed.includes('.')) return `https://${trimmed}`
+  return ''
 }
 
 function parseCsv(csvText) {
@@ -363,6 +410,8 @@ function renderMarkers() {
   placeMarkers.value.forEach((marker) => marker.remove())
   placeMarkers.value = []
   placeMarkerById.value = {}
+  selectedPlace.value = null
+  showNavigationPopup.value = false
 
   if (userMarker.value) {
     userMarker.value.remove()
@@ -407,8 +456,15 @@ function renderMarkers() {
       .setIcon(placeIcon)
       .addTo(map.value)
       .bindPopup(
-        `<strong>${escapeHtml(place.name)}</strong><br/>${escapeHtml(place.category || place.sourceLabel || 'Place')}<br/>Opening: ${escapeHtml(place.openingHours || 'Not provided')}<br/>Distance from you: ${formatDistance(place.distanceKm)}`
+        `<strong>${escapeHtml(place.name)}</strong><br/>${escapeHtml(place.category || place.sourceLabel || 'Place')}${
+          place.website
+            ? `<br/>Website: <a href="${escapeHtml(place.website)}" target="_blank" rel="noopener noreferrer">Visit site</a>`
+            : ''
+        }<br/>Distance from you: ${formatDistance(place.distanceKm)}`
       )
+    marker.on('click', () => {
+      selectedPlace.value = place
+    })
     placeMarkers.value.push(marker)
     placeMarkerById.value[place.id] = marker
   })
@@ -420,12 +476,35 @@ function setActiveTab(tabId) {
 }
 
 function focusPlaceOnMap(place) {
+  selectedPlace.value = place
   if (!map.value) return
   const marker = placeMarkerById.value[place.id]
   map.value.setView([place.lat, place.lng], 16, { animate: true })
   if (marker) {
     marker.openPopup()
   }
+}
+
+function openNavigationPopup() {
+  if (!selectedPlace.value || !userLocation.value) return
+  showNavigationPopup.value = true
+}
+
+function closeNavigationPopup() {
+  showNavigationPopup.value = false
+}
+
+function openDirections(mode) {
+  if (!selectedPlace.value || !userLocation.value) return
+
+  let travelMode = 'driving'
+  if (mode === 'walk') travelMode = 'walking'
+  if (mode === 'transit') travelMode = 'transit'
+
+  const from = `${userLocation.value.lat},${userLocation.value.lng}`
+  const to = `${selectedPlace.value.lat},${selectedPlace.value.lng}`
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=${travelMode}`
+  window.open(mapsUrl, '_blank', 'noopener,noreferrer')
 }
 
 function getCategoryMarkerColor(place) {
@@ -638,6 +717,35 @@ h2 {
   color: #38281f;
 }
 
+.selected-place-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #fff3ea;
+  border: 1px solid #eedbcf;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.selected-place-text {
+  margin: 0;
+  color: #6e5a4a;
+  font-size: 13.5px;
+}
+
+.directions-btn {
+  border: 1px solid #b66a48;
+  background: #fff;
+  color: #5f351f;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+
 .empty-text {
   color: #7b6a5c;
   margin: 0;
@@ -707,6 +815,74 @@ h2 {
   border-radius: 50%;
   border: 2px solid #ffffff;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
+}
+
+.nav-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 28, 18, 0.25);
+  backdrop-filter: blur(3px);
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.nav-popup {
+  width: min(380px, 100%);
+  background: #fffaf7;
+  border: 1px solid #eadfd7;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(70, 48, 31, 0.2);
+}
+
+.nav-popup h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #2f261f;
+}
+
+.nav-popup-sub {
+  margin: 8px 0 12px;
+  color: #6e5a4a;
+  font-size: 14px;
+}
+
+.nav-mode-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-mode-btn {
+  flex: 1 1 30%;
+  border: 1px solid #d7c7bb;
+  background: #fff;
+  color: #5f351f;
+  border-radius: 10px;
+  padding: 10px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-google-note {
+  margin: 10px 0 0;
+  color: #735f50;
+  font-size: 13px;
+}
+
+.nav-exit-btn {
+  margin-top: 12px;
+  width: 100%;
+  border: 1px solid #b66a48;
+  background: #fff2e9;
+  color: #5f351f;
+  border-radius: 10px;
+  padding: 9px 10px;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 @media (max-width: 960px) {

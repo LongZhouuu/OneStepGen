@@ -9,11 +9,10 @@ export const focusMapSources = [
       name: 'Organisation',
       lat: 'latitude',
       lng: 'longitude',
-      openingHours: '',
+      website: 'Website',
       category: '',
       address: 'Address',
     },
-    defaultOpeningHours: 'Check provider website',
   },
   {
     id: 'libraries',
@@ -25,11 +24,10 @@ export const focusMapSources = [
       name: 'Name',
       lat: 'latitude',
       lng: 'longitude',
-      openingHours: '',
+      website: '',
       category: '',
       address: 'Address',
     },
-    defaultOpeningHours: 'See library website',
   },
   {
     id: 'relax',
@@ -40,11 +38,10 @@ export const focusMapSources = [
     fieldMap: {
       name: 'Feature Name',
       latLng: 'Co-ordinates',
-      openingHours: '',
+      website: '',
       category: 'Sub Theme',
       address: '',
     },
-    defaultOpeningHours: 'Varies by location',
     includeKeywords: ['park', 'garden', 'reserve', 'library', 'community', 'square'],
   },
 ]
