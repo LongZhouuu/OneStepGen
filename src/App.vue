@@ -12,13 +12,13 @@
     <SiteFooter v-else />
 
     <!-- Global Floating Support Button -->
-    <FloatingSupportButton @open="openSupportFromButton" />
+    <FloatingSupportButton ref="supportButtonRef" @open="openSupportFromButton" />
 
     <!-- Support Modal -->
     <SupportModal
       v-if="openSupport"
       :initial-view="supportView"
-      @close="openSupport = false"
+      @close="closeSupport"
     />
   </div>
 </template>
@@ -47,6 +47,7 @@ const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
 // browser-native CustomEvent on `window` instead of bubbling props/emits up.
 
 const openSupport = ref(false)
+const supportButtonRef = ref(null)
 // Which sub-view SupportModal should open on: 'menu' | 'breathing' | 'rainbow' | 'helpline'
 const supportView = ref('menu')
 
@@ -54,6 +55,13 @@ const supportView = ref('menu')
 function openSupportFromButton() {
   supportView.value = 'menu'
   openSupport.value = true
+}
+
+function closeSupport() {
+  openSupport.value = false
+  requestAnimationFrame(() => {
+    supportButtonRef.value?.focus()
+  })
 }
 
 // Path 2: anywhere in the app can dispatch:

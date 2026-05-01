@@ -23,18 +23,37 @@
               v-model="inputText"
               placeholder="e.g. I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances…"
             />
+            <VoiceInputButton
+              class="input-voice-button"
+              aria-label="Dictate your task dump"
+              @transcript="appendVoiceInput"
+            />
+          </div>
+
+          <!--
+            DEMO: one-click sample text for testing without typing.
+            To remove: delete this block, DEMO_SAMPLE_TEXT + fillDemoSampleText() in script, and .demo-sample-row / .btn-demo-sample styles.
+          -->
+          <div class="demo-sample-row">
+            <button
+              type="button"
+              class="btn-demo-sample"
+              @click="fillDemoSampleText"
+            >
+              Use sample text
+            </button>
           </div>
  
           <div class="input-tools">
-            <label class="upload-btn" :class="{ 'has-file': uploadedFile }">
+            <label class="upload-btn" :class="{ 'has-file': uploadedFile || uploadedFileMeta }">
               <svg class="clip-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.49-8.48" />
               </svg>
-              {{ uploadedFile ? uploadedFile.name : 'Upload PDF' }}
+              {{ uploadedFile ? uploadedFile.name : uploadedFileMeta ? uploadedFileMeta.name : 'Upload PDF' }}
               <input type="file" accept=".pdf" style="display:none" @change="handlePdfUpload">
             </label>
-            <span v-if="!uploadedFile" class="char-count">{{ charCount }} characters</span>
-            <button v-if="uploadedFile" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
+            <span v-if="!uploadedFile && !uploadedFileMeta" class="char-count">{{ charCount }} characters</span>
+            <button v-if="uploadedFile || uploadedFileMeta" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
           </div>
  
           <div class="ai-hint">
@@ -107,47 +126,25 @@
 </template>
  
 <script>
-import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession } from '../router/workflow'
- 
-// ─── Mock Backend ──────────────────────────────────────────────────────────────
-// TODO: Replace _mockCallBackend() with a real fetch() once the endpoint is ready.
-//
-// Expected request shapes:
-//   text: { sessionId, inputType: 'text', rawInputText }
-//   pdf:  { sessionId, inputType: 'pdf',  file }
-//
-// Expected response shape:
-//   { sessionId, tasks: [{ text, priorityGroup, order }] }
-// ──────────────────────────────────────────────────────────────────────────────
-async function _mockCallBackend(payload) {
-  // Simulate network/model processing time
-  await new Promise(r => setTimeout(r, 800))
- 
-  return {
-    sessionId: payload.sessionId,
-    tasks: [
-      { text: 'Finish the project report',   priorityGroup: 'urgent-important',         order: 1 },
-      { text: 'Reply to client emails',       priorityGroup: 'urgent-important',         order: 2 },
-      { text: 'Plan next quarter roadmap',    priorityGroup: 'not-urgent-important',     order: 3 },
-      { text: 'Read industry articles',       priorityGroup: 'not-urgent-important',     order: 4 },
-      { text: 'Attend the team standup',      priorityGroup: 'urgent-not-important',     order: 5 },
-      { text: 'Book meeting room for Friday', priorityGroup: 'urgent-not-important',     order: 6 },
-      { text: 'Organise desktop folders',     priorityGroup: 'not-urgent-not-important', order: 7 },
-      { text: 'Update software on laptop',    priorityGroup: 'not-urgent-not-important', order: 8 },
-    ],
-  }
-}
- 
+import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
+import VoiceInputButton from '@/components/VoiceInputButton.vue'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL
 const MIN_LOADING_MS = 2600
- 
+
+// DEMO: copy used by the "Use sample text" button; edit the string or remove with the button.
+const DEMO_SAMPLE_TEXT =
+  "I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances"
+
 export default {
   name: 'AIDump',
+  components: { VoiceInputButton },
   data() {
     return {
-      view: 'input',          // 'input' | 'loading' | 'result' | 'error'
+      view: 'input',
       inputText: '',
-      uploadedFile: null,     // File object
-      uploadedFileMeta: null, // { name, size, type, lastModified }
+      uploadedFile: null,
+      uploadedFileMeta: null,
       taskCount: 0,
       errorMessage: '',
     }
@@ -158,19 +155,28 @@ export default {
     },
     canCreate() {
       const hasText = (this.inputText ?? '').trim().length > 0
-      const hasPdf  = this.uploadedFile !== null
+      const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
       return (hasText || hasPdf) && this.view === 'input'
     },
   },
   mounted() {
     guardWorkflowStep(1, this.$router)
+
+    const session = getCurrentSession()
+    if (session) {
+      if (session.inputType === 'text') {
+        this.inputText = session.rawInputText ?? ''
+      } else if (session.inputType === 'pdf') {
+        this.uploadedFileMeta = session.uploadedFileMeta ?? null
+      }
+    }
   },
   methods: {
     // ── PDF handling ──────────────────────────────────────────────────────────
     handlePdfUpload(e) {
       const file = e?.target?.files?.[0] ?? null
       if (!file) return
- 
+
       this.uploadedFile = file
       this.uploadedFileMeta = {
         name:         file.name,
@@ -178,15 +184,22 @@ export default {
         type:         file.type,
         lastModified: file.lastModified,
       }
- 
-      // Allow re-uploading the same file
       e.target.value = ''
     },
     removePdf() {
       this.uploadedFile     = null
       this.uploadedFileMeta = null
     },
- 
+    appendVoiceInput(transcript) {
+      const current = this.inputText?.trimEnd() ?? ''
+      this.inputText = current ? `${current} ${transcript}` : transcript
+    },
+
+    // DEMO: pairs with the "Use sample text" button in the template; delete when removing the button.
+    fillDemoSampleText() {
+      this.inputText = DEMO_SAMPLE_TEXT
+    },
+
     // ── Navigation ────────────────────────────────────────────────────────────
     backToDump() {
       this.view         = 'input'
@@ -196,16 +209,73 @@ export default {
       unlockStep(2)
       this.$router.push({ name: 'Planner' })
     },
- 
+
+    // ── Real backend call ─────────────────────────────────────────────────────
+    async _callBackend(inputType, sessionId) {
+      let res
+
+      if (inputType === 'pdf') {
+        // PDF: multipart/form-data
+        const formData = new FormData()
+        formData.append('file', this.uploadedFile)
+        res = await fetch(`${API_BASE}/upload-pdf`, {
+          method: 'POST',
+          body: formData,
+          // No Content-Type header — browser sets it automatically for FormData
+        })
+      } else {
+        // Text: JSON
+        res = await fetch(`${API_BASE}/process-text`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: this.inputText.trim() }),
+        })
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail ?? `Server error ${res.status}`)
+      }
+
+      // Backend returns array of { task, priority, priorityGroup, score, rank, category_rank }
+      // Convert to internal format: { text, priorityGroup, order }
+      const backendTasks = await res.json()
+      console.log('[AIDump] Raw backend response:', backendTasks)
+
+      return {
+        sessionId,
+        tasks: backendTasks.map(t => ({
+          text:          t.task,
+          priorityGroup: t.priorityGroup,
+          order:         t.rank,
+        })),
+      }
+    },
+
     // ── Main flow ─────────────────────────────────────────────────────────────
     async createTasks() {
-      const hasPdf  = this.uploadedFile !== null
+      const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
       const hasText = (this.inputText ?? '').trim().length > 0
       if (!hasPdf && !hasText) return
- 
+
       const inputType = hasPdf ? 'pdf' : 'text'
- 
-      // ── Phase 1: immediately save session skeleton to localStorage ──────────
+
+      // Same input check — skip AI if nothing changed
+      const existingSession = getCurrentSession()
+      const isSameText = inputType === 'text' &&
+        this.inputText.trim() === (existingSession?.rawInputText ?? '')
+      const isSamePdf = inputType === 'pdf' &&
+        this.uploadedFileMeta?.name === existingSession?.uploadedFileMeta?.name &&
+        this.uploadedFileMeta?.size === existingSession?.uploadedFileMeta?.size
+
+      if (isSameText || isSamePdf) {
+        this.taskCount = existingSession.tasks.length
+        this.view = 'result'
+        console.log('[AIDump] Same input detected, reusing existing tasks:', this.taskCount, 'tasks')
+        return
+      }
+
+      // Phase 1: save session skeleton immediately
       const session = createSession({
         inputType,
         rawInputText:     inputType === 'text' ? this.inputText.trim() : '',
@@ -213,35 +283,26 @@ export default {
       })
       const { sessionId } = session
       console.log('[AIDump] Session created:', { sessionId, inputType })
- 
-      // ── Show loading while waiting for backend ──────────────────────────────
+
       this.view = 'loading'
- 
-      // ── Build payload ───────────────────────────────────────────────────────
-      const payload = inputType === 'pdf'
-        ? { sessionId, inputType, file: this.uploadedFile }
-        : { sessionId, inputType, rawInputText: this.inputText.trim() }
- 
+
       try {
-        // Run backend call and minimum loading timer in parallel.
-        // Enters result only after BOTH are done — prevents instant flash
-        // when the model responds faster than MIN_LOADING_MS.
         const [response] = await Promise.all([
-          _mockCallBackend(payload),
+          this._callBackend(inputType, sessionId),
           new Promise(r => setTimeout(r, MIN_LOADING_MS)),
         ])
- 
+
         console.log('[AIDump] Backend response received:', response)
- 
-        // ── Phase 2: merge AI tasks into the existing session ───────────────
+
+        // Phase 2: merge AI tasks into session
         addAITasksToSession(sessionId, response.tasks)
- 
+
         this.taskCount = response.tasks.length
         console.log(`[AIDump] Tasks written to localStorage: ${this.taskCount} tasks`)
         console.log('[AIDump] Final localStorage session:', JSON.parse(localStorage.getItem('onestep-current-session')))
- 
+
         this.view = 'result'
- 
+
       } catch (err) {
         console.error('[AIDump] Backend call failed:', err)
         this.errorMessage = 'Something went wrong. Please try again.'
@@ -361,10 +422,41 @@ export default {
   line-height: 1.75;
   color: var(--brown-text);
   min-height: 130px;
+  padding-right: 48px;
 }
  
 .input-area textarea::placeholder {
   color: rgba(45, 31, 20, 0.32);
+}
+
+.input-voice-button {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+}
+
+/* DEMO: layout for the sample button; remove with the button if unused. */
+.demo-sample-row {
+  margin: 0 0 12px;
+}
+
+.btn-demo-sample {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(193, 113, 79, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--brown-mid);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btn-demo-sample:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+  background: rgba(193, 113, 79, 0.06);
 }
  
 .input-tools {

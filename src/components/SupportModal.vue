@@ -1,10 +1,19 @@
 <template>
-  <div class="support-overlay" @click.self="$emit('close')">
-    <div class="support-modal">
+  <div class="support-overlay" @click.self="emit('close')">
+    <div
+      ref="modalRef"
+      class="support-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="support-modal-title"
+      tabindex="-1"
+      @keydown="handleKeydown"
+    >
+      <h2 id="support-modal-title" class="sr-only">Support tools</h2>
 
       <!-- Close Button -->
       <!-- <button class="close-btn" @click="$emit('close')">✕</button> -->
-      <button type="button" class="btn-close" aria-label="Close" @click="$emit('close')"
+      <button ref="closeButtonRef" type="button" class="btn-close" aria-label="Close support tools" @click="emit('close')"
         style="position: absolute; top: 18px; right: 18px;"></button>
 
       <component :is="currentComponent" @goBox="currentView = 'breathing'" @goRainbow="currentView = 'rainbow'"
@@ -14,14 +23,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 
 import SupportMenu from './SupportMenu.vue'
 import BoxBreathingPanel from './BoxBreathingPanel.vue'
 import RainbowPanel from './RainbowPanel.vue'
 import HelplinePanel from './HelplinePanel.vue'
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const props = defineProps({
   initialView: {
@@ -31,6 +40,17 @@ const props = defineProps({
 })
 
 const currentView = ref(props.initialView)
+const modalRef = ref(null)
+const closeButtonRef = ref(null)
+
+const focusableSelector = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',')
 
 const currentComponent = computed(() => {
   switch (currentView.value) {
@@ -44,6 +64,56 @@ const currentComponent = computed(() => {
       return SupportMenu
   }
 })
+
+function getFocusableElements() {
+  return Array.from(modalRef.value?.querySelectorAll(focusableSelector) ?? [])
+    .filter((element) => !element.hasAttribute('disabled') && element.offsetParent !== null)
+}
+
+function focusInitialElement() {
+  nextTick(() => {
+    closeButtonRef.value?.focus()
+  })
+}
+
+function handleKeydown(event) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    emit('close')
+    return
+  }
+
+  if (event.key !== 'Tab') return
+
+  const focusableElements = getFocusableElements()
+  if (focusableElements.length === 0) {
+    event.preventDefault()
+    modalRef.value?.focus()
+    return
+  }
+
+  const firstElement = focusableElements[0]
+  const lastElement = focusableElements[focusableElements.length - 1]
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault()
+    lastElement.focus()
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault()
+    firstElement.focus()
+  }
+}
+
+onMounted(() => {
+  document.body.classList.add('support-modal-open')
+  focusInitialElement()
+})
+
+onUnmounted(() => {
+  document.body.classList.remove('support-modal-open')
+})
+
+watch(currentView, focusInitialElement)
 </script>
 
 <style scoped>
@@ -67,6 +137,18 @@ const currentComponent = computed(() => {
   position: relative;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .close-btn {
   position: absolute;
   top: 18px;
@@ -87,5 +169,22 @@ const currentComponent = computed(() => {
 
 .close-btn:hover {
   background: #e0e0e0;
+}
+
+.btn-close:focus-visible {
+  outline: 3px solid #4d2a1d;
+  outline-offset: 4px;
+}
+
+:global(body.support-modal-open) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-overlay,
+  .support-modal,
+  .btn-close {
+    transition: none;
+  }
 }
 </style>

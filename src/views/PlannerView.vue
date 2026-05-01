@@ -9,7 +9,23 @@
           </svg>
         </div>
         <div>
-          <div class="phb-title">Plan your tasks</div>
+          <div class="phb-title-row">
+            <div class="phb-title">Plan your tasks</div>
+            <button
+              type="button"
+              class="btn-info"
+              aria-label="About the Eisenhower Matrix"
+              @click="toggleInfoPopover"
+              ref="infoBtn"
+            >
+              <!-- Inline icon (question/info) to avoid asset dependency -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.5 9.2a2.6 2.6 0 0 1 5 1c0 1.7-1.9 2.2-2.4 2.8-.4.5-.4 1-.4 1.8" />
+                <path d="M12 17.1h.01" />
+              </svg>
+            </button>
+          </div>
           <div class="phb-desc">Review, edit and reorder. Tasks are sorted by priority.</div>
         </div>
       </div>
@@ -21,7 +37,8 @@
             <p class="panel-sub">Drag to reorder · tap edit to change</p>
           </div>
           <div class="task-header-actions">
-            <span class="task-count-badge">{{ activeTasks.length }} tasks</span>
+            <span v-if="tasks.length === 0" class="task-empty-hint">No tasks found. Try adding one yourself!</span>
+            <span v-else class="task-count-badge">{{ activeTasks.length }} tasks</span>
             <button class="btn-add-task" type="button" @click="showModal = true">+ Add</button>
           </div>
         </div>
@@ -50,13 +67,20 @@
                   <span class="task-num">{{ task.order }}</span>
 
                   <template v-if="editingId === task.id">
-                    <input
-                      v-model="editingText"
-                      class="task-edit-input"
-                      @keyup.enter="confirmEdit(task)"
-                      @blur="confirmEdit(task)"
-                      @keyup.escape="cancelEdit"
-                    />
+                    <div class="task-edit-field">
+                      <input
+                        v-model="editingText"
+                        class="task-edit-input"
+                        @keyup.enter="confirmEdit(task)"
+                        @blur="confirmEdit(task)"
+                        @keyup.escape="cancelEdit"
+                      />
+                      <VoiceInputButton
+                        class="task-voice-button"
+                        aria-label="Dictate task edit"
+                        @transcript="appendEditingVoiceInput"
+                      />
+                    </div>
                   </template>
                   <template v-else>
                     <span class="task-text">{{ task.text }}</span>
@@ -124,7 +148,14 @@
 
         <div class="modal-field">
           <label for="new-task-text">What's the task?</label>
-          <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+          <div class="modal-input-field">
+            <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+            <VoiceInputButton
+              class="modal-voice-button"
+              aria-label="Dictate new task"
+              @transcript="appendNewTaskVoiceInput"
+            />
+          </div>
         </div>
 
         <div class="modal-field">
@@ -161,11 +192,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Info popover (no backdrop blur) -->
+    <div v-if="showInfoPopover" class="info-popover-overlay" @click.self="showInfoPopover = false">
+      <div
+        class="info-popover-card"
+        role="dialog"
+        aria-modal="false"
+        aria-label="Eisenhower Matrix info"
+        :style="infoPopoverStyle"
+        ref="infoPopoverCard"
+      >
+        <div class="info-popover-title">How tasks are sorted</div>
+        <div class="info-popover-body">
+          Our AI model adopts <strong>The Eisenhower Matrix</strong>, which is based on <strong>two things</strong>:
+          <strong>urgency</strong> shows what you need to do now, and <strong>importance</strong> shows what contributes to long-term goals.
+          By sorting tasks into four quadrants, you decide what to do now, schedule for later, delegate to others, or remove altogether.
+        </div>
+        <div class="info-popover-source">
+          Airtable. (n.d.). <em>Eisenhower matrix: How to prioritize urgent tasks</em>.
+          <a href="https://www.airtable.com/articles/eisenhower-matrix" target="_blank" rel="noreferrer">https://www.airtable.com/articles/eisenhower-matrix</a>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import draggable from 'vuedraggable'
+import VoiceInputButton from '@/components/VoiceInputButton.vue'
 import {
   guardWorkflowStep,
   unlockStep,
@@ -185,12 +240,14 @@ const GROUP_ORDER = [
 
 export default {
   name: 'PlannerView',
-  components: { draggable },
+  components: { draggable, VoiceInputButton },
   data() {
     return {
       sessionId: null,
       tasks: [],
       showModal: false,
+      showInfoPopover: false,
+      infoPopoverStyle: {},
       newTaskText: '',
       newTaskImportant: true,
       newTaskUrgent: true,
@@ -236,8 +293,48 @@ export default {
   mounted() {
     guardWorkflowStep(2, this.$router)
     this._loadFromSession()
+    window.addEventListener('keydown', this._onKeydown)
+    window.addEventListener('resize', this._updateInfoPopoverPosition)
+  },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this._onKeydown)
+    window.removeEventListener('resize', this._updateInfoPopoverPosition)
   },
   methods: {
+    _onKeydown(e) {
+      if (e.key === 'Escape') this.showInfoPopover = false
+    },
+    toggleInfoPopover() {
+      this.showInfoPopover = !this.showInfoPopover
+      if (this.showInfoPopover) this.$nextTick(this._updateInfoPopoverPosition)
+    },
+    _updateInfoPopoverPosition() {
+      if (!this.showInfoPopover) return
+      const btn = this.$refs.infoBtn
+      if (!btn || !btn.getBoundingClientRect) return
+
+      const r = btn.getBoundingClientRect()
+      const card = this.$refs.infoPopoverCard
+      const cardW = card?.offsetWidth ?? 520
+      const cardH = card?.offsetHeight ?? 260
+
+      const gap = 10
+      // Place the card below the button, horizontally aligned to the button center,
+      // and clamp within viewport to avoid getting hidden by nav bars.
+      let top = r.bottom + gap
+      const maxTop = window.innerHeight - 12 - cardH
+      top = Math.round(Math.min(Math.max(top, 12), maxTop))
+
+      const desiredLeft = r.left + r.width / 2 - cardW / 2
+      const left = Math.round(Math.min(Math.max(desiredLeft, 12), window.innerWidth - 12 - cardW))
+
+      const arrowX = Math.round((r.left + r.width / 2) - left)
+      this.infoPopoverStyle = {
+        top: `${top}px`,
+        left: `${left}px`,
+        '--arrow-x': `${arrowX}px`,
+      }
+    },
     // ── Load ─────────────────────────────────────────────────────────────────
     _loadFromSession() {
       const session = getCurrentSession()
@@ -284,6 +381,10 @@ export default {
       this._loadFromSession()
       this.cancelEdit()
     },
+    appendEditingVoiceInput(transcript) {
+      const current = this.editingText?.trimEnd() ?? ''
+      this.editingText = current ? `${current} ${transcript}` : transcript
+    },
 
     // ── Delete ────────────────────────────────────────────────────────────────
     deleteTask(taskId) {
@@ -321,6 +422,11 @@ export default {
       this.newTaskImportant = true
       this.newTaskUrgent    = true
       this.showModal        = false
+    },
+
+    appendNewTaskVoiceInput(transcript) {
+      const current = this.newTaskText?.trimEnd() ?? ''
+      this.newTaskText = current ? `${current} ${transcript}` : transcript
     },
 
     // ── Drag ──────────────────────────────────────────────────────────────────
@@ -452,6 +558,44 @@ export default {
   margin-top: 2px;
 }
 
+.phb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-info {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--brown-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.18s, opacity 0.18s, box-shadow 0.18s, background 0.18s;
+  box-shadow: 0 10px 18px rgba(45, 31, 20, 0.08);
+}
+
+.btn-info svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-info:hover {
+  transform: translateY(-1px);
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.btn-info:active {
+  transform: translateY(0px) scale(0.98);
+}
+
 .phb-desc {
   font-size: 13.5px;
   color: rgba(45, 31, 20, 0.65);
@@ -501,6 +645,18 @@ export default {
   letter-spacing: 0.03em;
 }
 
+.task-empty-hint {
+  background: rgba(193, 113, 79, 0.1);
+  color: var(--terracotta);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .btn-add-task {
   display: flex;
   align-items: center;
@@ -542,8 +698,8 @@ export default {
 }
 
 .eisen-hint {
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 600;
   opacity: 0.6;
   text-transform: none;
   letter-spacing: 0;
@@ -638,8 +794,17 @@ export default {
 .task-btn:hover { background: rgba(193,113,79,0.08); color: var(--terracotta); }
 .task-btn.danger:hover { background: rgba(232,139,139,0.12); color: #e07878; }
 
+.task-edit-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .task-edit-input {
   flex: 1;
+  min-width: 0;
   border: 1.5px solid rgba(193,113,79,0.25);
   border-radius: 10px;
   padding: 10px 12px;
@@ -648,6 +813,11 @@ export default {
 }
 
 .task-edit-input:focus { border-color: var(--terracotta); }
+
+.task-voice-button {
+  width: 34px;
+  height: 34px;
+}
 
 /* ── Skipped section ─────────────────────────────────────────────────────── */
 .skipped-section {
@@ -757,13 +927,26 @@ export default {
 .modal-field { margin-bottom: 20px; }
 .modal-field label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--brown-text); }
 
+.modal-input-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .modal-input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   padding: 14px 16px;
   border: 2px solid rgba(193,113,79,0.55);
   border-radius: 14px;
   font: inherit;
   outline: none;
+}
+
+.modal-voice-button {
+  width: 42px;
+  height: 42px;
 }
 
 .modal-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -808,6 +991,65 @@ export default {
 }
 
 .btn-modal-add:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Info popover ────────────────────────────────────────────────────────── */
+.info-popover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  background: transparent;
+}
+
+.info-popover-card {
+  position: absolute;
+  width: min(520px, calc(100vw - 32px));
+  background: white;
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 24px 80px rgba(45,31,20,0.22);
+  border: 1px solid rgba(193, 113, 79, 0.18);
+}
+
+.info-popover-card::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--arrow-x, 24px) - 7px);
+  top: -8px;
+  width: 14px;
+  height: 14px;
+  background: white;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(193, 113, 79, 0.18);
+  border-top: 1px solid rgba(193, 113, 79, 0.18);
+}
+
+.info-popover-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brown-dark);
+  margin-bottom: 10px;
+}
+
+.info-popover-body {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(45, 31, 20, 0.75);
+}
+
+.info-popover-source {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(193, 113, 79, 0.12);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(45, 31, 20, 0.6);
+}
+
+.info-popover-source a {
+  color: var(--terracotta);
+  text-decoration: underline;
+  word-break: break-word;
+}
 
 @media (max-width: 520px) {
   .planner-page { padding: 90px 16px 40px; }
