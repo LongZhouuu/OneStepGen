@@ -130,6 +130,9 @@ function handleContinueWithSkipped() {
     margin: 0 auto;
     /* padding: 90px 0px 40px; */
     padding-top: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .complete-card {
