@@ -3,6 +3,7 @@
     <div
       ref="modalRef"
       class="support-modal"
+      :class="{ 'support-modal--wide': currentView === 'quiet' }"
       role="dialog"
       aria-modal="true"
       aria-labelledby="support-modal-title"
@@ -11,13 +12,23 @@
     >
       <h2 id="support-modal-title" class="sr-only">Support tools</h2>
 
-      <!-- Close Button -->
-      <!-- <button class="close-btn" @click="$emit('close')">✕</button> -->
-      <button ref="closeButtonRef" type="button" class="btn-close" aria-label="Close support tools" @click="emit('close')"
-        style="position: absolute; top: 18px; right: 18px;"></button>
+      <button
+        ref="closeButtonRef"
+        type="button"
+        class="btn-close"
+        aria-label="Close support tools"
+        @click="emit('close')"
+        style="position: absolute; top: 18px; right: 18px;"
+      ></button>
 
-      <component :is="currentComponent" @goBox="currentView = 'breathing'" @goRainbow="currentView = 'rainbow'"
-        @goHelpline="currentView = 'helpline'" @back="currentView = 'menu'" />
+      <component
+        :is="currentComponent"
+        @goBox="currentView = 'breathing'"
+        @goRainbow="currentView = 'rainbow'"
+        @goHelpline="currentView = 'helpline'"
+        @goQuiet="currentView = 'quiet'"
+        @back="currentView = 'menu'"
+      />
     </div>
   </div>
 </template>
@@ -29,6 +40,7 @@ import SupportMenu from './SupportMenu.vue'
 import BoxBreathingPanel from './BoxBreathingPanel.vue'
 import RainbowPanel from './RainbowPanel.vue'
 import HelplinePanel from './HelplinePanel.vue'
+import QuietPlacesPanel from './QuietPlacesPanel.vue'
 
 const emit = defineEmits(['close'])
 
@@ -60,6 +72,8 @@ const currentComponent = computed(() => {
       return RainbowPanel
     case 'helpline':
       return HelplinePanel
+    case 'quiet':
+      return QuietPlacesPanel
     default:
       return SupportMenu
   }
@@ -86,6 +100,7 @@ function handleKeydown(event) {
   if (event.key !== 'Tab') return
 
   const focusableElements = getFocusableElements()
+
   if (focusableElements.length === 0) {
     event.preventDefault()
     modalRef.value?.focus()
@@ -137,6 +152,10 @@ watch(currentView, focusInitialElement)
   position: relative;
 }
 
+.support-modal--wide {
+  width: min(1100px, 94vw);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -147,28 +166,6 @@ watch(currentView, focusInitialElement)
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.close-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: #eeeeee;
-  color: #555;
-  font-size: 15px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
-}
-
-.close-btn:hover {
-  background: #e0e0e0;
 }
 
 .btn-close:focus-visible {
