@@ -244,9 +244,8 @@ export default {
       const isSamePdf = inputType === 'pdf' &&
         this.uploadedFileMeta?.name === existingSession?.uploadedFileMeta?.name &&
         this.uploadedFileMeta?.size === existingSession?.uploadedFileMeta?.size
-      const alreadyHasTasks = (existingSession?.tasks?.length ?? 0) > 0
 
-      if ((isSameText || isSamePdf) && alreadyHasTasks) {
+      if (isSameText || isSamePdf) {
         this.taskCount = existingSession.tasks.length
         this.view = 'result'
         console.log('[AIDump] Same input detected, reusing existing tasks:', this.taskCount, 'tasks')
