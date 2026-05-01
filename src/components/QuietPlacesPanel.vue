@@ -3,7 +3,7 @@
     <button class="back-btn" type="button" @click="$emit('back')">
       ← Back
     </button>
-    <h2>Melbourne CDB Focus Map</h2>
+    <h2>Melbourne CBD Focus Map</h2>
     <p class="sub">Find nearby work/reset spots with opening times and distance.</p>
 
     <div class="controls">
@@ -17,12 +17,27 @@
           type="text"
           class="location-input"
           placeholder="Enter Melbourne address or suburb"
+          @input="onLocationInput"
+          @focus="showSuggestions = true"
           @keydown.enter.prevent="searchLocation"
         />
         <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
           {{ isSearching ? 'Searching...' : 'Search' }}
         </button>
       </div>
+      <ul v-if="showSuggestions && locationSuggestions.length" class="suggestions-list">
+        <li
+          v-for="(item, index) in locationSuggestions"
+          :key="`${item.lat}-${item.lon}-${index}`"
+          class="suggestion-item"
+          role="button"
+          tabindex="0"
+          @click="selectSuggestion(item)"
+          @keydown.enter.prevent="selectSuggestion(item)"
+        >
+          {{ item.display_name }}
+        </li>
+      </ul>
     </div>
 
     <p v-if="selectedAddress" class="selected-address">
@@ -152,6 +167,9 @@ const activeTab = ref(focusMapSources[0]?.id || '')
 const selectedPlace = ref(null)
 const showNavigationPopup = ref(false)
 const selectedAddress = ref('')
+const locationSuggestions = ref([])
+const showSuggestions = ref(false)
+let suggestionTimer = null
 
 const placeMarkers = ref([])
 const placeMarkerById = ref({})
@@ -398,6 +416,7 @@ async function searchLocation() {
     }
 
     selectedAddress.value = first.display_name || locationQuery.value
+    showSuggestions.value = false
     setUserLocation(Number(first.lat), Number(first.lon))
     statusMessage.value = 'Location set from search.'
   } catch {
@@ -405,6 +424,45 @@ async function searchLocation() {
   } finally {
     isSearching.value = false
   }
+}
+
+function onLocationInput() {
+  showSuggestions.value = true
+  if (suggestionTimer) {
+    clearTimeout(suggestionTimer)
+  }
+  suggestionTimer = setTimeout(() => {
+    void fetchLocationSuggestions()
+  }, 280)
+}
+
+async function fetchLocationSuggestions() {
+  if (!locationQuery.value || locationQuery.value.length < 3) {
+    locationSuggestions.value = []
+    return
+  }
+
+  try {
+    const encoded = encodeURIComponent(`${locationQuery.value}, Melbourne`)
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encoded}`
+    )
+    if (!res.ok) return
+    const results = await res.json()
+    locationSuggestions.value = Array.isArray(results) ? results : []
+  } catch {
+    locationSuggestions.value = []
+  }
+}
+
+function selectSuggestion(item) {
+  if (!item) return
+  locationQuery.value = item.display_name || locationQuery.value
+  selectedAddress.value = item.display_name || ''
+  showSuggestions.value = false
+  locationSuggestions.value = []
+  setUserLocation(Number(item.lat), Number(item.lon))
+  statusMessage.value = 'Location set from suggestion.'
 }
 
 function setUserLocation(lat, lng) {
@@ -607,6 +665,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (suggestionTimer) {
+    clearTimeout(suggestionTimer)
+    suggestionTimer = null
+  }
   if (map.value) {
     map.value.remove()
     map.value = null
@@ -647,6 +709,35 @@ h2 {
 .search-row {
   display: flex;
   gap: 8px;
+}
+
+.suggestions-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #eadfd7;
+  border-radius: 10px;
+  background: #fffdfc;
+  max-height: 170px;
+  overflow: auto;
+}
+
+.suggestion-item {
+  padding: 9px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f2e9e3;
+  font-size: 13.5px;
+  color: #614c3d;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item:focus-visible {
+  background: #f9f1eb;
+  outline: none;
 }
 
 .location-input {
