@@ -29,6 +29,20 @@
               @transcript="appendVoiceInput"
             />
           </div>
+
+          <!--
+            DEMO: one-click sample text for testing without typing.
+            To remove: delete this block, DEMO_SAMPLE_TEXT + fillDemoSampleText() in script, and .demo-sample-row / .btn-demo-sample styles.
+          -->
+          <div class="demo-sample-row">
+            <button
+              type="button"
+              class="btn-demo-sample"
+              @click="fillDemoSampleText"
+            >
+              Use sample text
+            </button>
+          </div>
  
           <div class="input-tools">
             <label class="upload-btn" :class="{ 'has-file': uploadedFile || uploadedFileMeta }">
@@ -118,6 +132,10 @@ import VoiceInputButton from '@/components/VoiceInputButton.vue'
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 const MIN_LOADING_MS = 2600
 
+// DEMO: copy used by the "Use sample text" button; edit the string or remove with the button.
+const DEMO_SAMPLE_TEXT =
+  "I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances"
+
 export default {
   name: 'AIDump',
   components: { VoiceInputButton },
@@ -175,6 +193,11 @@ export default {
     appendVoiceInput(transcript) {
       const current = this.inputText?.trimEnd() ?? ''
       this.inputText = current ? `${current} ${transcript}` : transcript
+    },
+
+    // DEMO: pairs with the "Use sample text" button in the template; delete when removing the button.
+    fillDemoSampleText() {
+      this.inputText = DEMO_SAMPLE_TEXT
     },
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -244,9 +267,8 @@ export default {
       const isSamePdf = inputType === 'pdf' &&
         this.uploadedFileMeta?.name === existingSession?.uploadedFileMeta?.name &&
         this.uploadedFileMeta?.size === existingSession?.uploadedFileMeta?.size
-      const alreadyHasTasks = (existingSession?.tasks?.length ?? 0) > 0
 
-      if ((isSameText || isSamePdf) && alreadyHasTasks) {
+      if (isSameText || isSamePdf) {
         this.taskCount = existingSession.tasks.length
         this.view = 'result'
         console.log('[AIDump] Same input detected, reusing existing tasks:', this.taskCount, 'tasks')
@@ -411,6 +433,30 @@ export default {
   position: absolute;
   right: 16px;
   bottom: 16px;
+}
+
+/* DEMO: layout for the sample button; remove with the button if unused. */
+.demo-sample-row {
+  margin: 0 0 12px;
+}
+
+.btn-demo-sample {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(193, 113, 79, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--brown-mid);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btn-demo-sample:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+  background: rgba(193, 113, 79, 0.06);
 }
  
 .input-tools {
