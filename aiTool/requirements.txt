@@ -1,0 +1,15 @@
+# FastAPI & Server
+fastapi==0.115.0
+uvicorn==0.30.6
+
+# Environment variable management
+python-dotenv==1.0.1
+
+# PDF text extraction
+pypdf==4.3.1
+
+# Groq AI SDK (free tier — Llama 3 inference)
+groq==0.25.0
+
+# File upload support for FastAPI
+python-multipart==0.0.9

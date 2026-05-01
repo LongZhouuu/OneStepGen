@@ -114,47 +114,19 @@
 <script>
 import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
- 
-// ─── Mock Backend ──────────────────────────────────────────────────────────────
-// TODO: Replace _mockCallBackend() with a real fetch() once the endpoint is ready.
-//
-// Expected request shapes:
-//   text: { sessionId, inputType: 'text', rawInputText }
-//   pdf:  { sessionId, inputType: 'pdf',  file }
-//
-// Expected response shape:
-//   { sessionId, tasks: [{ text, priorityGroup, order }] }
-// ──────────────────────────────────────────────────────────────────────────────
-async function _mockCallBackend(payload) {
-  // Simulate network/model processing time
-  await new Promise(r => setTimeout(r, 800))
- 
-  return {
-    sessionId: payload.sessionId,
-    tasks: [
-      { text: 'Finish the project report',   priorityGroup: 'urgent-important',         order: 1 },
-      { text: 'Reply to client emails',       priorityGroup: 'urgent-important',         order: 2 },
-      { text: 'Plan next quarter roadmap',    priorityGroup: 'not-urgent-important',     order: 3 },
-      { text: 'Read industry articles',       priorityGroup: 'not-urgent-important',     order: 4 },
-      { text: 'Attend the team standup',      priorityGroup: 'urgent-not-important',     order: 5 },
-      { text: 'Book meeting room for Friday', priorityGroup: 'urgent-not-important',     order: 6 },
-      { text: 'Organise desktop folders',     priorityGroup: 'not-urgent-not-important', order: 7 },
-      { text: 'Update software on laptop',    priorityGroup: 'not-urgent-not-important', order: 8 },
-    ],
-  }
-}
- 
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL
 const MIN_LOADING_MS = 2600
- 
+
 export default {
   name: 'AIDump',
   components: { VoiceInputButton },
   data() {
     return {
-      view: 'input',          // 'input' | 'loading' | 'result' | 'error'
+      view: 'input',
       inputText: '',
-      uploadedFile: null,     // File object
-      uploadedFileMeta: null, // { name, size, type, lastModified }
+      uploadedFile: null,
+      uploadedFileMeta: null,
       taskCount: 0,
       errorMessage: '',
     }
@@ -186,7 +158,7 @@ export default {
     handlePdfUpload(e) {
       const file = e?.target?.files?.[0] ?? null
       if (!file) return
- 
+
       this.uploadedFile = file
       this.uploadedFileMeta = {
         name:         file.name,
@@ -194,20 +166,17 @@ export default {
         type:         file.type,
         lastModified: file.lastModified,
       }
- 
-      // Allow re-uploading the same file
       e.target.value = ''
     },
     removePdf() {
       this.uploadedFile     = null
       this.uploadedFileMeta = null
     },
-
     appendVoiceInput(transcript) {
       const current = this.inputText?.trimEnd() ?? ''
       this.inputText = current ? `${current} ${transcript}` : transcript
     },
- 
+
     // ── Navigation ────────────────────────────────────────────────────────────
     backToDump() {
       this.view         = 'input'
@@ -217,7 +186,49 @@ export default {
       unlockStep(2)
       this.$router.push({ name: 'Planner' })
     },
- 
+
+    // ── Real backend call ─────────────────────────────────────────────────────
+    async _callBackend(inputType, sessionId) {
+      let res
+
+      if (inputType === 'pdf') {
+        // PDF: multipart/form-data
+        const formData = new FormData()
+        formData.append('file', this.uploadedFile)
+        res = await fetch(`${API_BASE}/upload-pdf`, {
+          method: 'POST',
+          body: formData,
+          // No Content-Type header — browser sets it automatically for FormData
+        })
+      } else {
+        // Text: JSON
+        res = await fetch(`${API_BASE}/process-text`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: this.inputText.trim() }),
+        })
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail ?? `Server error ${res.status}`)
+      }
+
+      // Backend returns array of { task, priority, priorityGroup, score, rank, category_rank }
+      // Convert to internal format: { text, priorityGroup, order }
+      const backendTasks = await res.json()
+      console.log('[AIDump] Raw backend response:', backendTasks)
+
+      return {
+        sessionId,
+        tasks: backendTasks.map(t => ({
+          text:          t.task,
+          priorityGroup: t.priorityGroup,
+          order:         t.rank,
+        })),
+      }
+    },
+
     // ── Main flow ─────────────────────────────────────────────────────────────
     async createTasks() {
       const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
@@ -226,6 +237,7 @@ export default {
 
       const inputType = hasPdf ? 'pdf' : 'text'
 
+      // Same input check — skip AI if nothing changed
       const existingSession = getCurrentSession()
       const isSameText = inputType === 'text' &&
         this.inputText.trim() === (existingSession?.rawInputText ?? '')
@@ -241,7 +253,7 @@ export default {
         return
       }
 
-      // ── Phase 1: immediately save session skeleton to localStorage ──────────
+      // Phase 1: save session skeleton immediately
       const session = createSession({
         inputType,
         rawInputText:     inputType === 'text' ? this.inputText.trim() : '',
@@ -249,35 +261,26 @@ export default {
       })
       const { sessionId } = session
       console.log('[AIDump] Session created:', { sessionId, inputType })
- 
-      // ── Show loading while waiting for backend ──────────────────────────────
+
       this.view = 'loading'
- 
-      // ── Build payload ───────────────────────────────────────────────────────
-      const payload = inputType === 'pdf'
-        ? { sessionId, inputType, file: this.uploadedFile }
-        : { sessionId, inputType, rawInputText: this.inputText.trim() }
- 
+
       try {
-        // Run backend call and minimum loading timer in parallel.
-        // Enters result only after BOTH are done — prevents instant flash
-        // when the model responds faster than MIN_LOADING_MS.
         const [response] = await Promise.all([
-          _mockCallBackend(payload),
+          this._callBackend(inputType, sessionId),
           new Promise(r => setTimeout(r, MIN_LOADING_MS)),
         ])
- 
+
         console.log('[AIDump] Backend response received:', response)
- 
-        // ── Phase 2: merge AI tasks into the existing session ───────────────
+
+        // Phase 2: merge AI tasks into session
         addAITasksToSession(sessionId, response.tasks)
- 
+
         this.taskCount = response.tasks.length
         console.log(`[AIDump] Tasks written to localStorage: ${this.taskCount} tasks`)
         console.log('[AIDump] Final localStorage session:', JSON.parse(localStorage.getItem('onestep-current-session')))
- 
+
         this.view = 'result'
- 
+
       } catch (err) {
         console.error('[AIDump] Backend call failed:', err)
         this.errorMessage = 'Something went wrong. Please try again.'
