@@ -94,28 +94,40 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to) => {
+router.beforeEach((to, from) => {
   const targetStep = getStepByRouteName(to.name)
 
-  // nothing happend if not to workspace
+  // nothing happend if not to workspace route
   if (!targetStep) return true
 
   const session = syncWorkflowFromSession()
 
-  // enter Step 1 AI Dump if no session set
+  // only Step 1 is allowed to jump to if there is no session data in localstorage
   if (!session) {
     if (targetStep.id === 1) return true
     return { name: 'AIDump', replace: true }
   }
 
-  // jump to maxReachedStep if field exist
+  const fromStep = getStepByRouteName(from.name)
   const highestRouteName = getHighestUnlockedRouteName()
+  const maxReachedStep = session.maxReachedStep ?? 1
 
-  if (to.name !== highestRouteName) {
-    return { name: highestRouteName, replace: true }
+  // if entering workspace from outside, always resume the latest reached step
+  if (!fromStep) {
+    if (to.name !== highestRouteName) {
+      return { name: highestRouteName, replace: true }
+    }
+
+    return true
   }
 
-  return true
+  // elif moving inside workspace, allow going to any unlocked step
+  if (targetStep.id <= maxReachedStep) {
+    return true
+  }
+
+  // trying to access locked future step
+  return { name: highestRouteName, replace: true }
 })
 
 export default router
