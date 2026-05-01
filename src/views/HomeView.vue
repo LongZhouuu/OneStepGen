@@ -830,7 +830,7 @@ function enterWorkspace() {
   padding: clamp(48px, 8vh, 80px) clamp(20px, 6vw, 80px) clamp(48px, 7vh, 70px);
   background: transparent;
   padding-bottom: 0;
-  min-height: 100vh;
+  min-height: 84vh;
 }
 
 .security-card {

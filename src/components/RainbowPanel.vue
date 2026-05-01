@@ -555,7 +555,7 @@ h2 {
   background-color: white;
   color: #b66a48;
   border: 1px #b66a48 solid;
-  box-sizing: content-box;
+  /* box-sizing: content-box; */
 }
 
 @media (max-width: 480px) {
