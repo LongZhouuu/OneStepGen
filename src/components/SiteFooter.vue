@@ -89,7 +89,7 @@
             </li>
             <li>
               <RouterLink :to="{ name: 'Planner' }" class="nav-link">
-                <span class="nav-text">Planner</span>
+                <span class="nav-text">Workspace</span>
                 <span class="nav-arrow" aria-hidden="true">→</span>
               </RouterLink>
             </li>
