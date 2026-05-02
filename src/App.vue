@@ -1,5 +1,6 @@
 <template>
-  <div class="app-wrapper">
+  <SitePasswordGate v-if="!siteUnlocked" @unlocked="onSiteUnlocked" />
+  <div v-else class="app-wrapper">
     <NavBar />
 
     <!-- AI supported based workflow content -->
@@ -27,6 +28,9 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 
+import { isSiteAccessGranted, isGateSkippedInDev } from '@/utils/siteAccess'
+import SitePasswordGate from './components/SitePasswordGate.vue'
+
 import NavBar from './components/NavBar.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import BottomNav from './components/BottomNav.vue'
@@ -35,6 +39,12 @@ import FloatingSupportButton from './components/FloatingSupportButton.vue'
 import SupportModal from './components/SupportModal.vue'
 
 const route = useRoute()
+
+const siteUnlocked = ref(isGateSkippedInDev() || isSiteAccessGranted())
+
+function onSiteUnlocked() {
+  siteUnlocked.value = true
+}
 
 const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
 

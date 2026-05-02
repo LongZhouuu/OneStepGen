@@ -73,7 +73,7 @@ import { RouterLink } from 'vue-router'
           </li>
 
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/About">About us</RouterLink>
+            <RouterLink class="nav-link" to="/about">About us</RouterLink>
           </li>
         </ul>
       </div>
