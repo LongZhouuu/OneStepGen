@@ -11,21 +11,6 @@
     </h2>
     <p class="sub">Choose what you need right now</p>
 
-    <!-- Helpful Resources -->
-    <button class="support-card" type="button" @click="$emit('goHelpline')">
-      <span class="support-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path
-            d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
-        </svg>
-      </span>
-      <span class="support-text">
-        <span class="support-heading">Helpful Resources</span>
-        <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
-      </span>
-    </button>
-
     <!-- Box Breathing -->
     <button class="support-card" type="button" @click="$emit('goBox')">
       <span class="support-icon" aria-hidden="true">
@@ -70,6 +55,21 @@
       <span class="support-text">
         <span class="support-heading">Nearby Quiet Spaces</span>
         <span class="support-sub">Find libraries and calm workspaces close to you</span>
+      </span>
+    </button>
+
+    <!-- Helpful Resources -->
+    <button class="support-card" type="button" @click="$emit('goHelpline')">
+      <span class="support-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path
+            d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
+        </svg>
+      </span>
+      <span class="support-text">
+        <span class="support-heading">Helpful Resources</span>
+        <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
       </span>
     </button>
 
