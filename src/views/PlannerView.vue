@@ -68,18 +68,30 @@
 
                   <template v-if="editingId === task.id">
                     <div class="task-edit-field">
-                      <input
-                        v-model="editingText"
-                        class="task-edit-input"
-                        @keyup.enter="confirmEdit(task)"
-                        @blur="confirmEdit(task)"
-                        @keyup.escape="cancelEdit"
-                      />
-                      <VoiceInputButton
-                        class="task-voice-button"
-                        aria-label="Dictate task edit"
-                        @transcript="appendEditingVoiceInput"
-                      />
+                      <div class="task-edit-input-row">
+                        <input
+                          v-model="editingText"
+                          class="task-edit-input"
+                          maxlength="100"
+                          @input="onEditingTextInput"
+                          @keyup.enter="confirmEdit(task)"
+                          @blur="confirmEdit(task)"
+                          @keyup.escape="cancelEdit"
+                        />
+                        <VoiceInputButton
+                          class="task-voice-button"
+                          aria-label="Dictate task edit"
+                          @transcript="appendEditingVoiceInput"
+                        />
+                      </div>
+                      <div class="task-text-input-meta">
+                        <span class="task-char-count" :class="{ warn: editingCharCount >= taskTextMaxChars }">
+                          {{ editingCharCount }} / {{ taskTextMaxChars }}
+                        </span>
+                        <span v-if="editingCharCount >= taskTextMaxChars" class="task-text-limit-msg" role="status">
+                          Maximum {{ taskTextMaxChars }} characters.
+                        </span>
+                      </div>
                     </div>
                   </template>
                   <template v-else>
@@ -149,12 +161,20 @@
         <div class="modal-field">
           <label for="new-task-text">What's the task?</label>
           <div class="modal-input-field">
-            <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" placeholder="e.g. Reply to client email..." />
+            <input id="new-task-text" class="modal-input" v-model="newTaskText" type="text" maxlength="100" placeholder="e.g. Reply to client email..." @input="onNewTaskTextInput" />
             <VoiceInputButton
               class="modal-voice-button"
               aria-label="Dictate new task"
               @transcript="appendNewTaskVoiceInput"
             />
+          </div>
+          <div class="task-text-input-meta">
+            <span class="task-char-count" :class="{ warn: newTaskCharCount >= taskTextMaxChars }">
+              {{ newTaskCharCount }} / {{ taskTextMaxChars }}
+            </span>
+            <span v-if="newTaskCharCount >= taskTextMaxChars" class="task-text-limit-msg" role="status">
+              Maximum {{ taskTextMaxChars }} characters.
+            </span>
           </div>
         </div>
 
@@ -238,6 +258,9 @@ const GROUP_ORDER = [
   'not-urgent-not-important',
 ]
 
+const TASK_TEXT_MAX_CHARS = 100
+const TASK_TEXT_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/g
+
 export default {
   name: 'PlannerView',
   components: { draggable, VoiceInputButton },
@@ -249,6 +272,7 @@ export default {
       showInfoPopover: false,
       infoPopoverStyle: {},
       newTaskText: '',
+      taskTextMaxChars: TASK_TEXT_MAX_CHARS,
       newTaskImportant: true,
       newTaskUrgent: true,
       editingId: null,
@@ -256,6 +280,12 @@ export default {
     }
   },
   computed: {
+    newTaskCharCount() {
+      return (this.newTaskText ?? '').length
+    },
+    editingCharCount() {
+      return (this.editingText ?? '').length
+    },
     // pending + doing, sorted by order
     activeTasks() {
       return this.tasks
@@ -365,7 +395,7 @@ export default {
     // ── Edit ─────────────────────────────────────────────────────────────────
     startEdit(task) {
       this.editingId   = task.id
-      this.editingText = task.text
+      this.editingText = this._sanitizeTaskText(task.text)
     },
     cancelEdit() {
       this.editingId   = null
@@ -373,7 +403,7 @@ export default {
     },
     confirmEdit(task) {
       if (this.editingId !== task.id) return
-      const text = (this.editingText ?? '').trim()
+      const text = this._sanitizeTaskText(this.editingText ?? '').trim()
       if (!text) { this.cancelEdit(); return }
 
       updateTaskInSession(this.sessionId, task.id, { text })
@@ -383,7 +413,24 @@ export default {
     },
     appendEditingVoiceInput(transcript) {
       const current = this.editingText?.trimEnd() ?? ''
-      this.editingText = current ? `${current} ${transcript}` : transcript
+      const merged = current ? `${current} ${transcript}` : transcript
+      this.editingText = this._sanitizeTaskText(merged)
+    },
+
+    onNewTaskTextInput(e) {
+      const next = this._sanitizeTaskText(e?.target?.value ?? this.newTaskText)
+      if (next !== this.newTaskText) this.newTaskText = next
+    },
+
+    onEditingTextInput(e) {
+      const next = this._sanitizeTaskText(e?.target?.value ?? this.editingText)
+      if (next !== this.editingText) this.editingText = next
+    },
+
+    _sanitizeTaskText(raw) {
+      const s = String(raw ?? '')
+      const cleaned = s.replace(TASK_TEXT_DISALLOWED, '')
+      return cleaned.length > TASK_TEXT_MAX_CHARS ? cleaned.slice(0, TASK_TEXT_MAX_CHARS) : cleaned
     },
 
     // ── Delete ────────────────────────────────────────────────────────────────
@@ -395,7 +442,7 @@ export default {
 
     // ── Add ───────────────────────────────────────────────────────────────────
     addTask() {
-      const text = (this.newTaskText ?? '').trim()
+      const text = this._sanitizeTaskText(this.newTaskText ?? '').trim()
       if (!text) return
 
       const priorityGroup =
@@ -426,7 +473,8 @@ export default {
 
     appendNewTaskVoiceInput(transcript) {
       const current = this.newTaskText?.trimEnd() ?? ''
-      this.newTaskText = current ? `${current} ${transcript}` : transcript
+      const merged = current ? `${current} ${transcript}` : transcript
+      this.newTaskText = this._sanitizeTaskText(merged)
     },
 
     // ── Drag ──────────────────────────────────────────────────────────────────
@@ -797,6 +845,14 @@ export default {
 .task-edit-field {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.task-edit-input-row {
+  display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -813,6 +869,34 @@ export default {
 }
 
 .task-edit-input:focus { border-color: var(--terracotta); }
+
+.task-text-input-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(45, 31, 20, 0.45);
+}
+
+.modal-field .modal-input-field + .task-text-input-meta {
+  margin-top: 8px;
+}
+
+.task-char-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.task-char-count.warn {
+  color: var(--terracotta);
+}
+
+.task-text-limit-msg {
+  font-weight: 600;
+  color: var(--terracotta);
+}
 
 .task-voice-button {
   width: 34px;

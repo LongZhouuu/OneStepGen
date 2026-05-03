@@ -21,7 +21,9 @@
           <div class="input-area">
             <textarea
               v-model="inputText"
+              maxlength="2500"
               placeholder="e.g. I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances…"
+              @input="onDumpTextInput"
             />
             <VoiceInputButton
               class="input-voice-button"
@@ -52,7 +54,14 @@
               {{ uploadedFile ? uploadedFile.name : uploadedFileMeta ? uploadedFileMeta.name : 'Upload PDF' }}
               <input type="file" accept=".pdf" style="display:none" @change="handlePdfUpload">
             </label>
-            <span v-if="!uploadedFile && !uploadedFileMeta" class="char-count">{{ charCount }} characters</span>
+            <div v-if="!uploadedFile && !uploadedFileMeta" class="dump-text-input-meta">
+              <span class="dump-char-count" :class="{ warn: charCount >= dumpInputMaxChars }">
+                {{ charCount }} / {{ dumpInputMaxChars }}
+              </span>
+              <span v-if="charCount >= dumpInputMaxChars" class="dump-text-limit-msg" role="status">
+                Maximum {{ dumpInputMaxChars }} characters.
+              </span>
+            </div>
             <button v-if="uploadedFile || uploadedFileMeta" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
           </div>
  
@@ -131,6 +140,9 @@ import VoiceInputButton from '@/components/VoiceInputButton.vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 const MIN_LOADING_MS = 2600
+const DUMP_INPUT_MAX_CHARS = 2500
+// English letters, digits, whitespace, and common English punctuation only (strip everything else).
+const DUMP_INPUT_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/g
 
 // DEMO: copy used by the "Use sample text" button; edit the string or remove with the button.
 const DEMO_SAMPLE_TEXT =
@@ -153,6 +165,9 @@ export default {
     charCount() {
       return (this.inputText ?? '').length
     },
+    dumpInputMaxChars() {
+      return DUMP_INPUT_MAX_CHARS
+    },
     canCreate() {
       const hasText = (this.inputText ?? '').trim().length > 0
       const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
@@ -165,7 +180,7 @@ export default {
     const session = getCurrentSession()
     if (session) {
       if (session.inputType === 'text') {
-        this.inputText = session.rawInputText ?? ''
+        this.inputText = this._sanitizeDumpInput(session.rawInputText ?? '')
       } else if (session.inputType === 'pdf') {
         this.uploadedFileMeta = session.uploadedFileMeta ?? null
       }
@@ -192,12 +207,24 @@ export default {
     },
     appendVoiceInput(transcript) {
       const current = this.inputText?.trimEnd() ?? ''
-      this.inputText = current ? `${current} ${transcript}` : transcript
+      const merged = current ? `${current} ${transcript}` : transcript
+      this.inputText = this._sanitizeDumpInput(merged)
+    },
+
+    onDumpTextInput(e) {
+      const next = this._sanitizeDumpInput(e?.target?.value ?? this.inputText)
+      if (next !== this.inputText) this.inputText = next
+    },
+
+    _sanitizeDumpInput(raw) {
+      const s = String(raw ?? '')
+      const cleaned = s.replace(DUMP_INPUT_DISALLOWED, '')
+      return cleaned.length > DUMP_INPUT_MAX_CHARS ? cleaned.slice(0, DUMP_INPUT_MAX_CHARS) : cleaned
     },
 
     // DEMO: pairs with the "Use sample text" button in the template; delete when removing the button.
     fillDemoSampleText() {
-      this.inputText = DEMO_SAMPLE_TEXT
+      this.inputText = this._sanitizeDumpInput(DEMO_SAMPLE_TEXT)
     },
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -510,9 +537,29 @@ export default {
   color: var(--terracotta);
 }
  
-.char-count {
+.dump-text-input-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
   font-size: 12px;
+  line-height: 1.4;
   color: rgba(45, 31, 20, 0.38);
+}
+
+.dump-char-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dump-char-count.warn {
+  color: var(--terracotta);
+}
+
+.dump-text-limit-msg {
+  font-weight: 600;
+  color: var(--terracotta);
 }
  
 /* Remove PDF button */
