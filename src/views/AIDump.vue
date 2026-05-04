@@ -138,7 +138,8 @@
 import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+// Strip trailing slash so paths like /process-text never become //process-text
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
 const MIN_LOADING_MS = 2600
 const DUMP_INPUT_MAX_CHARS = 2500
 // English letters, digits, whitespace, and common English punctuation only (strip everything else).
@@ -239,34 +240,77 @@ export default {
 
     // ── Real backend call ─────────────────────────────────────────────────────
     async _callBackend(inputType, sessionId) {
+      if (!API_BASE) {
+        throw new Error(
+          'Missing API URL: set VITE_API_BASE_URL in .env.production, run npm run build, redeploy dist/, invalidate CloudFront.',
+        )
+      }
+
+      const path = inputType === 'pdf' ? '/upload-pdf' : '/process-text'
+      const url = `${API_BASE}${path}`
       let res
 
-      if (inputType === 'pdf') {
-        // PDF: multipart/form-data
-        const formData = new FormData()
-        formData.append('file', this.uploadedFile)
-        res = await fetch(`${API_BASE}/upload-pdf`, {
-          method: 'POST',
-          body: formData,
-          // No Content-Type header — browser sets it automatically for FormData
-        })
-      } else {
-        // Text: JSON
-        res = await fetch(`${API_BASE}/process-text`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: this.inputText.trim() }),
-        })
+      try {
+        if (inputType === 'pdf') {
+          const formData = new FormData()
+          formData.append('file', this.uploadedFile)
+          res = await fetch(url, {
+            method: 'POST',
+            body: formData,
+          })
+        } else {
+          res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: this.inputText.trim() }),
+          })
+        }
+      } catch (e) {
+        const msg = e?.message || String(e)
+        if (
+          msg.includes('Failed to fetch') ||
+          msg.includes('NetworkError') ||
+          msg.includes('Load failed')
+        ) {
+          throw new Error(
+            `Network/CORS blocked request to ${url}. Enable CORS on API Gateway for your CloudFront domain (or * for testing).`,
+          )
+        }
+        throw e
+      }
+
+      const text = await res.text()
+      const trimmed = text.trim()
+      if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
+        throw new Error(
+          `Got HTML instead of JSON — the request probably hit your CloudFront SPA (wrong host/path), not API Gateway. Use absolute VITE_API_BASE_URL=https://YOUR-ID.execute-api.ap-southeast-2.amazonaws.com then rebuild & redeploy. Attempted: ${url}`,
+        )
+      }
+
+      let payload
+      try {
+        payload = JSON.parse(text)
+      } catch {
+        throw new Error(
+          `API did not return JSON (HTTP ${res.status}). First chars: ${trimmed.slice(0, 120)}…`,
+        )
       }
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail ?? `Server error ${res.status}`)
+        const detail = payload.detail
+        let detailStr = ''
+        if (typeof detail === 'string') detailStr = detail
+        else if (Array.isArray(detail))
+          detailStr = detail.map(d => d.msg || JSON.stringify(d)).join('; ')
+        else if (detail != null) detailStr = JSON.stringify(detail)
+        throw new Error(
+          detailStr || payload.message || `HTTP ${res.status} from API (${path}).`,
+        )
       }
 
       // Backend returns array of { task, priority, priorityGroup, score, rank, category_rank }
       // Convert to internal format: { text, priorityGroup, order }
-      const backendTasks = await res.json()
+      const backendTasks = payload
       console.log('[AIDump] Raw backend response:', backendTasks)
 
       return {
@@ -332,7 +376,8 @@ export default {
 
       } catch (err) {
         console.error('[AIDump] Backend call failed:', err)
-        this.errorMessage = 'Something went wrong. Please try again.'
+        const text = err?.message || 'Something went wrong. Please try again.'
+        this.errorMessage = text.length > 420 ? `${text.slice(0, 417)}…` : text
         this.view = 'error'
       }
     },

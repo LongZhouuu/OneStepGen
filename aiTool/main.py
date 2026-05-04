@@ -27,9 +27,14 @@ Run with:
     uvicorn main:app --reload
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from pydantic import BaseModel
+import os
+import secrets
+
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # Our utility modules (the AI pipeline)
 from utils.pdf_parser import extract_text_from_pdf
@@ -49,6 +54,34 @@ app = FastAPI(
     version="3.0.0",
 )
 
+
+class OriginVerifyMiddleware(BaseHTTPMiddleware):
+    """
+    When ORIGIN_VERIFY_SECRET is set, require header X-Origin-Verify to match.
+    CloudFront should send this on the origin request only (not exposed in the Vue bundle).
+    Skips check for OPTIONS so CORS preflight still works.
+    Unset ORIGIN_VERIFY_SECRET for local dev against API directly.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        expected = os.getenv("ORIGIN_VERIFY_SECRET", "").strip()
+        if not expected:
+            return await call_next(request)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        got = request.headers.get("x-origin-verify") or request.headers.get(
+            "X-Origin-Verify",
+            "",
+        )
+        if not secrets.compare_digest(got.strip().encode("utf-8"), expected.encode("utf-8")):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Forbidden"},
+            )
+        return await call_next(request)
+
+
 # Allow cross-origin requests from any frontend
 app.add_middleware(
     CORSMiddleware,
@@ -56,6 +89,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Outermost: verify CloudFront origin secret before other layers
+app.add_middleware(OriginVerifyMiddleware)
 
 
 # ── Request / Response models ──────────────────────────────
