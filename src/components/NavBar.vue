@@ -31,6 +31,10 @@ import { RouterLink } from 'vue-router'
             <RouterLink class="nav-link" to="/">Home</RouterLink>
           </li>
 
+          <li class="nav-item">
+            <RouterLink class="nav-link" :to="{ name: 'Planner' }">Workspace</RouterLink>
+          </li>
+
           <!-- Tools Dropdown
           <li class="nav-item dropdown">
             <a

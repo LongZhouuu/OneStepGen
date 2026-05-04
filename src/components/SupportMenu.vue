@@ -2,29 +2,11 @@
   <div>
     <!-- Menu Title -->
     <h2 class="support-title">
-      <svg class="title-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path
-          d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z" />
-      </svg>
+      <img class="title-icon" :src="supportIconUrl" alt="" aria-hidden="true" />
 
       <span>Support</span>
     </h2>
     <p class="sub">Choose what you need right now</p>
-
-    <!-- Helpful Resources -->
-    <button class="support-card" type="button" @click="$emit('goHelpline')">
-      <span class="support-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path
-            d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
-        </svg>
-      </span>
-      <span class="support-text">
-        <span class="support-heading">Helpful Resources</span>
-        <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
-      </span>
-    </button>
 
     <!-- Box Breathing -->
     <button class="support-card" type="button" @click="$emit('goBox')">
@@ -73,6 +55,21 @@
       </span>
     </button>
 
+    <!-- Helpful Resources -->
+    <button class="support-card" type="button" @click="$emit('goHelpline')">
+      <span class="support-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path
+            d="M4.5 5.7c0-.7.5-1.2 1.2-1.2h2.6c.5 0 1 .3 1.1.8l1.1 3.1c.2.5 0 1-.4 1.3l-1.8 1.2a12 12 0 0 0 5.8 5.8l1.2-1.8c.3-.4.8-.6 1.3-.4l3.1 1.1c.5.2.8.6.8 1.1v2.6c0 .7-.5 1.2-1.2 1.2A15.5 15.5 0 0 1 4.5 5.7z" />
+        </svg>
+      </span>
+      <span class="support-text">
+        <span class="support-heading">Helpful Resources</span>
+        <span class="support-sub">Crisis support, mental health lines &amp; community resources</span>
+      </span>
+    </button>
+
     <!-- Footer -->
     <div class="support-footer">
       <p class="support-footer-text">
@@ -86,6 +83,8 @@
 </template>
 
 <script setup>
+import supportIconUrl from '@/assets/support-icon.png'
+
 defineEmits(['goBox', 'goRainbow', 'goHelpline', 'goQuiet'])
 </script>
 
@@ -100,9 +99,13 @@ defineEmits(['goBox', 'goRainbow', 'goHelpline', 'goQuiet'])
 }
 
 .title-icon {
-  width: 26px;
-  height: 26px;
-  color: #b66a48;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter:
+    brightness(0) saturate(100%) invert(48%) sepia(23%) saturate(965%) hue-rotate(335deg) brightness(94%) contrast(89%)
+    drop-shadow(0 0 0 #b66a48)
+    drop-shadow(0 0 0 #b66a48);
   flex-shrink: 0;
 }
 
