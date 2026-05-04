@@ -27,13 +27,17 @@ Run with:
     uvicorn main:app --reload
 """
 
+import base64
+import hashlib
+import hmac
 import os
 import secrets
+import time
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # Our utility modules (the AI pipeline)
@@ -95,6 +99,69 @@ app.add_middleware(OriginVerifyMiddleware)
 
 # ── Request / Response models ──────────────────────────────
 
+# ── Site gate (server-side; password never in SPA bundle) ────────────────
+
+SITE_GATE_COOKIE = "onestepgen_site_gate"
+SITE_GATE_MAX_AGE = 7 * 24 * 3600
+
+
+def _site_access_password_configured() -> bool:
+    return bool(os.getenv("SITE_ACCESS_PASSWORD", "").strip())
+
+
+def _site_gate_signing_key() -> bytes:
+    key = os.getenv("SITE_GATE_SESSION_SECRET", "").strip()
+    if not key:
+        raise RuntimeError("SITE_GATE_SESSION_SECRET is not set")
+    return key.encode("utf-8")
+
+
+def _request_is_https(request: Request) -> bool:
+    if request.url.scheme == "https":
+        return True
+    xf = (request.headers.get("x-forwarded-proto") or "").lower().split(",")[0].strip()
+    return xf == "https"
+
+
+def mint_site_gate_cookie_value() -> str:
+    exp = int(time.time()) + SITE_GATE_MAX_AGE
+    rnd = secrets.token_hex(16)
+    payload = f"v1|{exp}|{rnd}"
+    sig = hmac.new(_site_gate_signing_key(), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    raw = f"{payload}|{sig}"
+    return base64.urlsafe_b64encode(raw.encode("utf-8")).decode("ascii").rstrip("=")
+
+
+def site_gate_cookie_valid(raw: str | None) -> bool:
+    if not raw or not _site_access_password_configured():
+        return False
+    try:
+        pad = "=" * (-len(raw) % 4)
+        decoded = base64.urlsafe_b64decode((raw + pad).encode("ascii")).decode("utf-8")
+        parts = decoded.split("|", 3)
+        if len(parts) != 4:
+            return False
+        ver, exp_s, rnd, sig = parts
+        if ver != "v1":
+            return False
+        exp = int(exp_s)
+        if exp < int(time.time()):
+            return False
+        payload = f"{ver}|{exp_s}|{rnd}"
+        expected = hmac.new(
+            _site_gate_signing_key(),
+            payload.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        return hmac.compare_digest(expected.encode("ascii"), sig.encode("ascii"))
+    except (ValueError, OSError, UnicodeDecodeError):
+        return False
+
+
+class SiteAccessVerifyBody(BaseModel):
+    password: str = Field(..., min_length=1, max_length=512)
+
+
 class TextInput(BaseModel):
     """The JSON body for the /process-text endpoint."""
     text: str
@@ -141,6 +208,62 @@ def root():
         "message": "ADHD Productivity Tool API is running!",
         "docs": "Visit /docs for the interactive API explorer.",
     }
+
+
+@app.post("/site-access/verify")
+async def site_access_verify(request: Request, body: SiteAccessVerifyBody):
+    """
+    Check shared site password (server env SITE_ACCESS_PASSWORD).
+    On success sets HttpOnly cookie; phrase is never compared in the browser bundle.
+    """
+    if not _site_access_password_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Site gate is not configured on the server.",
+        )
+
+    expected = os.getenv("SITE_ACCESS_PASSWORD", "").strip().encode("utf-8")
+    got = body.password.encode("utf-8")
+    if not secrets.compare_digest(got, expected):
+        raise HTTPException(status_code=401, detail="Invalid access phrase.")
+
+    try:
+        token = mint_site_gate_cookie_value()
+    except RuntimeError:
+        raise HTTPException(
+            status_code=503,
+            detail="Site gate session signing is not configured (SITE_GATE_SESSION_SECRET).",
+        )
+
+    resp = JSONResponse(content={"ok": True})
+    resp.set_cookie(
+        key=SITE_GATE_COOKIE,
+        value=token,
+        max_age=SITE_GATE_MAX_AGE,
+        httponly=True,
+        secure=_request_is_https(request),
+        samesite="lax",
+        path="/",
+    )
+    return resp
+
+
+@app.get("/site-access/status")
+def site_access_status(request: Request):
+    """204 if valid gate cookie; 401 otherwise."""
+    if not _site_access_password_configured():
+        raise HTTPException(status_code=503, detail="Site gate not configured.")
+    raw = request.cookies.get(SITE_GATE_COOKIE)
+    if site_gate_cookie_valid(raw):
+        return Response(status_code=204)
+    raise HTTPException(status_code=401, detail="Not authenticated.")
+
+
+@app.post("/site-access/logout")
+def site_access_logout():
+    resp = JSONResponse(content={"ok": True})
+    resp.delete_cookie(SITE_GATE_COOKIE, path="/")
+    return resp
 
 
 @app.post(

@@ -9,7 +9,18 @@
 
       <div v-if="misconfigured" class="site-gate__alert" role="alert">
         <strong>Configuration required.</strong>
-        Set <code>VITE_SITE_ACCESS_PASSWORD</code> in your hosting build environment, then redeploy.
+        <template v-if="serverGate">
+          <p class="site-gate__alert-p">
+            Use <strong>server gate</strong>: set <code>VITE_SITE_GATE=server</code> and
+            <code>VITE_API_BASE_URL</code> in the build, then set
+            <code>SITE_ACCESS_PASSWORD</code> and <code>SITE_GATE_SESSION_SECRET</code> on the API (Lambda).
+          </p>
+        </template>
+        <template v-else>
+          <p class="site-gate__alert-p">
+            Set <code>VITE_SITE_ACCESS_PASSWORD</code> in your hosting build environment, then redeploy.
+          </p>
+        </template>
       </div>
 
       <form v-else class="site-gate__form" @submit.prevent="onSubmit">
@@ -25,10 +36,13 @@
           :aria-invalid="showError"
           aria-describedby="site-gate-hint site-gate-error"
           placeholder="Enter password"
+          :disabled="submitting"
         />
         <p id="site-gate-hint" class="site-gate__hint">Use a password manager to paste the phrase.</p>
         <p v-if="showError" id="site-gate-error" class="site-gate__error" role="alert">That phrase is not correct.</p>
-        <button type="submit" class="site-gate__submit">Continue</button>
+        <button type="submit" class="site-gate__submit" :disabled="submitting">
+          {{ submitting ? 'Checking…' : 'Continue' }}
+        </button>
       </form>
     </div>
   </div>
@@ -40,6 +54,8 @@ import {
   grantSiteAccess,
   passwordMatches,
   isProductionMisconfigured,
+  isServerSiteGate,
+  verifySitePasswordOnServer,
 } from '@/utils/siteAccess'
 
 defineOptions({ name: 'SitePasswordGate' })
@@ -48,7 +64,9 @@ const emit = defineEmits(['unlocked'])
 
 const password = ref('')
 const showError = ref(false)
+const submitting = ref(false)
 const misconfigured = computed(() => isProductionMisconfigured())
+const serverGate = computed(() => isServerSiteGate())
 
 onMounted(() => {
   document.body.classList.add('site-gate-open')
@@ -58,16 +76,27 @@ onUnmounted(() => {
   document.body.classList.remove('site-gate-open')
 })
 
-function onSubmit() {
+async function onSubmit() {
   if (misconfigured.value) return
   showError.value = false
-  if (passwordMatches(password.value)) {
-    grantSiteAccess()
-    emit('unlocked')
-    return
+  submitting.value = true
+  try {
+    if (serverGate.value) {
+      const ok = await verifySitePasswordOnServer(password.value)
+      if (ok) {
+        emit('unlocked')
+        return
+      }
+    } else if (passwordMatches(password.value)) {
+      grantSiteAccess()
+      emit('unlocked')
+      return
+    }
+    showError.value = true
+    password.value = ''
+  } finally {
+    submitting.value = false
   }
-  showError.value = true
-  password.value = ''
 }
 </script>
 
@@ -133,6 +162,12 @@ function onSubmit() {
   border: 1px solid rgba(231, 76, 60, 0.25);
   border-radius: 12px;
   padding: 0.85rem 1rem;
+}
+
+.site-gate__alert-p {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .site-gate__alert code {
@@ -202,12 +237,17 @@ function onSubmit() {
   transition: background 0.2s, transform 0.15s;
 }
 
-.site-gate__submit:hover {
+.site-gate__submit:hover:not(:disabled) {
   background: #a85f42;
 }
 
-.site-gate__submit:active {
+.site-gate__submit:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.site-gate__submit:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {

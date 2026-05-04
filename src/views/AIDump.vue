@@ -256,11 +256,13 @@ export default {
           formData.append('file', this.uploadedFile)
           res = await fetch(url, {
             method: 'POST',
+            credentials: 'include',
             body: formData,
           })
         } else {
           res = await fetch(url, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: this.inputText.trim() }),
           })
