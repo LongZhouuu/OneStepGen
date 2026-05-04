@@ -2,10 +2,7 @@
   <div>
     <!-- Menu Title -->
     <h2 class="support-title">
-      <svg class="title-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path
-          d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z" />
-      </svg>
+      <img class="title-icon" :src="supportIconUrl" alt="" aria-hidden="true" />
 
       <span>Support</span>
     </h2>
@@ -86,6 +83,8 @@
 </template>
 
 <script setup>
+import supportIconUrl from '@/assets/support-icon.png'
+
 defineEmits(['goBox', 'goRainbow', 'goHelpline', 'goQuiet'])
 </script>
 
@@ -100,9 +99,13 @@ defineEmits(['goBox', 'goRainbow', 'goHelpline', 'goQuiet'])
 }
 
 .title-icon {
-  width: 26px;
-  height: 26px;
-  color: #b66a48;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter:
+    brightness(0) saturate(100%) invert(48%) sepia(23%) saturate(965%) hue-rotate(335deg) brightness(94%) contrast(89%)
+    drop-shadow(0 0 0 #b66a48)
+    drop-shadow(0 0 0 #b66a48);
   flex-shrink: 0;
 }
 
