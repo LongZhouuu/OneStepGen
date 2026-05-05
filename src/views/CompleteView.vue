@@ -82,15 +82,17 @@ onMounted(() => {
 })
 
 const completedCount = computed(() => {
-    return session.value?.tasks?.filter(task => task.status === 'completed').length || 0
+    return session.value?.completedCount
 })
 
 const totalTaskCount = computed(() => {
-    return session.value?.tasks?.length || 0
+    // return session.value?.tasks?.length || 0
+    return session.value?.completedCount + session.value?.skippedCount
 })
 
 const skippedCount = computed(() => {
-    return session.value?.tasks?.filter(task => task.status === 'skipped').length || 0
+    // return session.value?.tasks?.filter(task => task.status === 'skipped').length || 0
+    return session.value?.skippedCount
 })
 
 function clearCurrentSession() {

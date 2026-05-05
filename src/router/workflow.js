@@ -148,6 +148,8 @@ export function createSession({
     rawInputText,
     uploadedFileMeta,
     tasks: [],
+    completedCount: 0,
+    skippedCount: 0,
     reward,
     startedAt: timestamp,
     completedAt: null,
@@ -326,10 +328,24 @@ export function updateTaskInSession(sessionId, taskId, updates) {
 
   if (!task) return null
 
+  const wasCompleted = task.status === 'completed'
+  const wasSkipped = task.status == 'skipped'
+
   Object.assign(task, {
     ...updates,
     updatedAt: Date.now(),
   })
+
+  const isNowCompleted = task.status === 'completed'
+  const isNowSkipped = task.status == 'skipped'
+
+  if (!wasCompleted && isNowCompleted) {
+    session.completedCount += 1
+  }
+
+  if (!wasSkipped && isNowSkipped) {
+    session.skippedCount += 1
+  }
 
   saveCurrentSession(session)
 
