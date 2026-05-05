@@ -31,7 +31,7 @@ import { useRoute, RouterView } from 'vue-router'
 import {
   isSiteAccessGranted,
   isGateSkippedInDev,
-  isServerSiteGate,
+  usesServerSiteGate,
   checkServerSiteGateFromCookie,
 } from '@/utils/siteAccess'
 import SitePasswordGate from './components/SitePasswordGate.vue'
@@ -46,7 +46,7 @@ import SupportModal from './components/SupportModal.vue'
 const route = useRoute()
 
 const siteUnlocked = ref(
-  isGateSkippedInDev() || (!isServerSiteGate() && isSiteAccessGranted()),
+  isGateSkippedInDev() || (!usesServerSiteGate() && isSiteAccessGranted()),
 )
 
 function onSiteUnlocked() {
@@ -93,7 +93,7 @@ function handleOpenSupportEvent(e) {
 // to avoid leaking listeners (especially relevant in dev with HMR).
 onMounted(() => {
   window.addEventListener('open-support', handleOpenSupportEvent)
-  if (!isGateSkippedInDev() && isServerSiteGate()) {
+  if (!isGateSkippedInDev() && usesServerSiteGate()) {
     checkServerSiteGateFromCookie().then((ok) => {
       if (ok) siteUnlocked.value = true
     })

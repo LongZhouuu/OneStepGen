@@ -5,13 +5,46 @@ export function getApiBase() {
   return (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '')
 }
 
-/** Server verifies phrase + HttpOnly cookie — password not in JS bundle. */
+/** Explicit opt-in: `VITE_SITE_GATE=server` at build time. */
 export function isServerSiteGate() {
   return String(import.meta.env.VITE_SITE_GATE ?? '').toLowerCase() === 'server'
 }
 
+/**
+ * Use server verify + HttpOnly cookie when:
+ * - `VITE_SITE_GATE=server`, OR
+ * - production + `VITE_API_BASE_URL` set (Lambda phrase); ignores leftover `VITE_SITE_ACCESS_PASSWORD`
+ *   unless you explicitly force legacy client gate with `VITE_SITE_GATE=client`.
+ */
+export function usesServerSiteGate() {
+  if (String(import.meta.env.VITE_SITE_GATE ?? '').toLowerCase() === 'client') {
+    return false
+  }
+  if (isServerSiteGate()) return true
+  if (import.meta.env.PROD && getApiBase()) return true
+  return false
+}
+
+/**
+ * Phrase for the **legacy client-only** gate (`VITE_SITE_ACCESS_PASSWORD`).
+ *
+ * Vite replaces `import.meta.env.VITE_*` at **build** time with string literals.
+ * If this function always read `VITE_SITE_ACCESS_PASSWORD`, that phrase would
+ * always appear in `dist` — even when production uses the **server** gate.
+ *
+ * So in **production** we only read that env when `VITE_SITE_GATE=client`
+ * (explicit bundle-only mode). In all other production builds we return `''`
+ * without referencing `VITE_SITE_ACCESS_PASSWORD`, so the secret is not
+ * emitted. **Development** still reads the var for local testing.
+ */
 export function getExpectedPassword() {
-  return (import.meta.env.VITE_SITE_ACCESS_PASSWORD ?? '').trim()
+  if (import.meta.env.DEV) {
+    return (import.meta.env.VITE_SITE_ACCESS_PASSWORD ?? '').trim()
+  }
+  if (String(import.meta.env.VITE_SITE_GATE ?? '').toLowerCase() === 'client') {
+    return (import.meta.env.VITE_SITE_ACCESS_PASSWORD ?? '').trim()
+  }
+  return ''
 }
 
 /** Dev: skip gate when no client password (legacy) or VITE_SKIP_SITE_GATE=true. */
@@ -24,7 +57,7 @@ export function isGateSkippedInDev() {
 
 export function isProductionMisconfigured() {
   if (!import.meta.env.PROD) return false
-  if (isServerSiteGate()) {
+  if (usesServerSiteGate()) {
     return !getApiBase()
   }
   return !getExpectedPassword()
@@ -34,12 +67,12 @@ export function isProductionMisconfigured() {
 export function isSiteAccessGranted() {
   if (isGateSkippedInDev()) return true
   if (isProductionMisconfigured()) return false
-  if (isServerSiteGate()) return false
+  if (usesServerSiteGate()) return false
   return sessionStorage.getItem(STORAGE_KEY) === '1'
 }
 
 export function grantSiteAccess() {
-  if (!isServerSiteGate()) {
+  if (!usesServerSiteGate()) {
     sessionStorage.setItem(STORAGE_KEY, '1')
   }
 }

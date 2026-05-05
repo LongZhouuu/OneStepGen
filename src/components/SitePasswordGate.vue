@@ -9,7 +9,7 @@
 
       <div v-if="misconfigured" class="site-gate__alert" role="alert">
         <strong>Configuration required.</strong>
-        <template v-if="serverGate">
+        <template v-if="serverGateMode">
           <p class="site-gate__alert-p">
             Use <strong>server gate</strong>: set <code>VITE_SITE_GATE=server</code> and
             <code>VITE_API_BASE_URL</code> in the build, then set
@@ -54,7 +54,7 @@ import {
   grantSiteAccess,
   passwordMatches,
   isProductionMisconfigured,
-  isServerSiteGate,
+  usesServerSiteGate,
   verifySitePasswordOnServer,
 } from '@/utils/siteAccess'
 
@@ -66,7 +66,7 @@ const password = ref('')
 const showError = ref(false)
 const submitting = ref(false)
 const misconfigured = computed(() => isProductionMisconfigured())
-const serverGate = computed(() => isServerSiteGate())
+const serverGateMode = computed(() => usesServerSiteGate())
 
 onMounted(() => {
   document.body.classList.add('site-gate-open')
@@ -81,7 +81,7 @@ async function onSubmit() {
   showError.value = false
   submitting.value = true
   try {
-    if (serverGate.value) {
+    if (serverGateMode.value) {
       const ok = await verifySitePasswordOnServer(password.value)
       if (ok) {
         emit('unlocked')
