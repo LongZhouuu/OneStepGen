@@ -1,8 +1,5 @@
 <template>
   <div class="panel">
-    <button class="back-btn" type="button" @click="$emit('back')">
-      ← Back
-    </button>
     <h2>Melbourne CBD Focus Map</h2>
     <p class="sub">Find nearby work/reset spots with opening times and distance.</p>
 
@@ -146,8 +143,6 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { focusMapSources } from '@/data/focusMapSources'
-
-defineEmits(['back'])
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -679,14 +674,6 @@ onUnmounted(() => {
 <style scoped>
 .panel {
   padding-top: 8px;
-}
-
-.back-btn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  margin-bottom: 18px;
-  font-size: 15px;
 }
 
 h2 {

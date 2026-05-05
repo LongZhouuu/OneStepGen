@@ -3,7 +3,6 @@
     <div
       ref="modalRef"
       class="support-modal"
-      :class="{ 'support-modal--wide': currentView === 'quiet' }"
       role="dialog"
       aria-modal="true"
       aria-labelledby="support-modal-title"
@@ -26,7 +25,6 @@
         @goBox="currentView = 'breathing'"
         @goRainbow="currentView = 'rainbow'"
         @goHelpline="currentView = 'helpline'"
-        @goQuiet="currentView = 'quiet'"
         @back="currentView = 'menu'"
       />
     </div>
@@ -40,7 +38,6 @@ import SupportMenu from './SupportMenu.vue'
 import BoxBreathingPanel from './BoxBreathingPanel.vue'
 import RainbowPanel from './RainbowPanel.vue'
 import HelplinePanel from './HelplinePanel.vue'
-import QuietPlacesPanel from './QuietPlacesPanel.vue'
 
 const emit = defineEmits(['close'])
 
@@ -72,8 +69,6 @@ const currentComponent = computed(() => {
       return RainbowPanel
     case 'helpline':
       return HelplinePanel
-    case 'quiet':
-      return QuietPlacesPanel
     default:
       return SupportMenu
   }
@@ -150,10 +145,6 @@ watch(currentView, focusInitialElement)
   border-radius: 28px;
   padding: 34px;
   position: relative;
-}
-
-.support-modal--wide {
-  width: min(1100px, 94vw);
 }
 
 .sr-only {
