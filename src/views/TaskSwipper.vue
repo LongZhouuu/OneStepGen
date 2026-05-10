@@ -2,6 +2,7 @@
     <div class="page">
 
         <div class="phone-frame">
+        <TaskProgressBar :tasks="tasks" />
             <!-- back button -->
             <!-- <button class="back-btn" @click="goBackToPlanner">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -80,6 +81,7 @@ import SwipingTimer from '@/components/SwipingTimer.vue'
 import TipsPanel from '@/components/TipsPanel.vue'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import TaskProgressBar from '@/components/TaskProgressBar.vue'
 import {
     guardWorkflowStep, 
     unlockStep, 
@@ -170,7 +172,7 @@ function updateTaskStatus(index, newStatus) {
     /* min-height: 100vh; */
     display: flex;
     justify-content: center;
-    padding: 132px 24px 0px;
+    padding: 10.8vh 24px 0px;
     font-family: inherit;
     color: #2d2d2d;
 }
@@ -185,8 +187,8 @@ function updateTaskStatus(index, newStatus) {
     max-width: 980px;
     display: grid;
     grid-template-columns: minmax(0, 460px) minmax(0, 460px);
-    grid-template-rows: minmax(0, 420px);
-    gap: 34px;
+    grid-template-rows: auto minmax(0, 420px);
+    /* gap: 34px; */
     align-items: stretch;
     justify-content: center;
     /* align-items: center; */
@@ -310,6 +312,7 @@ function updateTaskStatus(index, newStatus) {
     font-size: 1rem;
     font-weight: 700;
     flex-shrink: 0;
+    /* right: -3%; */
 }
 
 
@@ -448,6 +451,8 @@ function updateTaskStatus(index, newStatus) {
 
 .status {
     overflow: hidden;
+    right: -1.6%;
+    position: relative;
 }
 
 .status.tipsOpen {
