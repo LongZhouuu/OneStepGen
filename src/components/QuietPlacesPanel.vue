@@ -346,7 +346,7 @@ function recommendScore(place, maxV, maxD) {
   if (!place.crowdAvailable) return 9999
   const cv = place.crowdVolume / maxV
   const cd = Math.min(place.distanceKm, maxD) / maxD
-  return 0.55 * cv + 0.45 * cd
+  return 0.6 * cv + 0.4 * cd
 }
 
 const visiblePlaces = computed(() => {
