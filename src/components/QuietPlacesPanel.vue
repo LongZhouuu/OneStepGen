@@ -10,22 +10,23 @@
     </p>
 
     <div class="controls">
-      <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
-        {{ isLocating ? 'Getting location...' : 'Use my location' }}
-      </button>
-
-      <div class="search-row">
-        <input
-          v-model.trim="locationQuery"
-          type="text"
-          class="location-input"
-          placeholder="Enter Melbourne address or suburb"
-          @input="onLocationInput"
-          @focus="showSuggestions = true"
-          @keydown.enter.prevent="searchLocation"
-        />
-        <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
-          {{ isSearching ? 'Searching...' : 'Search' }}
+      <div class="location-actions">
+        <div class="search-row">
+          <input
+            v-model.trim="locationQuery"
+            type="text"
+            class="location-input"
+            placeholder="Enter Melbourne address or suburb"
+            @input="onLocationInput"
+            @focus="showSuggestions = true"
+            @keydown.enter.prevent="searchLocation"
+          />
+          <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
+            {{ isSearching ? 'Searching...' : 'Search' }}
+          </button>
+        </div>
+        <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
+          {{ isLocating ? 'Getting location...' : 'Use my location' }}
         </button>
       </div>
       <ul v-if="showSuggestions && locationSuggestions.length" class="suggestions-list">
@@ -359,17 +360,8 @@ const visiblePlaces = computed(() => {
 })
 
 const activeTabMessage = computed(() => {
-  const crowdNote =
-    'Marker colours reflect nearby foot traffic where a sensor match exists (City of Melbourne data).'
-  if (activeTab.value === 'libraries') {
-    return `Blue = libraries when crowd data is unavailable. ${crowdNote}`
-  }
-  if (activeTab.value === 'coworking') {
-    return `Red = coworking when crowd data is unavailable. ${crowdNote}`
-  }
-  if (activeTab.value === 'relax') {
-    return `Green = relax landmarks when crowd data is unavailable. ${crowdNote}`
-  }
+  if (activeTab.value === 'libraries') return 'Blue = libraries when crowd data is unavailable.'
+  if (activeTab.value === 'relax') return 'Green = relax landmarks when crowd data is unavailable.'
   return ''
 })
 
@@ -891,9 +883,16 @@ h2 {
   gap: 10px;
 }
 
+.location-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
 .search-row {
   display: flex;
   gap: 8px;
+  flex: 1;
 }
 
 .suggestions-list {
@@ -942,6 +941,10 @@ h2 {
   padding: 9px 12px;
   cursor: pointer;
   font-family: inherit;
+}
+
+.locate-btn {
+  white-space: nowrap;
 }
 
 .locate-btn:disabled,
@@ -1324,6 +1327,10 @@ h2 {
   .map,
   .results {
     height: clamp(260px, 44vh, 460px);
+  }
+
+  .location-actions {
+    flex-direction: column;
   }
 }
 </style>
