@@ -1,5 +1,8 @@
 <template>
   <div class="panel">
+    <button class="back-btn" type="button" @click="$emit('back')">
+      ← Back
+    </button>
     <h2>Melbourne CBD Focus Map</h2>
     <p class="sub">
       Find nearby coworking, library, and relax spots. Crowd levels use City of Melbourne pedestrian
@@ -7,23 +10,22 @@
     </p>
 
     <div class="controls">
-      <div class="location-actions">
-        <div class="search-row">
-          <input
-            v-model.trim="locationQuery"
-            type="text"
-            class="location-input"
-            placeholder="Enter Melbourne address or suburb"
-            @input="onLocationInput"
-            @focus="showSuggestions = true"
-            @keydown.enter.prevent="searchLocation"
-          />
-          <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
-            {{ isSearching ? 'Searching...' : 'Search' }}
-          </button>
-        </div>
-        <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
-          {{ isLocating ? 'Getting location...' : 'Use my location' }}
+      <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
+        {{ isLocating ? 'Getting location...' : 'Use my location' }}
+      </button>
+
+      <div class="search-row">
+        <input
+          v-model.trim="locationQuery"
+          type="text"
+          class="location-input"
+          placeholder="Enter Melbourne address or suburb"
+          @input="onLocationInput"
+          @focus="showSuggestions = true"
+          @keydown.enter.prevent="searchLocation"
+        />
+        <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
+          {{ isSearching ? 'Searching...' : 'Search' }}
         </button>
       </div>
       <ul v-if="showSuggestions && locationSuggestions.length" class="suggestions-list">
@@ -61,6 +63,10 @@
       </button>
     </div>
 
+    <p v-if="activeTabMessage" class="category-message">
+      {{ activeTabMessage }}
+    </p>
+
     <div class="crowd-toolbar">
       <button
         type="button"
@@ -71,9 +77,6 @@
         {{ isRefreshingCrowd ? 'Refreshing…' : 'Refresh Crowd Data' }}
       </button>
       <button type="button" class="help-link" @click="showCrowdHelp = true">What is crowd level?</button>
-      <p v-if="crowdUpdatedAtDateTimeLabel" class="crowd-updated-summary">
-        Crowd data updated: {{ crowdUpdatedAtDateTimeLabel }}
-      </p>
     </div>
 
     <div class="content-grid">
@@ -131,7 +134,7 @@
               v-if="place.id === recommendedQuietPlaceId"
               class="place-meta recommended-reason"
             >
-              Recommended because it balances lower crowd with shorter distance.
+              Recommended because it has the lowest crowd right now.
             </p>
             <p class="place-meta">
               <span class="place-pin" aria-hidden="true">📍</span>
@@ -217,10 +220,11 @@ import {
   volumeTertileBounds,
 } from '@/data/melbourneFootTraffic'
 
-
 const placeSources = focusMapSources.filter((source) => Boolean(source.url))
 
 const RECOMMEND_MAX_KM = 8
+
+defineEmits(['back'])
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -270,22 +274,6 @@ const crowdUpdatedAtLabel = computed(() => {
   }
 })
 
-const crowdUpdatedAtDateTimeLabel = computed(() => {
-  const d = crowdContext.value.updatedAt
-  if (!d) return ''
-  try {
-    return d.toLocaleString(undefined, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    })
-  } catch {
-    return ''
-  }
-})
-
 const volumeBounds = computed(() => {
   const vols = crowdContext.value.sensors
     .filter((s) => s.status === 'A')
@@ -327,18 +315,10 @@ const categoryPlacesWithDistance = computed(() => {
 const recommendedQuietPlaceId = computed(() => {
   const withData = categoryPlacesWithDistance.value.filter((p) => p.crowdAvailable)
   if (!withData.length) return null
-  const maxV = Math.max(1, ...withData.map((p) => p.crowdVolume))
   let best = withData[0]
-  let bestScore = recommendScore(best, maxV, RECOMMEND_MAX_KM)
   for (const p of withData.slice(1)) {
-    const score = recommendScore(p, maxV, RECOMMEND_MAX_KM)
-    if (score < bestScore) {
-      best = p
-      bestScore = score
-    } else if (score === bestScore && p.distanceKm < best.distanceKm) {
-      best = p
-      bestScore = score
-    }
+    if (p.crowdVolume < best.crowdVolume) best = p
+    else if (p.crowdVolume === best.crowdVolume && p.distanceKm < best.distanceKm) best = p
   }
   return best.id
 })
@@ -347,7 +327,7 @@ function recommendScore(place, maxV, maxD) {
   if (!place.crowdAvailable) return 9999
   const cv = place.crowdVolume / maxV
   const cd = Math.min(place.distanceKm, maxD) / maxD
-  return 0.6 * cv + 0.4 * cd
+  return 0.55 * cv + 0.45 * cd
 }
 
 const visiblePlaces = computed(() => {
@@ -376,6 +356,21 @@ const visiblePlaces = computed(() => {
     })
   }
   return list.slice(0, 20)
+})
+
+const activeTabMessage = computed(() => {
+  const crowdNote =
+    'Marker colours reflect nearby foot traffic where a sensor match exists (City of Melbourne data).'
+  if (activeTab.value === 'libraries') {
+    return `Blue = libraries when crowd data is unavailable. ${crowdNote}`
+  }
+  if (activeTab.value === 'coworking') {
+    return `Red = coworking when crowd data is unavailable. ${crowdNote}`
+  }
+  if (activeTab.value === 'relax') {
+    return `Green = relax landmarks when crowd data is unavailable. ${crowdNote}`
+  }
+  return ''
 })
 
 watch(visiblePlaces, () => {
@@ -868,6 +863,15 @@ onUnmounted(() => {
 <style scoped>
 .panel {
   padding-top: 8px;
+  padding-bottom: 18px;
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  margin-bottom: 18px;
+  font-size: 15px;
 }
 
 h2 {
@@ -878,7 +882,7 @@ h2 {
 
 .sub {
   color: #7b6a5c;
-  margin: 8px 0 12px;
+  margin: 10px 0 16px;
 }
 
 .controls {
@@ -887,19 +891,9 @@ h2 {
   gap: 10px;
 }
 
-.location-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
 .search-row {
   display: flex;
-  flex: 1;
-  border: 1px solid #d8c7ba;
-  border-radius: 12px;
-  background: #fff;
-  overflow: hidden;
+  gap: 8px;
 }
 
 .suggestions-list {
@@ -933,40 +927,21 @@ h2 {
 
 .location-input {
   flex: 1;
-  border: none;
+  border: 1px solid #d8c7ba;
+  border-radius: 10px;
   padding: 10px 12px;
   font-family: inherit;
-  min-width: 0;
-}
-
-.location-input:focus {
-  outline: none;
 }
 
 .locate-btn,
 .search-btn {
-  border: 1px solid #d0bfb3;
+  border: 1px solid #b66a48;
   background: #fff7f2;
   color: #6d422d;
   border-radius: 10px;
-  padding: 9px 14px;
+  padding: 9px 12px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13px;
-}
-
-.locate-btn {
-  white-space: nowrap;
-  background: #ffffff;
-  min-width: 138px;
-}
-
-.search-btn {
-  border: none;
-  border-left: 1px solid #e2d5cc;
-  border-radius: 0;
-  background: #fff7f2;
-  min-width: 84px;
 }
 
 .locate-btn:disabled,
@@ -991,8 +966,18 @@ h2 {
   padding: 8px 10px;
 }
 
+.category-message {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: #6f5a4b;
+  background: #f9f1eb;
+  border: 1px solid #e9ddd4;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
 .crowd-toolbar {
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1024,12 +1009,6 @@ h2 {
   cursor: pointer;
   font-family: inherit;
   font-size: 13px;
-}
-
-.crowd-updated-summary {
-  margin: 0;
-  font-size: 12.5px;
-  color: #6d5b8d;
 }
 
 .sort-row {
@@ -1345,10 +1324,6 @@ h2 {
   .map,
   .results {
     height: clamp(260px, 44vh, 460px);
-  }
-
-  .location-actions {
-    flex-direction: column;
   }
 }
 </style>
