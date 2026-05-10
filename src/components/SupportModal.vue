@@ -140,6 +140,7 @@ watch(currentView, focusInitialElement)
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
   z-index: 9999;
 }
 
@@ -150,6 +151,8 @@ watch(currentView, focusInitialElement)
   border-radius: 28px;
   padding: 34px;
   position: relative;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
 }
 
 .support-modal--wide {
@@ -182,6 +185,18 @@ watch(currentView, focusInitialElement)
   .support-modal,
   .btn-close {
     transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .support-overlay {
+    padding: 10px;
+  }
+
+  .support-modal {
+    padding: 24px 16px 18px;
+    border-radius: 18px;
+    max-height: calc(100dvh - 20px);
   }
 }
 </style>
