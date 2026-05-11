@@ -182,7 +182,19 @@ def assign_priorities(tasks: list[dict]) -> list[dict]:
         llm_importance = task_dict.get("importance")
 
         score = _compute_score(task_text, llm_urgency, llm_importance)
-        priority = _score_to_priority(score)
+        
+        # Use proper Eisenhower Matrix for priority buckets
+        urg = llm_urgency if llm_urgency is not None else _DEFAULT_URGENCY
+        imp = llm_importance if llm_importance is not None else _DEFAULT_IMPORTANCE
+        
+        if imp >= 3 and urg >= 3:
+            priority = "Do First"
+        elif imp >= 3 and urg < 3:
+            priority = "Schedule"
+        elif imp < 3 and urg >= 3:
+            priority = "Delegate"
+        else:
+            priority = "Maybe/Later"
 
         priority_group_map = {
             "Do First": "urgent-important",
@@ -199,8 +211,12 @@ def assign_priorities(tasks: list[dict]) -> list[dict]:
             "score": score,
         })
 
-    # Sort by score descending — highest priority tasks come first
-    results.sort(key=lambda t: t["score"], reverse=True)
+    # Sort by priority BUCKET (not exact score) so the most urgent group
+    # appears first, but tasks within the same bucket stay in the
+    # chronological order the LLM extracted them.  Python's sort is
+    # stable, so equal-bucket items keep their original positions.
+    _BUCKET_ORDER = {"Do First": 0, "Schedule": 1, "Delegate": 2, "Maybe/Later": 3}
+    results.sort(key=lambda t: _BUCKET_ORDER.get(t["priority"], 99))
 
     # Assign a 1-based global rank so the user knows the overall order
     for position, task in enumerate(results, start=1):

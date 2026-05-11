@@ -131,8 +131,13 @@ async def process_text(body: TextInput):
         )
 
     # Run the full AI pipeline
-    result = await run_pipeline(body.text)
-    return result
+    try:
+        result = await run_pipeline(body.text)
+        return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 @app.post(

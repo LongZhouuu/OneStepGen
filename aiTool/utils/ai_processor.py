@@ -79,7 +79,8 @@ Example output:
   "tasks": [
     {"task": "Open the assignment document", "urgency": 4, "importance": 5},
     {"task": "Write the introduction paragraph", "urgency": 3, "importance": 4},
-    {"task": "Save the file", "urgency": 2, "importance": 3}
+    {"task": "Sign for pizza delivery right now", "urgency": 5, "importance": 1},
+    {"task": "Read a casual magazine next month", "urgency": 1, "importance": 1}
   ]
 }"""
 
@@ -287,13 +288,8 @@ def _parse_response(raw_text: str) -> list[dict]:
         if normalised and normalised["task"]:
             tasks.append(normalised)
 
-    # Filter out likely-hallucinated noise: if the LLM rated a task as
-    # both minimal urgency (1) AND minimal importance (1), it's almost
-    # certainly not a genuine action item — strip it.
-    tasks = [
-        t for t in tasks
-        if not (t["urgency"] == 1 and t["importance"] == 1)
-    ]
+    # We no longer filter out urgency=1 and importance=1 tasks,
+    # as they are needed to populate the "Maybe/Later" (Score 0) bucket.
 
     return tasks
 
