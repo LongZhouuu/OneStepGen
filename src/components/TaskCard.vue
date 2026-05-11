@@ -339,9 +339,9 @@ function swipeOut(direction) {
     border-radius: 28px;
     padding: 0 0 24px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-    width: 106%;
+    width: 100%;
     position: relative;
-    left: -3%;
+    left: -1.6%;
     height: 100%;
     overflow: hidden;
 }
