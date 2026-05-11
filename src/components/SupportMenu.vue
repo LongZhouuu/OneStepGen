@@ -40,21 +40,6 @@
       </span>
     </button>
 
-    <!-- Nearby Quiet Spaces -->
-    <button class="support-card" type="button" @click="$emit('goQuiet')">
-      <span class="support-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
-          <circle cx="12" cy="10" r="2.5" />
-        </svg>
-      </span>
-      <span class="support-text">
-        <span class="support-heading">Nearby Quiet Spaces</span>
-        <span class="support-sub">Find libraries and calm workspaces close to you</span>
-      </span>
-    </button>
-
     <!-- Helpful Resources -->
     <button class="support-card" type="button" @click="$emit('goHelpline')">
       <span class="support-icon" aria-hidden="true">
@@ -85,7 +70,7 @@
 <script setup>
 import supportIconUrl from '@/assets/support-icon.png'
 
-defineEmits(['goBox', 'goRainbow', 'goHelpline', 'goQuiet'])
+defineEmits(['goBox', 'goRainbow', 'goHelpline'])
 </script>
 
 <style scoped>

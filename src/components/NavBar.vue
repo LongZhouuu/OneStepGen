@@ -1,5 +1,21 @@
 <script setup>
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import QuietPlacesModal from './QuietPlacesModal.vue'
+
+const quietPlacesOpen = ref(false)
+const focusMapBtnRef = ref(null)
+
+function openQuietPlaces() {
+  quietPlacesOpen.value = true
+}
+
+function closeQuietPlaces() {
+  quietPlacesOpen.value = false
+  requestAnimationFrame(() => {
+    focusMapBtnRef.value?.focus()
+  })
+}
 </script>
 
 <template>
@@ -79,10 +95,25 @@ import { RouterLink } from 'vue-router'
           <li class="nav-item">
             <RouterLink class="nav-link" to="/about">About us</RouterLink>
           </li>
+
+          <li class="nav-item nav-item--focus-map">
+            <button
+              ref="focusMapBtnRef"
+              type="button"
+              class="nav-focus-map-btn"
+              aria-haspopup="dialog"
+              :aria-expanded="quietPlacesOpen"
+              @click="openQuietPlaces"
+            >
+              Focus map
+            </button>
+          </li>
         </ul>
       </div>
     </div>
   </nav>
+
+  <QuietPlacesModal v-if="quietPlacesOpen" @close="closeQuietPlaces" />
 </template>
 
 <style scoped>
@@ -123,6 +154,32 @@ import { RouterLink } from 'vue-router'
   color: #ce752d;
   /* background-color: rgba(255, 255, 255, 0.5); */
   /* border-radius: 6px; */
+}
+
+.nav-focus-map-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.45rem 1.15rem;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ce752d 0%, #b45a20 100%);
+  box-shadow: 0 2px 10px rgba(206, 117, 45, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  margin-left: 0.35rem;
+  margin-right: 0.35rem;
+}
+
+.nav-focus-map-btn:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 14px rgba(206, 117, 45, 0.45);
+}
+
+.nav-focus-map-btn:focus-visible {
+  outline: 3px solid #4d2a1d;
+  outline-offset: 3px;
 }
 
 /* .dropdown-menu {
@@ -177,6 +234,12 @@ import { RouterLink } from 'vue-router'
     width: 100%;
     align-items: flex-start !important;
     gap: 4px;
+  }
+
+  .nav-focus-map-btn {
+    width: 100%;
+    text-align: center;
+    margin: 6px 0;
   }
   /* .nav-link, */
   /* .dropdown-item {

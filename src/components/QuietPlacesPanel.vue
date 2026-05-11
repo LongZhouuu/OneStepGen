@@ -217,6 +217,7 @@ import {
   volumeTertileBounds,
 } from '@/data/melbourneFootTraffic'
 
+
 const placeSources = focusMapSources.filter((source) => Boolean(source.url))
 
 const RECOMMEND_MAX_KM = 8
@@ -866,8 +867,12 @@ onUnmounted(() => {
 
 <style scoped>
 .panel {
+<<<<<<< HEAD
+  padding-top: 8px;
+=======
   padding-top: 0;
   padding-bottom: 10px;
+>>>>>>> main
 }
 
 h2 {
