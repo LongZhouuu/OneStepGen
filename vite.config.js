@@ -18,6 +18,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, '') || '/',
       },
+      '/melbourne-ods-api': {
+        target: 'https://data.melbourne.vic.gov.au',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/melbourne-ods-api/, ''),
+      },
     },
   },
   resolve: {

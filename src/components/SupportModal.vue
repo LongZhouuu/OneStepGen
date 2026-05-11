@@ -17,7 +17,6 @@
         class="btn-close"
         aria-label="Close support tools"
         @click="emit('close')"
-        style="position: absolute; top: 18px; right: 18px;"
       ></button>
 
       <component
@@ -135,6 +134,7 @@ watch(currentView, focusInitialElement)
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 10px;
   z-index: 9999;
 }
 
@@ -142,9 +142,11 @@ watch(currentView, focusInitialElement)
   width: 520px;
   max-width: 92%;
   background: white;
-  border-radius: 28px;
-  padding: 34px;
+  border-radius: 22px;
+  padding: 18px 18px 14px;
   position: relative;
+  max-height: calc(100dvh - 20px);
+  overflow: auto;
 }
 
 .sr-only {
@@ -164,6 +166,12 @@ watch(currentView, focusInitialElement)
   outline-offset: 4px;
 }
 
+.btn-close {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+}
+
 :global(body.support-modal-open) {
   overflow: hidden;
 }
@@ -173,6 +181,23 @@ watch(currentView, focusInitialElement)
   .support-modal,
   .btn-close {
     transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .support-overlay {
+    padding: 6px;
+  }
+
+  .support-modal {
+    padding: 14px 12px 12px;
+    border-radius: 18px;
+    max-height: calc(100dvh - 12px);
+  }
+
+  .btn-close {
+    top: 10px;
+    right: 8px;
   }
 }
 </style>
