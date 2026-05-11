@@ -424,7 +424,7 @@ export function completeCurrentSession(sessionId) {
 
 export const REWARD_COLLECTION_KEY = 'onestep-reward-collection'
 
-function getRewards() {
+export function getRewards() {
   return JSON.parse(localStorage.getItem(REWARD_COLLECTION_KEY)) || []
 }
 

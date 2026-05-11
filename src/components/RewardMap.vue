@@ -35,7 +35,17 @@
     @click.self="modal.open = false"
   >
     <div class="modal-card">
-      <button class="modal-close" @click="modal.open = false">✕</button>
+      <!-- Back arrow — only shown in photos view -->
+      <button
+        v-if="modal.unlocked && modal.view === 'photos'"
+        class="modal-back"
+        aria-label="Back to details"
+        @click="modal.view = 'info'"
+      >
+        <i class="bi bi-arrow-left"></i>
+      </button>
+
+      <button class="modal-close" aria-label="Close" @click="modal.open = false">✕</button>
 
       <!-- Locked state -->
       <div v-if="!modal.unlocked" class="modal-locked">
@@ -44,14 +54,77 @@
         <p class="modal-sub">Complete more sessions to unlock</p>
       </div>
 
-      <!-- Unlocked state -->
-      <div v-else class="modal-unlocked">
-        <img :src="modal.image" class="modal-img" :alt="modal.name" />
-        <h2 class="modal-name">{{ modal.name }}</h2>
-        <p class="modal-region">📍 {{ modal.region }}</p>
+      <!-- Unlocked: info view -->
+      <div v-else-if="modal.view === 'info'" class="modal-unlocked">
+        <div class="modal-img-wrap">
+          <img :src="modal.image" class="modal-img" :alt="modal.name" />
+          <button
+            v-if="modal.photos && modal.photos.length"
+            class="modal-photos-pill"
+            aria-label="View more photos"
+            @click="modal.view = 'photos'"
+          >
+            <i class="bi bi-images"></i>
+            <span>{{ modal.photos.length }}</span>
+          </button>
+        </div>
+
+        <div class="modal-title-row">
+          <h2 class="modal-name">{{ modal.name }}</h2>
+          <span class="modal-count-badge" aria-label="Collected count">
+            <i class="bi bi-collection-fill"></i>
+            <span>×{{ modal.count }}</span>
+          </span>
+        </div>
+
+        <p class="modal-region">
+          <i class="bi bi-geo-alt-fill"></i>
+          {{ modal.region }}
+        </p>
         <p class="modal-desc">{{ modal.description }}</p>
         <div class="modal-fact">⚡ {{ modal.funFact }}</div>
-        <div v-if="modal.count > 1" class="modal-count">Collected x{{ modal.count }}</div>
+
+        <div class="modal-divider"></div>
+
+        <div v-if="modal.photoCredits && modal.photoCredits.length" class="modal-credits">
+          <div class="modal-section-title">
+            <i class="bi bi-camera-fill"></i>
+            <span>Photo credits</span>
+          </div>
+          <ul class="modal-credits-list">
+            <li v-for="(credit, i) in modal.photoCredits" :key="i">{{ credit }}</li>
+          </ul>
+        </div>
+
+        <div v-if="modal.descriptionSource" class="modal-source">
+          <div class="modal-section-title">
+            <i class="bi bi-journal-text"></i>
+            <span>Description source</span>
+          </div>
+          <p class="modal-source-text">{{ modal.descriptionSource.citation }}</p>
+          <a
+            v-if="modal.descriptionSource.url"
+            class="modal-source-link"
+            :href="modal.descriptionSource.url"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{{ modal.descriptionSource.url }}</a>
+        </div>
+      </div>
+
+      <!-- Unlocked: photos view -->
+      <div v-else class="modal-photos">
+        <div class="strip">
+          <div class="strip-inner">
+            <template v-for="(photo, i) in modal.photos" :key="i">
+              <div class="photo-frame">
+                <img :src="photo" :alt="`${modal.name} photo ${i + 1}`" />
+              </div>
+              <div v-if="i < modal.photos.length - 1" class="photo-gap"></div>
+            </template>
+            <div class="strip-footer"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -145,8 +218,12 @@ const tooltip = ref({ visible: false, x: 0, y: 0, text: '' })
 // Modal state
 const modal = ref({
   open: false, unlocked: false,
+  view: 'info', // 'info' | 'photos'
   name: '', region: '', image: '',
   hint: '', description: '', funFact: '', count: 0,
+  photos: [],
+  photoCredits: [],
+  descriptionSource: null,
 })
 
 // ---------------------------------------------------------------------------
@@ -190,7 +267,7 @@ function renderAnimalPins(projection) {
       .style('object-position', 'center top')
       .style('display', 'block')
       .style('box-shadow', '0 2px 8px rgba(40,20,0,0.22)')
-      .style('filter', unlocked ? 'none' : 'grayscale(1) brightness(0.65)')
+      .style('filter', unlocked ? 'none' : 'brightness(0) invert(0.5)')
 
     // Hover — show tooltip
     fo.on('mouseenter', () => {
@@ -212,10 +289,14 @@ function renderAnimalPins(projection) {
       tooltip.value.visible = false
       modal.value = {
         open: true, unlocked,
+        view: 'info',
         name: animal.name, region: animal.region,
         image: animal.image, hint: animal.hint,
         description: animal.description, funFact: animal.funFact,
         count,
+        photos: animal.photos || [],
+        photoCredits: animal.photoCredits || [],
+        descriptionSource: animal.descriptionSource || null,
       }
     })
   })
@@ -453,7 +534,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 9999;
 }
 .modal-card {
   background: #fdf5e6;
@@ -474,26 +555,95 @@ onMounted(() => {
   font-size: 14px;
   color: #5a3a10;
 }
+.modal-back {
+  position: absolute;
+  top: 12px; left: 12px;
+  background: rgba(0,0,0,0.08);
+  border: none;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5a3a10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.modal-back:hover,
+.modal-close:hover {
+  background: rgba(0,0,0,0.16);
+}
+.modal-img-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
 .modal-img {
   width: 100%;
   height: 200px;
   object-fit: cover;
   border-radius: 10px;
-  margin-bottom: 12px;
+  display: block;
+}
+.modal-img-wrap .modal-img {
+  margin-bottom: 0;
 }
 .modal-img-locked {
-  filter: grayscale(1) brightness(0.6);
+  filter: brightness(0) invert(0.5);
+}
+.modal-photos-pill {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(30, 16, 4, 0.78);
+  color: #f5e8d0;
+  border: none;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.modal-photos-pill:hover {
+  background: rgba(30, 16, 4, 0.92);
+}
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 .modal-name {
   font-size: 20px;
   font-weight: 600;
   color: #2c1a08;
-  margin-bottom: 4px;
+  margin: 0;
+}
+.modal-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5e2c4;
+  color: #8b5e2a;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 .modal-region {
   font-size: 12px;
   color: #c87820;
   margin-bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .modal-desc {
   font-size: 13px;
@@ -510,11 +660,48 @@ onMounted(() => {
   border-radius: 0 8px 8px 0;
   margin-bottom: 10px;
 }
-.modal-count {
-  font-size: 13px;
-  font-weight: 500;
-  color: #8b5e2a;
-  text-align: center;
+.modal-divider {
+  height: 1px;
+  background: rgba(140, 90, 40, 0.18);
+  margin: 14px 0 12px;
+}
+.modal-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a4818;
+  margin-bottom: 6px;
+}
+.modal-credits {
+  margin-bottom: 12px;
+}
+.modal-credits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 11.5px;
+  color: #5a3a10;
+  line-height: 1.7;
+}
+.modal-source {
+  margin-bottom: 4px;
+}
+.modal-source-text {
+  font-size: 11.5px;
+  color: #5a3a10;
+  line-height: 1.6;
+  margin: 0 0 4px;
+}
+.modal-source-link {
+  font-size: 11.5px;
+  color: #c87820;
+  text-decoration: none;
+  word-break: break-all;
+}
+.modal-source-link:hover {
+  text-decoration: underline;
 }
 .modal-hint {
   font-size: 14px;
@@ -527,5 +714,69 @@ onMounted(() => {
   font-size: 11px;
   color: #907050;
   text-align: center;
+}
+
+/* Photos view (polaroid strip) */
+.modal-photos {
+  display: flex;
+  justify-content: center;
+  padding-top: 18px;
+}
+.strip {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+}
+.strip::before {
+  background: rgba(255, 255, 235, 0.62);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  content: "";
+  display: block;
+  height: 26px;
+  width: 90px;
+  position: absolute;
+  left: 50%;
+  margin-left: -45px;
+  top: -13px;
+  z-index: 10;
+}
+.strip-inner {
+  background: #f7f3ea;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  padding: 10px 10px 0 10px;
+  display: flex;
+  flex-direction: column;
+  width: 168px;
+  max-height: 540px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.strip-inner::-webkit-scrollbar {
+  display: none;
+}
+.photo-frame {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #1c1c1c;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.photo-gap {
+  height: 8px;
+  background: #f7f3ea;
+  flex-shrink: 0;
+}
+.strip-footer {
+  height: 40px;
+  background: #f7f3ea;
+  flex-shrink: 0;
 }
 </style>
