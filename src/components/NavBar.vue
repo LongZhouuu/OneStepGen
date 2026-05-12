@@ -88,7 +88,8 @@ function closeQuietPlaces() {
 
           <li class="nav-item">
             <RouterLink class="nav-link" to="/reward">
-              Reward<span class="nav-status">Coming soon</span>
+              Reward
+              <!-- <span class="nav-status">Coming soon</span> -->
             </RouterLink>
           </li>
 
