@@ -13,7 +13,7 @@
 
       <div class="hero-brand" aria-label="OneStepGen brand mark">
         <img src="../assets/logo.png" alt="OneStepGen logo" class="brand-logo" />
-        <!-- <p>OneStepGen</p> -->
+        <p>OneStepGen</p>
       </div>
     </section>
 
@@ -30,25 +30,9 @@
 
       <div class="challenge-grid">
         <article v-for="challenge in challenges" :key="challenge.title" class="info-card challenge-card">
-          <!-- <span class="card-icon">{{ challenge.icon }}</span> -->
+          <span class="card-icon">{{ challenge.icon }}</span>
           <h3>{{ challenge.title }}</h3>
           <p>{{ challenge.description }}</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- WHY IT GETS WORSE -->
-    <section class="section-block divider-block">
-      <p class="section-label">WHY IT GETS WORSE AT WORK</p>
-
-      <div class="reason-list">
-        <article v-for="(reason, index) in reasons" :key="reason.title" class="reason-card">
-          <span class="reason-number">{{ String(index + 1).padStart(2, '0') }}</span>
-          <div>
-            <h3>{{ reason.title }}</h3>
-            <p>{{ reason.description }}</p>
-          </div>
-          <!-- <span class="reason-tag">{{ reason.tag }}</span> -->
         </article>
       </div>
     </section>
@@ -95,16 +79,6 @@
             <a href="https://pubmed.ncbi.nlm.nih.gov/11765286/" target="_blank">
               The prevalence of ADHD is 7.5% under the DSM-IV diagnostic criteria
             </a>
-            <p class="source-text">
-            Source:
-            <a href="https://pubmed.ncbi.nlm.nih.gov/11765286/" target="_blank">
-              Graetz et al. (2001), Journal of the American Academy of Child & Adolescent Psychiatry
-            </a>
-            |
-            <a href="https://adhdguideline.aadpa.com.au/about/about-adhd" target="_blank">
-              Australian ADHD Professionals Association (AADPA), About ADHD
-            </a>
-          </p>
           </figcaption>
         </figure>
 
@@ -136,6 +110,32 @@
             </p>
           </div>
 
+          <p class="source-text">
+            Source:
+            <a href="https://pubmed.ncbi.nlm.nih.gov/11765286/" target="_blank">
+              Graetz et al. (2001)
+            </a>
+            |
+            <a href="https://adhdguideline.aadpa.com.au/about/about-adhd" target="_blank">
+              AADPA, About ADHD
+            </a>
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- WHY IT GETS WORSE -->
+    <section class="section-block divider-block">
+      <p class="section-label">WHY IT GETS WORSE AT WORK</p>
+
+      <div class="reason-list">
+        <article v-for="(reason, index) in reasons" :key="reason.title" class="reason-card">
+          <span class="reason-number">{{ String(index + 1).padStart(2, '0') }}</span>
+          <div>
+            <h3>{{ reason.title }}</h3>
+            <p>{{ reason.description }}</p>
+          </div>
+          <span class="reason-tag">{{ reason.tag }}</span>
         </article>
       </div>
     </section>
@@ -148,18 +148,22 @@ import LineChart from '@/components/LineChart.vue'
 
 const challenges = [
   {
+    icon: '▰',
     title: 'Task organisation',
     description: 'Difficulty prioritising and sequencing work when everything feels equally urgent.'
   },
   {
+    icon: '◴',
     title: 'Time management',
     description: "Time blindness makes deadlines feel abstract until they're suddenly critical."
   },
   {
+    icon: '⌁',
     title: 'Maintaining focus',
     description: 'Frequent workplace interruptions make it hard to re-enter a state of deep work.'
   },
   {
+    icon: '☷',
     title: 'Following instructions',
     description: 'Multi-step instructions overwhelm working memory, leading to errors and rework.'
   }
@@ -185,51 +189,40 @@ const reasons = [
     title: 'Higher demands increase pressure',
     description:
       'Professional environments layer complexity — competing deadlines, team dependencies, and performance expectations all simultaneously.',
-    // tag: 'Pressure'
+    tag: 'Pressure'
   },
   {
     title: 'Frequent distractions break focus',
     description:
       'Open offices, Slack notifications, and back-to-back meetings fragment attention in ways that hit ADHD workers disproportionately hard.',
-    // tag: 'Environment'
+    tag: 'Environment'
   },
   {
     title: 'Limited flexibility reduces coping options',
     description:
       'Fixed schedules and workflows leave little room to adapt to when focus is naturally available — a key ADHD management strategy.',
-    // tag: 'Structure'
+    tag: 'Structure'
   }
 ]
 </script>
 
 <style scoped>
 .about-page {
-  --page-bg: #f7efe5;
-  --surface: #fffaf4;
-  --surface-soft: #f2dfca;
-  --surface-muted: #ead2b8;
-  --text-main: #2f2f2f;
-  --text-muted: #6f665f;
-  --text-soft: #8a7b70;
-  --border: rgba(137, 94, 63, 0.2);
-  --accent: #b66f46;
-  --accent-soft: #e7c4aa;
-
   min-height: 100vh;
-  width: min(980px, calc(100% - 48px));
+  max-width: 980px;
   margin: 0 auto;
-  padding: 14vh 0 10vh;
-  color: var(--text-main);
-  background: transparent;
+  padding: 64px 28px 120px;
+  color: #f4eee8;
+  background: #1f1f1e;
 }
 
 .section-block {
-  margin-bottom: 4.6vh;
+  margin-bottom: 72px;
 }
 
 .divider-block {
-  border-top: 2.4px solid var(--border);
-  padding-top: 2vh;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 56px;
 }
 
 .eyebrow,
@@ -238,8 +231,7 @@ const reasons = [
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: var(--text-soft);
-  text-transform: uppercase;
+  color: #a79d93;
 }
 
 .small-label {
@@ -248,29 +240,29 @@ const reasons = [
 }
 
 .hero-section {
-  display: flex;
-  /* grid-template-columns: minmax(0, 1fr) 230px; */
-  /* gap: 56px; */
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 64px;
   align-items: center;
+  padding-top: 8px;
 }
 
 .hero-copy h1 {
-  max-width: 560px;
+  max-width: 520px;
   margin: 0 0 22px;
-  font-size: clamp(2.4rem, 5.4vw, 4.4rem);
-  line-height: 0.98;
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+  line-height: 0.96;
   letter-spacing: -0.055em;
   font-weight: 800;
-  color: var(--text-main);
+  color: #fff8f1;
 }
 
 .hero-description {
-  max-width: 620px;
+  max-width: 440px;
   margin: 0;
   font-size: 1rem;
   line-height: 1.65;
-  color: var(--text-muted);
+  color: #d4cbc2;
 }
 
 .hero-brand {
@@ -278,41 +270,32 @@ const reasons = [
   flex-direction: column;
   align-items: center;
   justify-self: center;
-  gap: 14px;
-  /* background: white; */
-  /* color: var(--text-muted); */
+  gap: 16px;
+  color: #d7cfc7;
   font-weight: 700;
-  width: 20%;
-}
-
-.hero-brand p {
-  margin: 0;
 }
 
 .brand-logo {
-  width: 24vw;
-  /* height: 20vh; */
-  object-fit: contain;
-  padding: 14px;
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
   border-radius: 28px;
-  background: white;
-  box-shadow: 0 18px 46px rgba(126, 84, 52, 0.18);
-  position: relative;
-  left: -40%;
+  background: #cda98c;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.26);
 }
 
 .statement-card {
-  padding: 4vh 2vw;
-  border-radius: 14px;
-  /* border-left: 4px solid var(--accent); */
-  background: rgba(255, 250, 245, 0.78);
-  box-shadow: 0 14px 34px rgba(126, 84, 52, 0.08);
+  padding: 34px 40px;
+  border-radius: 10px;
+  border-left: 3px solid #d4b193;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .statement-card p {
   margin: 0;
   max-width: 820px;
-  color: var(--text-main);
+  color: #fff4ea;
   font-size: 1.05rem;
   line-height: 1.75;
   font-weight: 700;
@@ -333,21 +316,21 @@ const reasons = [
 .knowledge-card,
 .infographic-card,
 .reason-card {
-  border: 1px solid var(--border);
-  background: rgba(255, 250, 244, 0.86);
-  border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(126, 84, 52, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .challenge-card {
-  padding: 2vw;
-  min-height: 18vh;
+  padding: 28px;
+  min-height: 168px;
 }
 
 .card-icon {
   display: inline-flex;
   margin-bottom: 24px;
-  color: var(--accent);
+  color: #c58d70;
   font-size: 1.2rem;
 }
 
@@ -355,7 +338,7 @@ const reasons = [
 .reason-card h3,
 .knowledge-item h3 {
   margin: 0 0 8px;
-  color: var(--text-main);
+  color: #fff8f1;
   font-size: 1rem;
   font-weight: 800;
 }
@@ -365,7 +348,7 @@ const reasons = [
 .knowledge-card p,
 .chart-heading p {
   margin: 0;
-  color: var(--text-muted);
+  color: #d2c9c0;
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -375,15 +358,13 @@ const reasons = [
 }
 
 .stat-card {
-  padding: 2vw;
-  /* background: linear-gradient(135deg, #fffaf4 0%, #f1dec9 100%); */
-  /* background: white; */
+  padding: 28px;
 }
 
 .stat-card strong {
   display: block;
   margin-bottom: 6px;
-  color: var(--text-main);
+  color: #fff8f1;
   font-size: 2.35rem;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -391,7 +372,7 @@ const reasons = [
 
 .stat-card span {
   display: block;
-  color: var(--text-muted);
+  color: #d4cbc2;
   font-size: 0.84rem;
   line-height: 1.3;
 }
@@ -409,7 +390,7 @@ const reasons = [
 .chart-heading h2,
 .knowledge-card h2 {
   margin: 0 0 10px;
-  color: var(--text-main);
+  color: #fff8f1;
   font-size: 1.25rem;
   font-weight: 800;
 }
@@ -428,7 +409,7 @@ const reasons = [
 .infographic-card img {
   width: 100%;
   display: block;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .infographic-card figcaption {
@@ -447,22 +428,15 @@ const reasons = [
 
 .source-text {
   margin-top: 24px;
-  color: var(--text-soft);
+  color: #a79d93;
   font-size: 0.78rem;
   line-height: 1.5;
 }
 
 .source-text a,
 .infographic-card a {
-  /* color: var(--accent); */
-  color: #6f665f;
-  /* text-decoration: n; */
-  /* font-weight: 600; */
-}
-
-.source-text a:hover,
-.infographic-card a:hover {
-  text-decoration: underline;
+  color: #d4b193;
+  text-decoration: none;
 }
 
 .reason-list {
@@ -479,7 +453,7 @@ const reasons = [
 }
 
 .reason-number {
-  color: var(--text-soft);
+  color: #9b9289;
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -488,20 +462,20 @@ const reasons = [
   align-self: start;
   padding: 5px 12px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: #744127;
+  background: #f0d6c5;
+  color: #6a3826;
   font-size: 0.72rem;
   font-weight: 700;
 }
 
-/* Keep existing chart components, but let them blend with the original warm theme. */
+/* Make the existing chart components fit the new About page visual system. */
 :deep(.psychologicalDistress),
 :deep(.labourComparision) {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
-  color: var(--text-main) !important;
+  color: #f4eee8;
 }
 
 :deep(.psychologicalDistress .row),
@@ -511,26 +485,26 @@ const reasons = [
 
 :deep(.psychologicalDistress h5),
 :deep(.labourComparision label) {
-  color: var(--text-main) !important;
+  color: #fff8f1;
 }
 
 :deep(.psychologicalDistress .chart-hint),
 :deep(.labourComparision .text-md-end),
 :deep(.psychologicalDistress .source-text),
 :deep(.labourComparision .source-text) {
-  color: var(--text-soft) !important;
+  color: #a79d93 !important;
 }
 
 :deep(.psychologicalDistress .chart-page),
 :deep(.labourComparision .chart-page) {
-  padding: 0 !important;
+  padding: 0;
 }
 
 :deep(.psychologicalDistress .chart-box),
 :deep(.labourComparision .chart-box) {
-  background: #fffaf4 !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
 
 @media (max-width: 900px) {
@@ -550,8 +524,7 @@ const reasons = [
 
 @media (max-width: 720px) {
   .about-page {
-    width: min(100% - 32px, 980px);
-    padding: 88px 0 88px;
+    padding: 48px 18px 88px;
   }
 
   .section-block {
