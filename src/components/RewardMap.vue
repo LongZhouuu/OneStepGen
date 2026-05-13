@@ -264,7 +264,7 @@ function renderAnimalPins(projection) {
       .style('border-radius', '50%')
       .style('border', '2.5px solid #C4A882')
       .style('object-fit', 'cover')
-      .style('object-position', 'center top')
+      .style('object-position', 'center center')
       .style('display', 'block')
       .style('box-shadow', '0 2px 8px rgba(40,20,0,0.22)')
       .style('filter', unlocked ? 'none' : 'brightness(0) invert(0.5)')
@@ -581,7 +581,7 @@ onMounted(() => {
 .modal-img {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
   display: block;
 }

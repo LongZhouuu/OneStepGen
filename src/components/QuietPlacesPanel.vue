@@ -867,12 +867,8 @@ onUnmounted(() => {
 
 <style scoped>
 .panel {
-<<<<<<< HEAD
-  padding-top: 8px;
-=======
   padding-top: 0;
   padding-bottom: 10px;
->>>>>>> main
 }
 
 h2 {
