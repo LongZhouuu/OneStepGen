@@ -20,7 +20,7 @@
     </section>
 
     <!-- TABBED CONTENT -->
-    <section class="section-block tab-section">
+    <section class="section-block tab-section" style="padding-top: 0;">
       <div class="tab-header">
         <button
           v-for="tab in tabs"
@@ -387,19 +387,21 @@ const reasons = [
 .tab-header {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 32px;
   padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(255, 250, 244, 0.72);
-  box-shadow: 0 12px 32px rgba(126, 84, 52, 0.06);
+  /* border: 1px solid var(--border); */
+  border-bottom: 2.4px solid var(--border);
+  /* border-radius: 18px; */
+  /* background: rgba(255, 250, 244, 0.72);  */
+  /* box-shadow: 0 12px 32px rgba(126, 84, 52, 0.06); */
 }
 
 .tab-button {
   border: 0 solid transparent;
   border-radius: 999px;
-  padding: 10px 18px;
+  padding: 1.6vh 2.6vw;
   background: transparent;
   color: var(--text-muted);
   font-size: 0.82rem;
@@ -415,8 +417,9 @@ const reasons = [
 }
 
 .tab-button.active {
-  background: var(--accent-soft);
-  color: #744127;
+  background: #b46a2d;
+  color: #ffffff;
+  border: none;
   border-color: rgba(137, 94, 63, 0.18);
   box-shadow: 0 8px 18px rgba(126, 84, 52, 0.12);
 }
@@ -477,6 +480,7 @@ const reasons = [
 .flip-card {
   min-height: 18vh;
   perspective: 1000px;
+  cursor: pointer;
 }
 
 .stat-flip-card {
