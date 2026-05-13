@@ -28,6 +28,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   WORKFLOW_STEPS,
   workflowState,
+  focusLockState,
   getStepByRouteName,
 } from '../router/workflow'
 
@@ -41,6 +42,8 @@ const STEP_META = {
   4: { label: 'Complete', sublabel: 'Done' },
 }
 
+const isFocusLocked = computed(() => focusLockState.value)
+
 const steps = WORKFLOW_STEPS.map((step) => ({
   ...step,
   label: STEP_META[step.id]?.label ?? step.label ?? `Step ${step.id}`,
@@ -51,7 +54,10 @@ const currentStep = computed(() => getStepByRouteName(route.name))
 const maxReachedStep = computed(() => workflowState.value)
 
 function isStepLocked(step) {
-  return step.id > maxReachedStep.value
+  const isNotUnlockedYet = step.id > maxReachedStep.value
+  const isPreviousStepDuringFocus = isFocusLocked.value && step.id < 3
+
+  return isNotUnlockedYet || isPreviousStepDuringFocus
 }
 
 function isStepDone(step) {
