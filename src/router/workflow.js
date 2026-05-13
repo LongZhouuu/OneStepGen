@@ -8,8 +8,10 @@ export const WORKFLOW_STEPS = [
 ]
 
 const maxReachedStep = ref(1)
+const focusLockActive = ref(false)
 
 export const workflowState = readonly(maxReachedStep)
+export const focusLockState = readonly(focusLockActive)
 
 export function getMaxReachedStep() {
   return maxReachedStep.value
@@ -31,6 +33,7 @@ export function setMaxReachedStep(step) {
 
 export function resetWorkflow() {
   maxReachedStep.value = 1
+  focusLockActive.value = false
 }
 
 export function startWorkflow() {
@@ -64,10 +67,29 @@ export function getHighestUnlockedRouteName() {
 export function guardWorkflowStep(stepId, router) {
   syncWorkflowFromSession()
 
+  if (focusLockActive.value && stepId < 3) {
+    router.replace({ name: 'TaskSwipper' })
+    return false
+  }
+
   if (canAccessStep(stepId)) return true
 
   router.replace({ name: getHighestUnlockedRouteName() })
   return false
+}
+
+export function setFocusLockActive(value) {
+  focusLockActive.value = Boolean(value)
+
+  const session = getCurrentSession()
+  if (session) {
+    session.focusLockActive = focusLockActive.value
+    saveCurrentSession(session)
+  }
+}
+
+export function isFocusLockActive() {
+  return focusLockActive.value
 }
 
 // ----------------------------------------------------------------------
@@ -144,6 +166,7 @@ export function createSession({
 
   const newSession = {
     sessionId: generateId('session'),
+    focusLockActive: false,
     inputType,
     rawInputText,
     uploadedFileMeta,
@@ -177,6 +200,8 @@ export function syncWorkflowFromSession() {
   delete session.reachedStep
 
   maxReachedStep.value = safeStep
+  focusLockActive.value = Boolean(session.focusLockActive)
+
   saveCurrentSession(session)
 
   return session

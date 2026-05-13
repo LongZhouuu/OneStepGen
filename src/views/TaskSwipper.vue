@@ -12,7 +12,7 @@
             </button> -->
 
             <!-- task card -->
-            <div class="taskCardWrapper" :class="{ expanded: isTimerRunning }">
+            <div class="taskCardWrapper">
                 <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" @updateTaskState="updateTaskStatus"
                     @noMoreTasks="handleNoMoreTasks" />
             </div>
@@ -87,8 +87,10 @@ import {
     unlockStep, 
     getCurrentSession,
     updateTaskInSession,
-    completeCurrentSession
+    completeCurrentSession,
+    setFocusLockActive
 } from '../router/workflow'
+
 // import mockmockmock from '@/components/mockmockmock.vue'
 
 const activeTab = ref('checkin')
@@ -103,7 +105,10 @@ const tasks = ref([])
 onMounted(() => {
     guardWorkflowStep(3, router)
     loadSession()
+    setFocusLockActive(false)
 })
+
+
 
 function loadSession() {
     const currentSession = getCurrentSession()
@@ -422,9 +427,9 @@ function updateTaskStatus(index, newStatus) {
     transform-origin: top center;
 }
 
-.taskCardWrapper.expanded {
+/* .taskCardWrapper.expanded {
     transform: scale(1.08);
-}
+} */
 
 .status {
     /* margin-top: 40px; */
@@ -443,11 +448,11 @@ function updateTaskStatus(index, newStatus) {
     transform-origin: top center;
 }
 
-.status.compressed {
+/* .status.compressed {
     transform: scale(0.92);
     opacity: 0.92;
     margin-top: 30px;
-}
+} */
 
 .status {
     overflow: hidden;

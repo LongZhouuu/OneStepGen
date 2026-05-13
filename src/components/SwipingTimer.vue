@@ -31,10 +31,10 @@
             <div class="timerLabel">
                 {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
             </div>
-            <div v-show="!isRunning" class="timerSubLabel">
+            <div class="timerSubLabel" style="white-space: pre-line;">
                 {{
-                    isAllTasksFinished ?
-                        'You have completed all listed tasks.' :
+                    isRunning ?
+                        'Please record your task progress on the left. \nIf you need to adjust the task list, please click pause to exit focus mode.' :
                         'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
                 }}
             </div>
@@ -62,6 +62,7 @@ import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import CountdownPop from './CountdownPop.vue'
 import VoiceInputButton from './VoiceInputButton.vue'
 import timerSound from '@/assets/timerRing.mp3'
+import { setFocusLockActive } from '../router/workflow'
 
 const emit = defineEmits(['countingState'])
 
@@ -176,6 +177,7 @@ function stopTimer() {
 
     isRunning.value = false
     emit('countingState', false)
+    setFocusLockActive(false)
 }
 
 function loadSavedTime() {
@@ -321,6 +323,7 @@ async function startTimer() {
 
     isRunning.value = true
     emit('countingState', true)
+    setFocusLockActive(true)
 
     timerId = setInterval(() => {
         if (totalSeconds.value > 0) {
