@@ -209,6 +209,9 @@ def assign_priorities(tasks: list[dict]) -> list[dict]:
             "priority": priority,
             "priorityGroup": priority_group,
             "score": score,
+            "parent_task_cognitive_load": task_dict.get(
+                "parent_task_cognitive_load", _DEFAULT_IMPORTANCE
+            ),
         })
 
     # Sort by priority BUCKET (not exact score) so the most urgent group

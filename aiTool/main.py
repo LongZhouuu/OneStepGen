@@ -66,13 +66,14 @@ class TextInput(BaseModel):
 
 
 class TaskOutput(BaseModel):
-    """A single task with its assigned priority, rank, and category rank."""
+    """A single task with its assigned priority, rank, category rank, and cognitive load."""
     task: str
     priority: str
     priorityGroup: str
     score: int = 0
     rank: int = 0
     category_rank: int = 0
+    parent_task_cognitive_load: int = 3
 
 
 # ── Helper: run the full pipeline ───────────────────────────

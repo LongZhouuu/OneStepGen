@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 # 3 = neutral middle of the 1–5 scale.
 _DEFAULT_URGENCY: int = 3
 _DEFAULT_IMPORTANCE: int = 3
+_DEFAULT_COGNITIVE_LOAD: int = 3
 
 
 # ── Rate limit / retry configuration ──────────────────────
@@ -69,18 +70,24 @@ Given the text below, do the following:
 4. For EACH step, rate its urgency and importance on a 1–5 integer scale:
    - urgency:    1 = no rush at all, 5 = must be done immediately
    - importance: 1 = trivial / nice-to-have, 5 = critical / high-impact
-5. Return ONLY a valid JSON object containing a "tasks" array. No markdown, no explanation.
-6. If the text does NOT contain any genuine tasks, to-dos, or action items,
+5. For EACH step, also rate the cognitive load of its PARENT TASK (not the
+   individual step) on a 1–5 integer scale:
+   - parent_task_cognitive_load: 1 = mindless / easy (e.g. sign a form),
+     5 = requires deep focus (e.g. write an essay)
+   Steps that belong to the same parent task should share the same
+   parent_task_cognitive_load value.
+6. Return ONLY a valid JSON object containing a "tasks" array. No markdown, no explanation.
+7. If the text does NOT contain any genuine tasks, to-dos, or action items,
    return {"tasks": []} — do NOT invent or hallucinate tasks from general
    narrative, news, or informational content.
 
 Example output:
 {
   "tasks": [
-    {"task": "Open the assignment document", "urgency": 4, "importance": 5},
-    {"task": "Write the introduction paragraph", "urgency": 3, "importance": 4},
-    {"task": "Sign for pizza delivery right now", "urgency": 5, "importance": 1},
-    {"task": "Read a casual magazine next month", "urgency": 1, "importance": 1}
+    {"task": "Open the assignment document", "urgency": 4, "importance": 5, "parent_task_cognitive_load": 5},
+    {"task": "Write the introduction paragraph", "urgency": 3, "importance": 4, "parent_task_cognitive_load": 5},
+    {"task": "Sign for pizza delivery right now", "urgency": 5, "importance": 1, "parent_task_cognitive_load": 1},
+    {"task": "Read a casual magazine next month", "urgency": 1, "importance": 1, "parent_task_cognitive_load": 1}
   ]
 }"""
 
@@ -99,7 +106,9 @@ def _clamp(value, lo: int = 1, hi: int = 5) -> int:
 def _normalise_task(item) -> dict:
     """
     Convert whatever the LLM returned for a single task into our
-    standard dict format: {"task": str, "urgency": int, "importance": int}.
+    standard dict format:
+        {"task": str, "urgency": int, "importance": int,
+         "parent_task_cognitive_load": int}
 
     Handles both the new object format and the legacy plain-string format.
     """
@@ -109,6 +118,7 @@ def _normalise_task(item) -> dict:
             "task": item,
             "urgency": _DEFAULT_URGENCY,
             "importance": _DEFAULT_IMPORTANCE,
+            "parent_task_cognitive_load": _DEFAULT_COGNITIVE_LOAD,
         }
 
     if isinstance(item, dict):
@@ -116,6 +126,9 @@ def _normalise_task(item) -> dict:
             "task": str(item.get("task", "")),
             "urgency": _clamp(item.get("urgency", _DEFAULT_URGENCY)),
             "importance": _clamp(item.get("importance", _DEFAULT_IMPORTANCE)),
+            "parent_task_cognitive_load": _clamp(
+                item.get("parent_task_cognitive_load", _DEFAULT_COGNITIVE_LOAD)
+            ),
         }
 
     # Unknown shape — skip it
@@ -312,10 +325,11 @@ async def extract_tasks_from_text(user_text: str) -> list[dict]:
     Returns
     -------
     list[dict]
-        Each dict has three keys:
-            • "task"       – the actionable step (str)
-            • "urgency"    – 1–5 scale (int)
-            • "importance" – 1–5 scale (int)
+        Each dict has four keys:
+            • "task"                      – the actionable step (str)
+            • "urgency"                   – 1–5 scale (int)
+            • "importance"                – 1–5 scale (int)
+            • "parent_task_cognitive_load" – 1–5 scale (int)
         Returns an empty list if anything goes wrong.
     """
 
