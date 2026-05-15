@@ -1,6 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
+import {
+  getStepByRouteName,
+  getHighestUnlockedRouteName,
+  syncWorkflowFromSession,
+} from './workflow'
+
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
@@ -9,7 +15,7 @@ import AboutView from '../views/AboutView.vue'
 import PlannerView from '../views/PlannerView.vue'
 // import PrioritizerView from '../views/tools/PrioritizerView.vue'
 // import SupportView from '../views/tools/SupportView.vue'
-import TipsView from '../views/tools/TipsAndTemplatesView.vue'
+// import TipsView from '../views/tools/TipsAndTemplatesView.vue'
 import TaskSwipper from '../views/TaskSwipper.vue'
 import AIDump from '../views/AIDump.vue'
 // import PlanView from '../views/PlanView.vue'
@@ -86,6 +92,42 @@ const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return { top: 0, left: 0 }
   }
+})
+
+router.beforeEach((to, from) => {
+  const targetStep = getStepByRouteName(to.name)
+
+  // nothing happend if not to workspace route
+  if (!targetStep) return true
+
+  const session = syncWorkflowFromSession()
+
+  // only Step 1 is allowed to jump to if there is no session data in localstorage
+  if (!session) {
+    if (targetStep.id === 1) return true
+    return { name: 'AIDump', replace: true }
+  }
+
+  const fromStep = getStepByRouteName(from.name)
+  const highestRouteName = getHighestUnlockedRouteName()
+  const maxReachedStep = session.maxReachedStep ?? 1
+
+  // if entering workspace from outside, always resume the latest reached step
+  if (!fromStep) {
+    if (to.name !== highestRouteName) {
+      return { name: highestRouteName, replace: true }
+    }
+
+    return true
+  }
+
+  // elif moving inside workspace, allow going to any unlocked step
+  if (targetStep.id <= maxReachedStep) {
+    return true
+  }
+
+  // trying to access locked future step
+  return { name: highestRouteName, replace: true }
 })
 
 export default router

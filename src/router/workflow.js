@@ -1,4 +1,5 @@
 import { ref, readonly } from 'vue'
+import { ANIMALS } from '../data/animals'
 
 export const WORKFLOW_STEPS = [
   { id: 1, label: 'AI dump', routeName: 'AIDump' },
@@ -8,22 +9,32 @@ export const WORKFLOW_STEPS = [
 ]
 
 const maxReachedStep = ref(1)
+const focusLockActive = ref(false)
 
 export const workflowState = readonly(maxReachedStep)
+export const focusLockState = readonly(focusLockActive)
 
 export function getMaxReachedStep() {
   return maxReachedStep.value
 }
 
 export function setMaxReachedStep(step) {
-  const safeStep = Math.min(Math.max(step, 1), WORKFLOW_STEPS.length)
-  if (safeStep > maxReachedStep.value) {
-    maxReachedStep.value = safeStep
+  const safeStep = normalizeStep(step)
+
+  if (safeStep <= maxReachedStep.value) return
+
+  maxReachedStep.value = safeStep
+
+  const session = getCurrentSession()
+  if (session) {
+    session.maxReachedStep = safeStep
+    saveCurrentSession(session)
   }
 }
 
 export function resetWorkflow() {
   maxReachedStep.value = 1
+  focusLockActive.value = false
 }
 
 export function startWorkflow() {
@@ -55,10 +66,31 @@ export function getHighestUnlockedRouteName() {
 }
 
 export function guardWorkflowStep(stepId, router) {
+  syncWorkflowFromSession()
+
+  if (focusLockActive.value && stepId < 3) {
+    router.replace({ name: 'TaskSwipper' })
+    return false
+  }
+
   if (canAccessStep(stepId)) return true
 
   router.replace({ name: getHighestUnlockedRouteName() })
   return false
+}
+
+export function setFocusLockActive(value) {
+  focusLockActive.value = Boolean(value)
+
+  const session = getCurrentSession()
+  if (session) {
+    session.focusLockActive = focusLockActive.value
+    saveCurrentSession(session)
+  }
+}
+
+export function isFocusLockActive() {
+  return focusLockActive.value
 }
 
 // ----------------------------------------------------------------------
@@ -97,10 +129,17 @@ function generateId(prefix) {
 //   ],
 //   "reward": "Fox",
 //   "startedAt": 1713940000000,
-//   "completedAt": null
+//   "completedAt": null,
+//   "reachedStep": null
 // }
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
+
+function normalizeStep(step) {
+  const numberStep = Number(step)
+  if (!Number.isFinite(numberStep)) return 1
+  return Math.min(Math.max(numberStep, 1), WORKFLOW_STEPS.length)
+}
 
 // get session and parse
 export function getCurrentSession() {
@@ -124,21 +163,51 @@ export function createSession({
 } = {}) {
   const timestamp = Date.now()
 
+  resetWorkflow()
+
   const newSession = {
     sessionId: generateId('session'),
+    focusLockActive: false,
     inputType,
     rawInputText,
     uploadedFileMeta,
     tasks: [],
+    completedCount: 0,
+    skippedCount: 0,
     reward,
     startedAt: timestamp,
     completedAt: null,
+    maxReachedStep: 1,
   }
 
   saveCurrentSession(newSession)
 
   return newSession
 }
+
+
+export function syncWorkflowFromSession() {
+  const session = getCurrentSession()
+
+  if (!session) {
+    resetWorkflow()
+    return null
+  }
+
+  const storedStep = session.maxReachedStep ?? session.reachedStep ?? 1
+  const safeStep = normalizeStep(storedStep)
+
+  session.maxReachedStep = safeStep
+  delete session.reachedStep
+
+  maxReachedStep.value = safeStep
+  focusLockActive.value = Boolean(session.focusLockActive)
+
+  saveCurrentSession(session)
+
+  return session
+}
+
 
 // Bulk add AI-generated tasks to an existing session
 // Replaces any existing tasks in the session with the AI results
@@ -285,10 +354,24 @@ export function updateTaskInSession(sessionId, taskId, updates) {
 
   if (!task) return null
 
+  const wasCompleted = task.status === 'completed'
+  const wasSkipped = task.status == 'skipped'
+
   Object.assign(task, {
     ...updates,
     updatedAt: Date.now(),
   })
+
+  const isNowCompleted = task.status === 'completed'
+  const isNowSkipped = task.status == 'skipped'
+
+  if (!wasCompleted && isNowCompleted) {
+    session.completedCount += 1
+  }
+
+  if (!wasSkipped && isNowSkipped) {
+    session.skippedCount += 1
+  }
 
   saveCurrentSession(session)
 
@@ -303,6 +386,7 @@ export function deleteSession(sessionId) {
   if (!session || session.sessionId !== sessionId) return null
 
   localStorage.removeItem(CURRENT_SESSION_KEY)
+  resetWorkflow()
 
   return true
 }
@@ -324,7 +408,7 @@ export function reorderTasksInSession(sessionId, reorderedTasks) {
     const isSkipped = task.status === 'skipped'
     return {
       ...task,
-      order:     isSkipped ? null : ++activeCounter,
+      order: isSkipped ? null : ++activeCounter,
       updatedAt: timestamp,
     }
   })
@@ -348,53 +432,63 @@ export function completeCurrentSession(sessionId) {
   return session
 }
 
-// REWARDS
-// var example = [
-//   {
-//     "id": "reward-1a2b3c",
-//     "name": "Fox",
-//     "earnedAt": 1713941000000,
-//     "sessionId": "session-9f3a2b1c-1234-4567-890a-bcdef1234567"
-//   },
-//   {
-//     "id": "reward-4d5e6f",
-//     "name": "Cat",
-//     "earnedAt": 1713950000000,
-//     "sessionId": "session-2222-xxxx"
-//   }
-// ]
+// REWARDS ===========================================================
+export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
 
-export const REWARD_COLLECTION_KEY = 'onestep-reward-collection'
-
-function getRewards() {
-  return JSON.parse(localStorage.getItem(REWARD_COLLECTION_KEY)) || []
+export function getRewards() {
+  return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
 }
 
-function saveRewards(rewards) {
-  localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify(rewards))
-}
+export const REWARDS_UPDATED_EVENT = 'rewards-updated'
 
-// initialize new reward array(if not exist)
-export function initRewardCollection() {
-  if (!localStorage.getItem(REWARD_COLLECTION_KEY)) {
-    localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify([]))
+function saveRewards(animals) {
+  localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify(animals))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REWARDS_UPDATED_EVENT))
   }
 }
 
-// add reward item
-// input: animal name, session uid
-export function addReward(name, sessionId) {
-  const rewards = getRewards()
+// initialize new animal array if it does not exist
+export function initRewardCollection() {
+  if (!localStorage.getItem(ANIMAL_COLLECTION_KEY)) {
+    localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify([]))
+  }
+}
 
-  const newReward = {
-    id: generateId('reward'),
-    name,
+// get one random animal from animals.js
+export function getRandomAnimal() {
+  const randomIndex = Math.floor(Math.random() * ANIMALS.length)
+  return ANIMALS[randomIndex]
+}
+
+// add one random animal to localStorage collection
+// each collected animal item contains at least:
+// name, image, region, earnedAt, sessionId
+export function addRandomAnimal(sessionId) {
+  const current_animals_list = getRewards()
+  const randomAnimal = getRandomAnimal()
+
+  const newAnimalItem = {
+    id: generateId(randomAnimal.id),
+    name: randomAnimal.name,
+    image: randomAnimal.image,
+    region: randomAnimal.region,
     earnedAt: Date.now(),
+    // The sessionID is used to make sure that a user can only get 
+    //  one animal within the same session.
+    // See getAnimalBySessionId()
     sessionId,
   }
 
-  rewards.push(newReward)
-  saveRewards(rewards)
+  current_animals_list.push(newAnimalItem)
+  saveRewards(current_animals_list)
 
-  return newReward
+  return newAnimalItem
+}
+
+// find animal item by sessionId
+export function getAnimalBySessionId(sessionId) {
+  const animals = getRewards()
+
+  return animals.find(animal => animal.sessionId === sessionId) || null
 }

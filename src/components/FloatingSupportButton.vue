@@ -9,21 +9,13 @@
     <!-- Tooltip -->
     <span class="float-tooltip">Support</span>
 
-    <svg
-      class="icon-svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 21.2c-.3 0-.6-.1-.8-.3C7 17.5 3.9 14.8 2.7 12.2 1.6 9.7 2.3 6.8 4.6 5.3c2-1.3 4.5-.9 6 .7l1.4 1.4 1.4-1.4c1.5-1.6 4-2 6-.7 2.3 1.5 3 4.4 1.9 6.9-1.2 2.6-4.3 5.3-8.5 8.7-.2.2-.5.3-.8.3z"
-      />
-    </svg>
+    <img class="icon-img" :src="supportIconUrl" alt="" aria-hidden="true" />
   </button>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import supportIconUrl from '@/assets/support-icon.png'
 
 defineEmits(['open'])
 
@@ -128,26 +120,27 @@ defineExpose({
   transform: translateY(-50%) translateX(0);
 }
 
-/* Heart Icon */
-.icon-svg {
-  width: 26px;
-  height: 26px;
-  color: white;
+/* Support Icon */
+.icon-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 0 0 white) drop-shadow(0 0 0 white);
   transition: transform 0.25s ease;
-  animation: heartbeat 2.4s ease-in-out infinite;
+  animation: support-lift 2.4s ease-in-out infinite;
   transform-origin: center;
 }
 
-.float-support:hover .icon-svg,
-.float-support:focus-visible .icon-svg {
+.float-support:hover .icon-img,
+.float-support:focus-visible .icon-img {
   transform: scale(1.1);
   animation-duration: 1.1s;
 }
 
-@keyframes heartbeat {
+@keyframes support-lift {
   0%, 40%, 100% { transform: scale(1); }
-  15% { transform: scale(1.12); }
-  30% { transform: scale(1.02); }
+  15% { transform: translateY(-1px) scale(1.08); }
+  30% { transform: translateY(0) scale(1.02); }
 }
 
 /* Idle Pulse Effect */
@@ -183,15 +176,15 @@ defineExpose({
   .float-support,
   .float-support::before,
   .float-tooltip,
-  .icon-svg {
+  .icon-img {
     animation: none;
     transition: none;
   }
 
   .float-support:hover,
   .float-support:focus-visible,
-  .float-support:hover .icon-svg,
-  .float-support:focus-visible .icon-svg {
+  .float-support:hover .icon-img,
+  .float-support:focus-visible .icon-img {
     transform: none;
   }
 }

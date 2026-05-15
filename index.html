@@ -2,7 +2,7 @@
 <html lang="">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/src/assets/logo.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OneStepGen</title>
     <link rel="preload" href="/fonts/Baloo2-400.ttf" as="font" type="font/ttf" crossorigin>
@@ -17,6 +17,16 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- #region agent log -->
+    <script>
+      window.addEventListener('error', (event) => {
+        fetch('http://127.0.0.1:7609/ingest/322f40ec-eecc-4d15-bcb7-c465e2212b7c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'20ebec'},body:JSON.stringify({sessionId:'20ebec',runId:'initial',hypothesisId:'A,B',location:'index.html:20',message:'Global browser error before or during app boot',data:{message:event.message,filename:event.filename,lineno:event.lineno,colno:event.colno,errorName:event.error?.name,errorMessage:event.error?.message},timestamp:Date.now()})}).catch(()=>{});
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        fetch('http://127.0.0.1:7609/ingest/322f40ec-eecc-4d15-bcb7-c465e2212b7c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'20ebec'},body:JSON.stringify({sessionId:'20ebec',runId:'initial',hypothesisId:'C,D',location:'index.html:23',message:'Unhandled browser promise rejection',data:{reasonName:event.reason?.name,reasonMessage:event.reason?.message,reasonString:String(event.reason)},timestamp:Date.now()})}).catch(()=>{});
+      });
+    </script>
+    <!-- #endregion -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -513,6 +513,7 @@ h2 {
 
 .actions {
   display: flex;
+  justify-content: space-between;
   gap: 12px;
   margin-top: 28px;
 }
@@ -520,7 +521,7 @@ h2 {
 .end-btn,
 .continue-btn {
   /* flex: 1; */
-  min-width: 14vw;
+  min-width: 38%;
   padding: 14px 20px;
   font-size: 15px;
   font-weight: bold;
@@ -555,7 +556,7 @@ h2 {
   background-color: white;
   color: #b66a48;
   border: 1px #b66a48 solid;
-  box-sizing: content-box;
+  /* box-sizing: content-box; */
 }
 
 @media (max-width: 480px) {
@@ -568,7 +569,10 @@ h2 {
   }
 
   .actions {
-    flex-direction: column;
+    /* flex-direction: column; */
+    /* display: flex; */
+    /* align-items: center; */
+    /* justify-content: space-between; */
   }
 }
 </style>

@@ -21,13 +21,29 @@
           <div class="input-area">
             <textarea
               v-model="inputText"
+              maxlength="2500"
               placeholder="e.g. I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances…"
+              @input="onDumpTextInput"
             />
             <VoiceInputButton
               class="input-voice-button"
               aria-label="Dictate your task dump"
               @transcript="appendVoiceInput"
             />
+          </div>
+
+          <!--
+            DEMO: one-click sample text for testing without typing.
+            To remove: delete this block, DEMO_SAMPLE_TEXT + fillDemoSampleText() in script, and .demo-sample-row / .btn-demo-sample styles.
+          -->
+          <div class="demo-sample-row">
+            <button
+              type="button"
+              class="btn-demo-sample"
+              @click="fillDemoSampleText"
+            >
+              Use sample text
+            </button>
           </div>
  
           <div class="input-tools">
@@ -38,7 +54,14 @@
               {{ uploadedFile ? uploadedFile.name : uploadedFileMeta ? uploadedFileMeta.name : 'Upload PDF' }}
               <input type="file" accept=".pdf" style="display:none" @change="handlePdfUpload">
             </label>
-            <span v-if="!uploadedFile && !uploadedFileMeta" class="char-count">{{ charCount }} characters</span>
+            <div v-if="!uploadedFile && !uploadedFileMeta" class="dump-text-input-meta">
+              <span class="dump-char-count" :class="{ warn: charCount >= dumpInputMaxChars }">
+                {{ charCount }} / {{ dumpInputMaxChars }}
+              </span>
+              <span v-if="charCount >= dumpInputMaxChars" class="dump-text-limit-msg" role="status">
+                Maximum {{ dumpInputMaxChars }} characters.
+              </span>
+            </div>
             <button v-if="uploadedFile || uploadedFileMeta" class="btn-remove-pdf" @click.prevent="removePdf">✕ Remove</button>
           </div>
  
@@ -115,8 +138,16 @@
 import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+// Strip trailing slash so paths like /process-text never become //process-text
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
 const MIN_LOADING_MS = 2600
+const DUMP_INPUT_MAX_CHARS = 2500
+// English letters, digits, whitespace, and common English punctuation only (strip everything else).
+const DUMP_INPUT_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/g
+
+// DEMO: copy used by the "Use sample text" button; edit the string or remove with the button.
+const DEMO_SAMPLE_TEXT =
+  "I need to finish the report for Monday, call the dentist, clean the kitchen, buy groceries, reply to Sarah's email, sort out my finances"
 
 export default {
   name: 'AIDump',
@@ -135,6 +166,9 @@ export default {
     charCount() {
       return (this.inputText ?? '').length
     },
+    dumpInputMaxChars() {
+      return DUMP_INPUT_MAX_CHARS
+    },
     canCreate() {
       const hasText = (this.inputText ?? '').trim().length > 0
       const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
@@ -147,7 +181,7 @@ export default {
     const session = getCurrentSession()
     if (session) {
       if (session.inputType === 'text') {
-        this.inputText = session.rawInputText ?? ''
+        this.inputText = this._sanitizeDumpInput(session.rawInputText ?? '')
       } else if (session.inputType === 'pdf') {
         this.uploadedFileMeta = session.uploadedFileMeta ?? null
       }
@@ -174,7 +208,24 @@ export default {
     },
     appendVoiceInput(transcript) {
       const current = this.inputText?.trimEnd() ?? ''
-      this.inputText = current ? `${current} ${transcript}` : transcript
+      const merged = current ? `${current} ${transcript}` : transcript
+      this.inputText = this._sanitizeDumpInput(merged)
+    },
+
+    onDumpTextInput(e) {
+      const next = this._sanitizeDumpInput(e?.target?.value ?? this.inputText)
+      if (next !== this.inputText) this.inputText = next
+    },
+
+    _sanitizeDumpInput(raw) {
+      const s = String(raw ?? '')
+      const cleaned = s.replace(DUMP_INPUT_DISALLOWED, '')
+      return cleaned.length > DUMP_INPUT_MAX_CHARS ? cleaned.slice(0, DUMP_INPUT_MAX_CHARS) : cleaned
+    },
+
+    // DEMO: pairs with the "Use sample text" button in the template; delete when removing the button.
+    fillDemoSampleText() {
+      this.inputText = this._sanitizeDumpInput(DEMO_SAMPLE_TEXT)
     },
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -189,34 +240,79 @@ export default {
 
     // ── Real backend call ─────────────────────────────────────────────────────
     async _callBackend(inputType, sessionId) {
+      if (!API_BASE) {
+        throw new Error(
+          'Missing API URL: set VITE_API_BASE_URL in .env.production, run npm run build, redeploy dist/, invalidate CloudFront.',
+        )
+      }
+
+      const path = inputType === 'pdf' ? '/upload-pdf' : '/process-text'
+      const url = `${API_BASE}${path}`
       let res
 
-      if (inputType === 'pdf') {
-        // PDF: multipart/form-data
-        const formData = new FormData()
-        formData.append('file', this.uploadedFile)
-        res = await fetch(`${API_BASE}/upload-pdf`, {
-          method: 'POST',
-          body: formData,
-          // No Content-Type header — browser sets it automatically for FormData
-        })
-      } else {
-        // Text: JSON
-        res = await fetch(`${API_BASE}/process-text`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: this.inputText.trim() }),
-        })
+      try {
+        if (inputType === 'pdf') {
+          const formData = new FormData()
+          formData.append('file', this.uploadedFile)
+          res = await fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+          })
+        } else {
+          res = await fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: this.inputText.trim() }),
+          })
+        }
+      } catch (e) {
+        const msg = e?.message || String(e)
+        if (
+          msg.includes('Failed to fetch') ||
+          msg.includes('NetworkError') ||
+          msg.includes('Load failed')
+        ) {
+          throw new Error(
+            `Network/CORS blocked request to ${url}. Enable CORS on API Gateway for your CloudFront domain (or * for testing).`,
+          )
+        }
+        throw e
+      }
+
+      const text = await res.text()
+      const trimmed = text.trim()
+      if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
+        throw new Error(
+          `Got HTML instead of JSON — the request probably hit your CloudFront SPA (wrong host/path), not API Gateway. Use absolute VITE_API_BASE_URL=https://YOUR-ID.execute-api.ap-southeast-2.amazonaws.com then rebuild & redeploy. Attempted: ${url}`,
+        )
+      }
+
+      let payload
+      try {
+        payload = JSON.parse(text)
+      } catch {
+        throw new Error(
+          `API did not return JSON (HTTP ${res.status}). First chars: ${trimmed.slice(0, 120)}…`,
+        )
       }
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail ?? `Server error ${res.status}`)
+        const detail = payload.detail
+        let detailStr = ''
+        if (typeof detail === 'string') detailStr = detail
+        else if (Array.isArray(detail))
+          detailStr = detail.map(d => d.msg || JSON.stringify(d)).join('; ')
+        else if (detail != null) detailStr = JSON.stringify(detail)
+        throw new Error(
+          detailStr || payload.message || `HTTP ${res.status} from API (${path}).`,
+        )
       }
 
       // Backend returns array of { task, priority, priorityGroup, score, rank, category_rank }
       // Convert to internal format: { text, priorityGroup, order }
-      const backendTasks = await res.json()
+      const backendTasks = payload
       console.log('[AIDump] Raw backend response:', backendTasks)
 
       return {
@@ -244,9 +340,8 @@ export default {
       const isSamePdf = inputType === 'pdf' &&
         this.uploadedFileMeta?.name === existingSession?.uploadedFileMeta?.name &&
         this.uploadedFileMeta?.size === existingSession?.uploadedFileMeta?.size
-      const alreadyHasTasks = (existingSession?.tasks?.length ?? 0) > 0
 
-      if ((isSameText || isSamePdf) && alreadyHasTasks) {
+      if (isSameText || isSamePdf) {
         this.taskCount = existingSession.tasks.length
         this.view = 'result'
         console.log('[AIDump] Same input detected, reusing existing tasks:', this.taskCount, 'tasks')
@@ -283,7 +378,8 @@ export default {
 
       } catch (err) {
         console.error('[AIDump] Backend call failed:', err)
-        this.errorMessage = 'Something went wrong. Please try again.'
+        const text = err?.message || 'Something went wrong. Please try again.'
+        this.errorMessage = text.length > 420 ? `${text.slice(0, 417)}…` : text
         this.view = 'error'
       }
     },
@@ -412,6 +508,30 @@ export default {
   right: 16px;
   bottom: 16px;
 }
+
+/* DEMO: layout for the sample button; remove with the button if unused. */
+.demo-sample-row {
+  margin: 0 0 12px;
+}
+
+.btn-demo-sample {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(193, 113, 79, 0.35);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--brown-mid);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.btn-demo-sample:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+  background: rgba(193, 113, 79, 0.06);
+}
  
 .input-tools {
   display: flex;
@@ -464,9 +584,29 @@ export default {
   color: var(--terracotta);
 }
  
-.char-count {
+.dump-text-input-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
   font-size: 12px;
+  line-height: 1.4;
   color: rgba(45, 31, 20, 0.38);
+}
+
+.dump-char-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dump-char-count.warn {
+  color: var(--terracotta);
+}
+
+.dump-text-limit-msg {
+  font-weight: 600;
+  color: var(--terracotta);
 }
  
 /* Remove PDF button */

@@ -11,11 +11,12 @@
             <span class="brand-name">OneStepGen</span>
           </div>
           <p class="brand-tagline">
-            Helping users with ADHD reduce overwhelm, start tasks,
-            and build momentum — one step at a time.
+            Helping users with ADHD reduce overwhelm,<br />
+            start tasks, and build momentum<br />
+            one step at a time.
           </p>
 
-          <div class="mood">
+          <!-- <div class="mood">
             <span class="mood-label">How<br />are<br />you?</span>
             <div class="mood-options" role="group" aria-label="How are you feeling?">
               <button
@@ -74,11 +75,11 @@
                 {{ moodMessage }}
               </span>
             </transition>
-          </div>
+          </div> -->
         </section>
 
         <!-- Quick links -->
-        <nav class="footer-col fade-up" :style="{ '--delay': '80ms' }" aria-label="Quick links">
+        <nav class="footer-col quick-links-col fade-up" :style="{ '--delay': '80ms' }" aria-label="Quick links">
           <h4 class="col-title">Quick Links</h4>
           <ul class="link-list">
             <li>
@@ -89,7 +90,7 @@
             </li>
             <li>
               <RouterLink :to="{ name: 'Planner' }" class="nav-link">
-                <span class="nav-text">Planner</span>
+                <span class="nav-text">Workspace</span>
                 <span class="nav-arrow" aria-hidden="true">→</span>
               </RouterLink>
             </li>
@@ -183,20 +184,20 @@ import { RouterLink } from 'vue-router'
 const footerEl = ref(null)
 const canvasEl = ref(null)
 
-const moods = [
-  { id: 'good', label: 'Feeling good', message: 'Wonderful. Ride the momentum.' },
-  { id: 'meh', label: 'Feeling meh', message: 'One tiny step counts. Begin there.' },
-  { id: 'low', label: 'Feeling low', message: 'Take a breath. You are doing enough.' },
-]
+// const moods = [
+//   { id: 'good', label: 'Feeling good', message: 'Wonderful. Ride the momentum.' },
+//   { id: 'meh', label: 'Feeling meh', message: 'One tiny step counts. Begin there.' },
+//   { id: 'low', label: 'Feeling low', message: 'Take a breath. You are doing enough.' },
+// ]
 
-const activeMood = ref(null)
-const moodMessage = ref('')
+// const activeMood = ref(null)
+// const moodMessage = ref('')
 
-function selectMood(id) {
-  activeMood.value = id
-  const found = moods.find((m) => m.id === id)
-  moodMessage.value = found ? found.message : ''
-}
+// function selectMood(id) {
+//   activeMood.value = id
+//   const found = moods.find((m) => m.id === id)
+//   moodMessage.value = found ? found.message : ''
+// }
 
 /* ---------- Particle network ---------- */
 let rafId = null
@@ -375,7 +376,7 @@ onBeforeUnmount(() => {
 
 .footer-top {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.2fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 56px;
   align-items: flex-start;
 }
@@ -445,7 +446,7 @@ onBeforeUnmount(() => {
 }
 
 /* Mood widget */
-.mood {
+/* .mood {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -531,7 +532,7 @@ onBeforeUnmount(() => {
 .mood-fade-enter-from,
 .mood-fade-leave-to {
   opacity: 0;
-}
+} */
 
 /* Columns */
 .col-title {
@@ -547,9 +548,20 @@ onBeforeUnmount(() => {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(112px, 1fr));
+  column-gap: 24px;
+  row-gap: 6px;
+}
+
+.quick-links-col {
+  justify-self: center;
+  align-items: stretch;
+  text-align: left;
+}
+
+.quick-links-col .link-list {
+  justify-items: start;
 }
 
 /* Nav links with sweep underline + arrow reveal */
