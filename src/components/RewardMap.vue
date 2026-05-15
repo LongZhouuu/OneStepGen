@@ -242,7 +242,7 @@ function renderAnimalPins(projection) {
   const PIN_SIZE = 44
 
   ANIMALS.forEach(animal => {
-    const count = rewards.filter(r => r.name === animal.id).length
+    const count = rewards.filter(r => r.name === animal.name).length
     const unlocked = count > 0
     const [x, y] = projection([animal.lng, animal.lat])
     const half = PIN_SIZE / 2
