@@ -414,8 +414,13 @@ export function getRewards() {
   return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
 }
 
+export const REWARDS_UPDATED_EVENT = 'rewards-updated'
+
 function saveRewards(animals) {
   localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify(animals))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REWARDS_UPDATED_EVENT))
+  }
 }
 
 // initialize new animal array if it does not exist
