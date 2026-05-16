@@ -67,7 +67,7 @@
               <div class="shm-detail-head">{{ detailHeading(item) }}</div>
               <p class="shm-detail-body">{{ detailBody(item) }}</p>
               <button type="button" class="shm-use-btn" @click="useHistorySession(item)">
-                Continue to Focus →
+                Start to Focus →
               </button>
             </div>
           </div>
