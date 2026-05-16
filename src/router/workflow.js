@@ -1,4 +1,5 @@
 import { ref, readonly } from 'vue'
+import { ANIMALS } from '../data/animals'
 
 export const WORKFLOW_STEPS = [
   { id: 1, label: 'AI dump', routeName: 'AIDump' },
@@ -442,6 +443,7 @@ export function completeCurrentSession(sessionId) {
   return session
 }
 
+<<<<<<< HEAD
 // ----------------------------------------------------------------------
 // Task history (localStorage key separate from current session)
 
@@ -629,38 +631,65 @@ export function saveOrUpdateHistory(name) {
 //     "sessionId": "session-2222-xxxx"
 //   }
 // ]
+=======
+// REWARDS ===========================================================
+export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
+>>>>>>> origin/main
 
-export const REWARD_COLLECTION_KEY = 'onestep-reward-collection'
-
-function getRewards() {
-  return JSON.parse(localStorage.getItem(REWARD_COLLECTION_KEY)) || []
+export function getRewards() {
+  return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
 }
 
-function saveRewards(rewards) {
-  localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify(rewards))
-}
+export const REWARDS_UPDATED_EVENT = 'rewards-updated'
 
-// initialize new reward array(if not exist)
-export function initRewardCollection() {
-  if (!localStorage.getItem(REWARD_COLLECTION_KEY)) {
-    localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify([]))
+function saveRewards(animals) {
+  localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify(animals))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REWARDS_UPDATED_EVENT))
   }
 }
 
-// add reward item
-// input: animal name, session uid
-export function addReward(name, sessionId) {
-  const rewards = getRewards()
+// initialize new animal array if it does not exist
+export function initRewardCollection() {
+  if (!localStorage.getItem(ANIMAL_COLLECTION_KEY)) {
+    localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify([]))
+  }
+}
 
-  const newReward = {
-    id: generateId('reward'),
-    name,
+// get one random animal from animals.js
+export function getRandomAnimal() {
+  const randomIndex = Math.floor(Math.random() * ANIMALS.length)
+  return ANIMALS[randomIndex]
+}
+
+// add one random animal to localStorage collection
+// each collected animal item contains at least:
+// name, image, region, earnedAt, sessionId
+export function addRandomAnimal(sessionId) {
+  const current_animals_list = getRewards()
+  const randomAnimal = getRandomAnimal()
+
+  const newAnimalItem = {
+    id: generateId(randomAnimal.id),
+    name: randomAnimal.name,
+    image: randomAnimal.image,
+    region: randomAnimal.region,
     earnedAt: Date.now(),
+    // The sessionID is used to make sure that a user can only get 
+    //  one animal within the same session.
+    // See getAnimalBySessionId()
     sessionId,
   }
 
-  rewards.push(newReward)
-  saveRewards(rewards)
+  current_animals_list.push(newAnimalItem)
+  saveRewards(current_animals_list)
 
-  return newReward
+  return newAnimalItem
+}
+
+// find animal item by sessionId
+export function getAnimalBySessionId(sessionId) {
+  const animals = getRewards()
+
+  return animals.find(animal => animal.sessionId === sessionId) || null
 }
