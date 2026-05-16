@@ -134,6 +134,15 @@ function generateId(prefix) {
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
 
+/** Saved task lists from Plan / Dump workflow (separate from current session). Max 10 entries, no auto-eviction. */
+const TASK_HISTORY_KEY = 'taskHistory'
+const MAX_TASK_HISTORY_ITEMS = 10
+
+/** Deep clone plain JSON-serializable values (e.g. task arrays). */
+function deepCloneJson(value) {
+  return JSON.parse(JSON.stringify(value))
+}
+
 function normalizeStep(step) {
   const numberStep = Number(step)
   if (!Number.isFinite(numberStep)) return 1
@@ -177,6 +186,11 @@ export function createSession({
     startedAt: timestamp,
     completedAt: null,
     maxReachedStep: 1,
+    sessionSource: {
+      type: 'new',
+      historyId: null,
+      historyName: null,
+    },
   }
 
   saveCurrentSession(newSession)
@@ -193,6 +207,12 @@ export function syncWorkflowFromSession() {
     return null
   }
 
+  session.sessionSource ??= {
+    type: 'new',
+    historyId: null,
+    historyName: null,
+  }
+
   const storedStep = session.maxReachedStep ?? session.reachedStep ?? 1
   const safeStep = normalizeStep(storedStep)
 
@@ -205,6 +225,169 @@ export function syncWorkflowFromSession() {
   saveCurrentSession(session)
 
   return session
+}
+
+// ----------------------------------------------------------------------
+// Task history (localStorage key separate from current session)
+
+function saveTaskHistory(items) {
+  localStorage.setItem(TASK_HISTORY_KEY, JSON.stringify(items))
+}
+
+/** Return all saved history entries (newest appended last). */
+export function getTaskHistory() {
+  try {
+    const data = localStorage.getItem(TASK_HISTORY_KEY)
+    if (!data) return []
+    const parsed = JSON.parse(data)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+/** True when history already holds MAX_TASK_HISTORY_ITEMS entries. */
+export function isHistoryFull() {
+  return getTaskHistory().length >= MAX_TASK_HISTORY_ITEMS
+}
+
+/**
+ * Append one history row. Tasks are deep-cloned so later session edits do not mutate stored data.
+ * @returns {string} New history row id
+ */
+export function addHistoryItem({ label, inputType, input, pdfFileName, tasks }) {
+  if (isHistoryFull()) {
+    throw new Error('History is full')
+  }
+
+  const list = getTaskHistory()
+  const id = generateId('history')
+  const row = {
+    id,
+    label,
+    createdAt: new Date().toISOString(),
+    inputType,
+    input: input ?? '',
+    pdfFileName: pdfFileName ?? null,
+    tasks: deepCloneJson(tasks ?? []),
+  }
+  list.push(row)
+  saveTaskHistory(list)
+  return id
+}
+
+/**
+ * Replace fields on an existing history row (preserves id and createdAt).
+ */
+export function updateHistoryItem(historyId, { label, tasks, inputType, input, pdfFileName }) {
+  const list = getTaskHistory()
+  const idx = list.findIndex(h => h.id === historyId)
+  if (idx === -1) {
+    throw new Error('History item not found')
+  }
+
+  const prev = list[idx]
+  list[idx] = {
+    ...prev,
+    label,
+    inputType,
+    input: input ?? '',
+    pdfFileName: pdfFileName ?? null,
+    tasks: deepCloneJson(tasks ?? []),
+  }
+  saveTaskHistory(list)
+}
+
+/** Remove one history row by id. */
+export function deleteHistoryItem(historyId) {
+  const list = getTaskHistory().filter(h => h.id !== historyId)
+  saveTaskHistory(list)
+}
+
+/**
+ * Replace current session from a history snapshot (does not use createSession — avoids resetting workflow progress).
+ * Aligns startedAt with createSession (Unix ms), not ISO string.
+ */
+export function loadSessionFromHistory(historyItem) {
+  if (!historyItem?.id) {
+    throw new Error('Invalid history item')
+  }
+
+  const tasks = deepCloneJson(historyItem.tasks ?? [])
+  const completedCount = tasks.filter(t => t.status === 'completed').length
+  const skippedCount = tasks.filter(t => t.status === 'skipped').length
+  const pdfName = historyItem.pdfFileName ?? null
+  const timestamp = Date.now()
+
+  const newSession = {
+    sessionId: generateId('session'),
+    focusLockActive: false,
+    inputType: historyItem.inputType === 'pdf' ? 'pdf' : 'text',
+    rawInputText: historyItem.input ?? '',
+    uploadedFileMeta: pdfName ? { name: pdfName } : null,
+    tasks,
+    completedCount,
+    skippedCount,
+    reward: null,
+    startedAt: timestamp,
+    completedAt: null,
+    maxReachedStep: 3,
+    sessionSource: {
+      type: 'history',
+      historyId: historyItem.id,
+      historyName: historyItem.label,
+    },
+  }
+
+  saveCurrentSession(newSession)
+  syncWorkflowFromSession()
+  return getCurrentSession()
+}
+
+/**
+ * Persist current tasks + input metadata into taskHistory (append or overwrite by sessionSource.historyId).
+ * UI should catch errors for full history on first save.
+ */
+export function saveOrUpdateHistory(name) {
+  const session = getCurrentSession()
+  if (!session) {
+    throw new Error('No active session')
+  }
+
+  session.sessionSource ??= {
+    type: 'new',
+    historyId: null,
+    historyName: null,
+  }
+
+  const source = session.sessionSource
+  const currentTasks = session.tasks ?? []
+
+  if (!source.historyId && isHistoryFull()) {
+    throw new Error('History is full')
+  }
+
+  if (source.historyId) {
+    updateHistoryItem(source.historyId, {
+      label: name,
+      tasks: deepCloneJson(currentTasks),
+      inputType: session.inputType,
+      input: session.rawInputText ?? null,
+      pdfFileName: session.uploadedFileMeta?.name ?? null,
+    })
+  } else {
+    const newId = addHistoryItem({
+      label: name,
+      inputType: session.inputType,
+      input: session.rawInputText ?? null,
+      pdfFileName: session.uploadedFileMeta?.name ?? null,
+      tasks: deepCloneJson(currentTasks),
+    })
+    session.sessionSource.historyId = newId
+  }
+
+  session.sessionSource.historyName = name
+  saveCurrentSession(session)
 }
 
 
