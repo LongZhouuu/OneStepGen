@@ -65,6 +65,11 @@ class TextInput(BaseModel):
     text: str
 
 
+class TaskInput(BaseModel):
+    """The JSON body for the /process-task endpoint."""
+    task: str
+
+
 class TaskOutput(BaseModel):
     """A single task with its assigned priority, rank, category rank, and cognitive load."""
     task: str
@@ -134,6 +139,35 @@ async def process_text(body: TextInput):
     # Run the full AI pipeline
     try:
         result = await run_pipeline(body.text)
+        return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
+
+
+@app.post(
+    "/process-task",
+    response_model=list[TaskOutput],
+    summary="Process a single manually added task",
+)
+async def process_task(body: TaskInput):
+    """
+    **Pipeline:**
+    single task text → LLM (Groq) → structured task(s) → semantic scoring → prioritised tasks
+
+    Send a JSON body with a `"task"` field containing the task you want
+    processed. The system will evaluate it just like it does for larger texts,
+    breaking it down (if needed) and assigning priorities and cognitive load.
+    """
+    if not body.task or not body.task.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="The 'task' field cannot be empty.",
+        )
+
+    try:
+        result = await run_pipeline(body.task)
         return result
     except Exception as e:
         import traceback
