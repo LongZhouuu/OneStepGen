@@ -44,7 +44,17 @@
             >
               Use sample text
             </button>
+            <button
+              type="button"
+              class="btn-demo-sample"
+              aria-label="Open session history"
+              @click="showSessionHistory = true"
+            >
+              Session History
+            </button>
           </div>
+
+          <SessionHistoryModal v-model="showSessionHistory" />
  
           <div class="input-tools">
             <label class="upload-btn" :class="{ 'has-file': uploadedFile || uploadedFileMeta }">
@@ -137,6 +147,7 @@
 <script>
 import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
+import SessionHistoryModal from '@/components/SessionHistoryModal.vue'
 
 // Strip trailing slash so paths like /process-text never become //process-text
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
@@ -151,7 +162,7 @@ const DEMO_SAMPLE_TEXT =
 
 export default {
   name: 'AIDump',
-  components: { VoiceInputButton },
+  components: { VoiceInputButton, SessionHistoryModal },
   data() {
     return {
       view: 'input',
@@ -160,6 +171,7 @@ export default {
       uploadedFileMeta: null,
       taskCount: 0,
       errorMessage: '',
+      showSessionHistory: false,
     }
   },
   computed: {
@@ -509,9 +521,13 @@ export default {
   bottom: 16px;
 }
 
-/* DEMO: layout for the sample button; remove with the button if unused. */
+/* DEMO: layout for sample + session history buttons; adjust if buttons are removed. */
 .demo-sample-row {
   margin: 0 0 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .btn-demo-sample {

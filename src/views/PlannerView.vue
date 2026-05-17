@@ -146,11 +146,30 @@
           </div>
         </div>
 
+        <p v-if="historyFullError" class="history-full-msg" role="alert">
+          {{ historyFullError }}
+        </p>
+
+        <button
+          type="button"
+          class="btn-save-history"
+          :disabled="!!saveHistoryFeedback"
+          @click="onClickSaveOrUpdateHistory"
+        >
+          {{ saveHistoryButtonText }}
+        </button>
+
         <button class="btn-start-swipe" type="button" :disabled="activeTasks.length === 0" @click="startFocusMode">
           Start Focus Mode →
         </button>
       </div>
     </div>
+
+    <SaveHistoryNameModal
+      v-model="showHistoryNameModal"
+      :initial-name="historyNameModalInitial"
+      @confirm="onConfirmHistoryName"
+    />
 
     <!-- Add Task Modal -->
     <div class="modal-overlay" v-if="showModal" @click.self="showModal = false">
@@ -241,6 +260,7 @@
 <script>
 import draggable from 'vuedraggable'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
+import SaveHistoryNameModal from '@/components/SaveHistoryNameModal.vue'
 import {
   guardWorkflowStep,
   unlockStep,
@@ -249,6 +269,8 @@ import {
   deleteTaskFromSession,
   updateTaskInSession,
   reorderTasksInSession,
+  saveOrUpdateHistory,
+  isHistoryFull,
 } from '../router/workflow'
 
 const GROUP_ORDER = [
@@ -263,11 +285,12 @@ const TASK_TEXT_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/
 
 export default {
   name: 'PlannerView',
-  components: { draggable, VoiceInputButton },
+  components: { draggable, VoiceInputButton, SaveHistoryNameModal },
   data() {
     return {
       sessionId: null,
       tasks: [],
+      sessionHistoryId: null,
       showModal: false,
       showInfoPopover: false,
       infoPopoverStyle: {},
@@ -277,9 +300,19 @@ export default {
       newTaskUrgent: true,
       editingId: null,
       editingText: '',
+      showHistoryNameModal: false,
+      historyNameModalInitial: '',
+      historyFullError: '',
+      saveHistoryFeedback: null,
+      saveFeedbackTimer: null,
     }
   },
   computed: {
+    saveHistoryButtonText() {
+      if (this.saveHistoryFeedback === 'saved') return '✓ Saved'
+      if (this.saveHistoryFeedback === 'updated') return '✓ Updated'
+      return this.sessionHistoryId == null ? 'Save to History' : 'Update History'
+    },
     newTaskCharCount() {
       return (this.newTaskText ?? '').length
     },
@@ -329,10 +362,13 @@ export default {
   beforeUnmount() {
     window.removeEventListener('keydown', this._onKeydown)
     window.removeEventListener('resize', this._updateInfoPopoverPosition)
+    this._clearSaveFeedbackTimer()
   },
   methods: {
     _onKeydown(e) {
-      if (e.key === 'Escape') this.showInfoPopover = false
+      if (e.key !== 'Escape') return
+      this.showInfoPopover = false
+      if (this.showHistoryNameModal) this.showHistoryNameModal = false
     },
     toggleInfoPopover() {
       this.showInfoPopover = !this.showInfoPopover
@@ -385,6 +421,9 @@ export default {
       // Read normalized data back from localStorage
       const updated = getCurrentSession()
       this.tasks = updated?.tasks ?? []
+
+      const src = updated?.sessionSource
+      this.sessionHistoryId = src?.historyId ?? null
 
       const active  = this.activeTasks.length
       const skipped = this.skippedTasks.length
@@ -543,6 +582,79 @@ export default {
       console.log(`[Planner] Start Focus Mode: ${this.activeTasks.length} active tasks`)
       unlockStep(3)
       this.$router.push({ name: 'TaskSwipper' })
+    },
+
+    _clearSaveFeedbackTimer() {
+      if (this.saveFeedbackTimer != null) {
+        clearTimeout(this.saveFeedbackTimer)
+        this.saveFeedbackTimer = null
+      }
+    },
+
+    // ── Save / Update History ─────────────────────────────────────────────────
+    onClickSaveOrUpdateHistory() {
+      if (this.saveHistoryFeedback) return
+
+      const session = getCurrentSession()
+      if (!session) return
+
+      session.sessionSource ??= {
+        type: 'new',
+        historyId: null,
+        historyName: null,
+      }
+
+      const src = session.sessionSource
+      if (!src.historyId && isHistoryFull()) {
+        this.historyFullError =
+          'History is full (10/10). Please delete some records in History before saving.'
+        return
+      }
+
+      this.historyFullError = ''
+      this.historyNameModalInitial = src.historyName ?? ''
+      this.showHistoryNameModal = true
+    },
+
+    onConfirmHistoryName(name) {
+      const trimmed = String(name ?? '').trim()
+      if (!trimmed) return
+
+      const session = getCurrentSession()
+      if (!session) return
+
+      session.sessionSource ??= {
+        type: 'new',
+        historyId: null,
+        historyName: null,
+      }
+
+      const hadHistoryIdBefore = !!session.sessionSource.historyId
+
+      try {
+        saveOrUpdateHistory(trimmed)
+      } catch (err) {
+        const msg = err?.message || ''
+        this.showHistoryNameModal = false
+        if (msg === 'History is full') {
+          this.historyFullError =
+            'History is full (10/10). Please delete some records in History before saving.'
+        } else {
+          this.historyFullError = 'Something went wrong. Please try again.'
+        }
+        return
+      }
+
+      this.showHistoryNameModal = false
+      this.historyFullError = ''
+      this._loadFromSession()
+
+      this._clearSaveFeedbackTimer()
+      this.saveHistoryFeedback = hadHistoryIdBefore ? 'updated' : 'saved'
+      this.saveFeedbackTimer = setTimeout(() => {
+        this.saveHistoryFeedback = null
+        this.saveFeedbackTimer = null
+      }, 1500)
     },
   },
 }
@@ -961,6 +1073,43 @@ export default {
   border-color: var(--terracotta);
 }
 
+.history-full-msg {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.22);
+  color: #a93226;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.btn-save-history {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-btn);
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--terracotta);
+  border: 2px solid rgba(193, 113, 79, 0.45);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  font: inherit;
+}
+
+.btn-save-history:hover:not(:disabled) {
+  background: rgba(193, 113, 79, 0.08);
+  border-color: var(--terracotta);
+}
+
+.btn-save-history:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
 /* ── Start Focus Mode ────────────────────────────────────────────────────── */
 .btn-start-swipe {
   width: 100%;
@@ -974,7 +1123,7 @@ export default {
   cursor: pointer;
   transition: all 0.25s;
   font: inherit;
-  margin-top: 24px;
+  margin-top: 12px;
 }
 
 .btn-start-swipe:hover:not(:disabled) {
