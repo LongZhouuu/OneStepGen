@@ -35,14 +35,26 @@
         <div class="task-board">
             <div class="memo-card-wrapper" id="memo-wrapper" style="max-width: 82%;">
                 <div class="memo-card-shadow"></div>
-                <div class="memo-card" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
+                <div class="memo-card"
+                    :class="{
+                        disabled: !currentTaskItem || !props.canSwipe,
+                        [`memo-card--${currentTaskCognitiveTier}`]: showMatchBadge,
+                    }"
+                    :style="cardStyle"
                     @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
                     @pointermove="currentTaskItem && props.canSwipe && onDrag($event)"
                     @pointerup="currentTaskItem && props.canSwipe && endDrag()"
                     @pointerleave="currentTaskItem && props.canSwipe && endDrag()"
                     @pointercancel="currentTaskItem && props.canSwipe && endDrag()"
                     :title="props.canSwipe ? '' : 'Click Check-In to begin the swipe.'">
-                    <div class="memo-task-num" id="memo-num">{{ currentTaskOrder }}</div>
+                    <div class="memo-card-top">
+                        <div class="memo-task-num" id="memo-num">{{ currentTaskOrder }}</div>
+                        <span
+                            v-if="showMatchBadge"
+                            class="cognitive-badge"
+                            :class="`cognitive-badge--${currentTaskCognitiveTier}`"
+                        >{{ currentTaskCognitiveLabel }}</span>
+                    </div>
                     <span class="task-text" id="memo-text">
                         {{ currentTaskText }}
                     </span>
@@ -72,6 +84,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import {
+    getTaskCognitiveTier,
+    getTaskCognitiveLabel,
+    taskMatchesUserEnergy,
+} from '@/utils/energyMatching'
 
 const emit = defineEmits(['updateTaskState', 'noMoreTasks'])
 
@@ -83,7 +100,11 @@ const props = defineProps({
     canSwipe: {
         type: Boolean,
         default: false
-    }
+    },
+    userEnergyLevel: {
+        type: String,
+        default: null,
+    },
 })
 
 const currentTaskId = ref(null)
@@ -154,6 +175,18 @@ const currentTaskOrder = computed(() => {
         ? currentTaskItem.value.order
         : '🥳'
 })
+
+const currentTaskCognitiveTier = computed(() =>
+    getTaskCognitiveTier(currentTaskItem.value ?? {}),
+)
+
+const currentTaskCognitiveLabel = computed(() =>
+    getTaskCognitiveLabel(currentTaskItem.value ?? {}),
+)
+
+const showMatchBadge = computed(() =>
+    taskMatchesUserEnergy(currentTaskItem.value ?? {}, props.userEnergyLevel),
+)
 
 const isDragging = ref(false)
 const startX = ref(0)
@@ -324,6 +357,59 @@ function swipeOut(direction) {
     transition: transform 0.12s;
     background-image: repeating-linear-gradient(transparent, transparent 29px, rgba(193, 113, 79, 0.07) 29px, rgba(193, 113, 79, 0.07) 30px);
     background-position: 0 44px;
+}
+
+.memo-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.memo-card--low {
+    border-color: #8ecfad;
+}
+
+.memo-card--normal {
+    border-color: #e8b86d;
+}
+
+.memo-card--high {
+    border-color: #e89a88;
+}
+
+.cognitive-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 2px solid transparent;
+}
+
+.cognitive-badge--low {
+    background: #e8f5ee;
+    color: #2d6b52;
+    border-color: #8ecfad;
+}
+
+.cognitive-badge--normal {
+    background: #fff4e6;
+    color: #9a5f20;
+    border-color: #e8b86d;
+}
+
+.cognitive-badge--high {
+    background: #fdeeed;
+    color: #9b3d28;
+    border-color: #e89a88;
 }
 
 .memo-swipe-hint {

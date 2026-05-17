@@ -353,9 +353,10 @@ export default {
       return {
         sessionId,
         tasks: backendTasks.map(t => ({
-          text:          t.task,
+          text: t.task,
           priorityGroup: t.priorityGroup,
-          order:         t.rank,
+          order: t.rank,
+          parent_task_cognitive_load: t.parent_task_cognitive_load ?? 3,
         })),
       }
     },

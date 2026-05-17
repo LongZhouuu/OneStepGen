@@ -141,6 +141,21 @@ const WORKFLOW_UI_STATE_KEY = 'onestep-workflow-ui-state'
 const DEFAULT_WORKFLOW_UI_STATE = {
   currentStep: 1,
   AIInput: '',
+  userEnergyLevel: null,
+}
+
+const VALID_ENERGY_LEVELS = new Set(['low', 'normal', 'high'])
+
+function normalizeEnergyLevel(value) {
+  if (value == null || value === '') return null
+  if (typeof value === 'string' && VALID_ENERGY_LEVELS.has(value)) return value
+  return null
+}
+
+function clampCognitiveLoad(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 3
+  return Math.min(5, Math.max(1, Math.round(n)))
 }
 
 export function getWorkflowUIState() {
@@ -153,6 +168,7 @@ export function getWorkflowUIState() {
     return {
       currentStep: normalizeStep(parsed.currentStep ?? 1),
       AIInput: parsed.AIInput ?? '',
+      userEnergyLevel: normalizeEnergyLevel(parsed.userEnergyLevel),
     }
   } catch {
     return { ...DEFAULT_WORKFLOW_UI_STATE }
@@ -169,6 +185,7 @@ export function saveWorkflowUIState(updates = {}) {
 
   next.currentStep = normalizeStep(next.currentStep)
   next.AIInput = String(next.AIInput ?? '')
+  next.userEnergyLevel = normalizeEnergyLevel(next.userEnergyLevel)
 
   localStorage.setItem(WORKFLOW_UI_STATE_KEY, JSON.stringify(next))
 
@@ -195,6 +212,16 @@ export function getWorkflowAIInput() {
   return getWorkflowUIState().AIInput
 }
 
+export function getUserEnergyLevel() {
+  return getWorkflowUIState().userEnergyLevel
+}
+
+export function setUserEnergyLevel(level) {
+  saveWorkflowUIState({
+    userEnergyLevel: normalizeEnergyLevel(level),
+  })
+}
+
 export function getSavedWorkflowRouteName() {
   syncWorkflowFromSession()
 
@@ -208,6 +235,7 @@ export function resetWorkflowUIState() {
   saveWorkflowUIState({
     currentStep: 1,
     AIInput: '',
+    userEnergyLevel: null,
   })
 }
 
@@ -240,6 +268,7 @@ export function createSession({
   const timestamp = Date.now()
 
   resetWorkflow()
+  setUserEnergyLevel(null)
 
   const newSession = {
     sessionId: generateId('session'),
@@ -324,6 +353,7 @@ export function addAITasksToSession(sessionId, aiTasks) {
     status: 'pending',
     priorityGroup: t.priorityGroup,
     order: t.order,           // use the order provided by AI
+    parent_task_cognitive_load: clampCognitiveLoad(t.parent_task_cognitive_load),
     createdAt: timestamp,
     updatedAt: timestamp,
   }))
@@ -402,6 +432,7 @@ export function addTaskToSession(sessionId, taskText, priorityGroup = null) {
     status: 'pending',
     priorityGroup,
     order: insertOrder,
+    parent_task_cognitive_load: 3,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
