@@ -35,6 +35,7 @@ export function setMaxReachedStep(step) {
 export function resetWorkflow() {
   maxReachedStep.value = 1
   focusLockActive.value = false
+  resetWorkflowUIState()
 }
 
 export function startWorkflow() {
@@ -135,6 +136,81 @@ function generateId(prefix) {
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
 
+const WORKFLOW_UI_STATE_KEY = 'onestep-workflow-ui-state'
+
+const DEFAULT_WORKFLOW_UI_STATE = {
+  currentStep: 1,
+  AIInput: '',
+}
+
+export function getWorkflowUIState() {
+  try {
+    const data = localStorage.getItem(WORKFLOW_UI_STATE_KEY)
+    if (!data) return { ...DEFAULT_WORKFLOW_UI_STATE }
+
+    const parsed = JSON.parse(data)
+
+    return {
+      currentStep: normalizeStep(parsed.currentStep ?? 1),
+      AIInput: parsed.AIInput ?? '',
+    }
+  } catch {
+    return { ...DEFAULT_WORKFLOW_UI_STATE }
+  }
+}
+
+export function saveWorkflowUIState(updates = {}) {
+  const current = getWorkflowUIState()
+
+  const next = {
+    ...current,
+    ...updates,
+  }
+
+  next.currentStep = normalizeStep(next.currentStep)
+  next.AIInput = String(next.AIInput ?? '')
+
+  localStorage.setItem(WORKFLOW_UI_STATE_KEY, JSON.stringify(next))
+
+  return next
+}
+
+export function setWorkflowCurrentStep(step) {
+  saveWorkflowUIState({
+    currentStep: normalizeStep(step),
+  })
+}
+
+export function getWorkflowCurrentStep() {
+  return getWorkflowUIState().currentStep
+}
+
+export function setWorkflowAIInput(value) {
+  saveWorkflowUIState({
+    AIInput: value ?? '',
+  })
+}
+
+export function getWorkflowAIInput() {
+  return getWorkflowUIState().AIInput
+}
+
+export function getSavedWorkflowRouteName() {
+  syncWorkflowFromSession()
+
+  const currentStep = getWorkflowCurrentStep()
+  const safeStep = Math.min(currentStep, maxReachedStep.value)
+
+  return getStepById(safeStep)?.routeName ?? 'AIDump'
+}
+
+export function resetWorkflowUIState() {
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: '',
+  })
+}
+
 function normalizeStep(step) {
   const numberStep = Number(step)
   if (!Number.isFinite(numberStep)) return 1
@@ -186,6 +262,11 @@ export function createSession({
   }
 
   saveCurrentSession(newSession)
+
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: inputType === 'text' ? rawInputText : '',
+  })
 
   return newSession
 }

@@ -23,13 +23,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   WORKFLOW_STEPS,
   workflowState,
   focusLockState,
   getStepByRouteName,
+  setWorkflowCurrentStep,
 } from '../router/workflow'
 
 const route = useRoute()
@@ -51,6 +52,16 @@ const steps = WORKFLOW_STEPS.map((step) => ({
 }))
 
 const currentStep = computed(() => getStepByRouteName(route.name))
+
+watch(
+  currentStep,
+  (step) => {
+    if (!step) return
+    setWorkflowCurrentStep(step.id)
+  },
+  { immediate: true }
+)
+
 const maxReachedStep = computed(() => workflowState.value)
 
 function isStepLocked(step) {
@@ -88,6 +99,8 @@ function isConnectorDone(stepId) {
 function goToStep(step) {
   if (isStepLocked(step)) return
   if (step.routeName === route.name) return
+
+  setWorkflowCurrentStep(step.id)
   router.push({ name: step.routeName })
 }
 </script>
