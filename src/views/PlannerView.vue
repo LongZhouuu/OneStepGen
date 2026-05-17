@@ -615,6 +615,11 @@ export default {
     // ── Delete ────────────────────────────────────────────────────────────────
     deleteTask(taskId) {
       deleteTaskFromSession(this.sessionId, taskId)
+
+      const session = getCurrentSession()
+      const skippedCount = (session?.tasks ?? []).filter(t => t.status === 'skipped').length
+      this._syncSkippedCountToSession(skippedCount)
+
       console.log(`[Planner] Task deleted → reordered: ${this.activeTasks.length - 1} active tasks`)
       this._loadFromSession()
     },
@@ -704,6 +709,10 @@ export default {
       )
 
       reorderTasksInSession(this.sessionId, [...reorderedActive, ...remainingSkipped])
+
+      // synchronize skippedCount to current number of skipped task
+      this._syncSkippedCountToSession(remainingSkipped.length)
+
       console.log(`[Planner] Move back: "${task.text}" → ${task.priorityGroup}`)
       this._loadFromSession()
     },
@@ -729,6 +738,22 @@ export default {
         clearTimeout(this.saveFeedbackTimer)
         this.saveFeedbackTimer = null
       }
+    },
+
+    _syncSkippedCountToSession(count = null) {
+      const session = getCurrentSession()
+      if (!session) return
+
+      const nextSkippedCount =
+        count ?? (session.tasks ?? []).filter(t => t.status === 'skipped').length
+
+      localStorage.setItem(
+        'onestep-current-session',
+        JSON.stringify({
+          ...session,
+          skippedCount: nextSkippedCount,
+        })
+      )
     },
 
     // ── Save / Update History ─────────────────────────────────────────────────
