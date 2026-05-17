@@ -31,7 +31,7 @@ from pathlib import Path
 from groq import AsyncGroq
 from dotenv import load_dotenv
 
-# Load the .env file so we can read GROQ_API_KEY
+# Load the .env file so we can read GROQ_API_KEY_1, GROQ_API_KEY_2, …
 # Use explicit path so it works from any working directory
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_ENV_PATH)
@@ -158,16 +158,23 @@ def _chunk_text(text: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> list[str]:
     return [c for c in chunks if c]
 
 
-async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None:
+async def _call_groq_with_retry(api_keys: list[str], user_text: str) -> str | None:
     """
     Call the Groq API with automatic retry on rate-limit (429) errors.
 
-    Uses exponential backoff: 2s → 4s → 8s (capped at MAX_BACKOFF_SECS).
-    Returns the raw response text, or None if all retries fail.
+    Rotates through *api_keys* (GROQ_API_KEY_1, GROQ_API_KEY_2, …) when a
+    key hits the rate limit.  Uses exponential backoff: 2s → 4s → 8s
+    (capped at MAX_BACKOFF_SECS).  Returns the raw response text, or None
+    if all retries fail.
     """
+    # Round-robin index into api_keys; advances on each rate-limit retry.
+    key_index = 0
     backoff = INITIAL_BACKOFF_SECS
 
     for attempt in range(1, MAX_RETRIES + 1):
+        # Fresh client per attempt so we can switch keys after a 429.
+        current_key = api_keys[key_index % len(api_keys)]
+        client = AsyncGroq(api_key=current_key)
         try:
             chat_completion = await client.chat.completions.create(
                 model="llama-3.3-70b-versatile",      # fast & accurate
@@ -206,6 +213,13 @@ async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None
             )
 
             if is_rate_limit and attempt < MAX_RETRIES:
+                # Try the next key on the next attempt (wraps with modulo).
+                key_index += 1
+                logger.warning(
+                    f"Rate limit on key {(key_index - 1) % len(api_keys) + 1}, "
+                    f"switching to key {key_index % len(api_keys) + 1} "
+                    f"of {len(api_keys)}"
+                )
                 # Parse retry-after header if available
                 retry_after = None
                 if hasattr(error, 'response') and error.response is not None:
@@ -233,13 +247,13 @@ async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None
                     f"Groq free tier allows 30 req/min and 1,000 req/day. "
                     f"Please wait a moment and try again."
                 )
-                raise RuntimeError("Groq API rate limit exceeded after maximum retries.")
+                raise RuntimeError("AI service is currently busy. Please try again in a moment.")
             else:
                 # Non-rate-limit error — don't retry
                 logger.error(f"LLM call failed: {error}")
                 raise
 
-    raise RuntimeError("Groq API rate limit exceeded after maximum retries.")
+    raise RuntimeError("AI service is currently busy. Please try again in a moment.")
 
 
 def _parse_response(raw_text: str) -> list[dict]:
@@ -323,14 +337,14 @@ async def extract_tasks_from_text(user_text: str) -> list[dict]:
         Returns an empty list if anything goes wrong.
     """
 
-    # ── 1. Read the API key from the environment ────────────
-    api_key = os.getenv("GROQ_API_KEY")
-
-    if not api_key or api_key == "your-groq-api-key-here":
-        raise ValueError("GROQ_API_KEY is not set in the environment.")
-
-    # ── 2. Create the Groq client ──────────────────────
-    client = AsyncGroq(api_key=api_key)
+    # ── 1. Load all Groq API keys from the environment ───────
+    # Expects GROQ_API_KEY_1, GROQ_API_KEY_2, … (works with one or many).
+    api_keys = [
+        v for k, v in os.environ.items()
+        if k.startswith("GROQ_API_KEY_")
+    ]
+    if not api_keys:
+        raise ValueError("No GROQ_API_KEY_ environment variables found. Please check your environment configuration.")
 
     # ── 3. Chunk the text if it's too large ────────────
     chunks = _chunk_text(user_text)
@@ -348,7 +362,8 @@ async def extract_tasks_from_text(user_text: str) -> list[dict]:
         if len(chunks) > 1:
             logger.info(f"🔄 Processing chunk {i}/{len(chunks)} ({len(chunk):,} chars)...")
 
-        raw_response = await _call_groq_with_retry(client, chunk)
+        # Pass the full key list; _call_groq_with_retry rotates on rate limits.
+        raw_response = await _call_groq_with_retry(api_keys, chunk)
 
         if raw_response is None:
             logger.warning(f"Chunk {i}/{len(chunks)} returned no results.")
