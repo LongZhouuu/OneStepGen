@@ -875,6 +875,7 @@ export default {
   flex-direction: column;
   gap: 10px;
   min-height: 36px;
+  min-width: 0;
 }
 
 /* ── Task item ───────────────────────────────────────────────────────────── */
@@ -886,6 +887,22 @@ export default {
   border-radius: 12px;
   padding: 14px 16px;
   border: 1.5px solid rgba(193, 113, 79, 0.18);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.task-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .drag-handle {

@@ -485,6 +485,8 @@ function swipeOut(direction) {
     display: flex;
     justify-content: space-between;
     gap: 0px;
+    position: relative;
+    bottom: 2vh;
 }
 
 .hintBtn {
