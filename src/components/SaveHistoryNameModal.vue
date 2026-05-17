@@ -21,6 +21,9 @@
         @keyup.enter="confirm"
       />
       <div class="shnm-input-meta">
+        <span v-if="showWrongInput" class="shnm-wrong-input" role="alert">
+          Wrong input
+        </span>
         <span class="shnm-char-count" :class="{ warn: nameCharCount >= historyNameMaxChars }">
           {{ nameCharCount }} / {{ historyNameMaxChars }}
         </span>
@@ -68,6 +71,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const localName = ref('')
+const showWrongInput = ref(false)
 const historyNameMaxChars = HISTORY_NAME_MAX_CHARS
 
 const nameCharCount = computed(() => (localName.value ?? '').length)
@@ -80,11 +84,17 @@ function sanitizeHistoryName(raw) {
     : cleaned
 }
 
+function hasDisallowedChars(raw) {
+  // Use non-global test so .replace() on the same pattern does not affect later checks.
+  return /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/.test(String(raw ?? ''))
+}
+
 watch(
   () => props.modelValue,
   (open) => {
     if (open) {
       localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
     }
   },
 )
@@ -94,12 +104,15 @@ watch(
   () => {
     if (props.modelValue) {
       localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
     }
   },
 )
 
 function onNameInput(e) {
-  const next = sanitizeHistoryName(e?.target?.value ?? localName.value)
+  const raw = e?.target?.value ?? localName.value
+  showWrongInput.value = hasDisallowedChars(raw)
+  const next = sanitizeHistoryName(raw)
   if (next !== localName.value) localName.value = next
 }
 
@@ -186,6 +199,13 @@ function confirm() {
   font-size: 12px;
   line-height: 1.4;
   color: rgba(45, 31, 20, 0.38);
+}
+
+.shnm-wrong-input {
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: #c0392b;
 }
 
 .shnm-char-count {
