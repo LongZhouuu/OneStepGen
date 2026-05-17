@@ -443,7 +443,7 @@ export function completeCurrentSession(sessionId) {
   return session
 }
 
-<<<<<<< HEAD
+
 // ----------------------------------------------------------------------
 // Task history (localStorage key separate from current session)
 
@@ -630,11 +630,10 @@ export function saveOrUpdateHistory(name) {
 //     "earnedAt": 1713950000000,
 //     "sessionId": "session-2222-xxxx"
 //   }
-// ]
-=======
+
 // REWARDS ===========================================================
 export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
->>>>>>> origin/main
+
 
 export function getRewards() {
   return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
