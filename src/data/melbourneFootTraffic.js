@@ -18,6 +18,7 @@ const PAGE_SIZE = 100
  * @param {string} pathAndQueryWithoutLimit — dataset path segment with optional ?where=&order_by=...
  * @returns {Promise<object[]>}
  */
+/** Melbourne API caps page size at 100 — loop until a short page is returned. */
 async function fetchAllPagedRows(pathAndQueryWithoutLimit) {
   const glue = pathAndQueryWithoutLimit.includes('?') ? '&' : '?'
   /** @type {object[]} */

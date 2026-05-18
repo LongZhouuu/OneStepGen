@@ -66,6 +66,7 @@ const maxReachedStep = computed(() => workflowState.value)
 
 function isStepLocked(step) {
   const isNotUnlockedYet = step.id > maxReachedStep.value
+  // While Swiper timer runs, Dump/Plan stay disabled so users finish the focus block.
   const isPreviousStepDuringFocus = isFocusLocked.value && step.id < 3
 
   return isNotUnlockedYet || isPreviousStepDuringFocus

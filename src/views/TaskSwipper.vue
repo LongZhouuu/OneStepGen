@@ -3,13 +3,6 @@
 
         <div class="phone-frame">
         <TaskProgressBar :tasks="tasks" />
-            <!-- back button -->
-            <!-- <button class="back-btn" @click="goBackToPlanner">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
-                </svg>
-                Back to Task Planner
-            </button> -->
 
             <!-- task card -->
             <div class="taskCardWrapper">
@@ -21,43 +14,7 @@
                     @noMoreTasks="handleNoMoreTasks"
                 />
             </div>
-            <!-- status -->
-            <!-- <section class="status" :class="{ compressed: isTimerRunning }">
-                <nav class="tabs">
-                    <button class="tab" :class="{ active: activeTab === 'checkin' }" @click="activeTab = 'checkin'">
-                        Check In
-                    </button>
-                    <button class="tab" :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">
-                        View All Tasks
-                    </button>
-                </nav>
-
-                <section v-show="activeTab === 'tasks'" class="taskList">
-                    <TransitionGroup name="task-slide" tag="div" class="taskItemContainer">
-                        <div v-for="task in tasks" :key="task.id" class="taskItem"
-                            :class="{ skipped: task.status === 'skipped' }">
-                            <span class="taskText">
-                                <span style="font-weight: bold;">
-                                    {{ task.order == null ? '' : task.order + 1 + '. ' }}
-                                </span>
-                                {{ task.text }}
-                            </span>
-
-                            <span class="taskStatus" :class="task.status">
-                                {{ task.status }}
-                            </span>
-                        </div>
-                    </TransitionGroup>
-                    <button class="clearBtn" @click="clear">
-                        Clear All Completed
-                    </button>
-                </section>
-
-                <section v-show="activeTab === 'checkin'" class="checkIn">
-                    <SwipingTimer ref="timerRef" @countingState="isTimerRunning = $event" />
-                </section>
-            </section> -->
-            <!-- timer -->
+          
             <section class="status" :class="{ compressed: isTimerRunning, tipsOpen: isTipsOpen }">
                 <div class="timerArea">
                     <SwipingTimer ref="timerRef" :collapsed="isTipsOpen" @countingState="isTimerRunning = $event" />
@@ -135,6 +92,7 @@ const hasRemainingTasks = computed(() => {
     )
 })
 
+/** Emitted when queue empty or last card resolved — completes session and unlocks step 4. */
 function handleNoMoreTasks() {
     activeTab.value = 'checkin'
     timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
