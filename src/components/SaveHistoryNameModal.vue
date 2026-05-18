@@ -15,10 +15,22 @@
         v-model="localName"
         type="text"
         class="shnm-input"
-        maxlength="120"
+        :maxlength="historyNameMaxChars"
         autocomplete="off"
+        @input="onNameInput"
         @keyup.enter="confirm"
       />
+      <div class="shnm-input-meta">
+        <span v-if="showWrongInput" class="shnm-wrong-input" role="alert">
+          Wrong input
+        </span>
+        <span class="shnm-char-count" :class="{ warn: nameCharCount >= historyNameMaxChars }">
+          {{ nameCharCount }} / {{ historyNameMaxChars }}
+        </span>
+        <span v-if="nameCharCount >= historyNameMaxChars" class="shnm-limit-msg" role="status">
+          Maximum {{ historyNameMaxChars }} characters.
+        </span>
+      </div>
 
       <div class="shnm-actions">
         <button type="button" class="shnm-btn shnm-btn-close" @click="close">
@@ -38,7 +50,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+const HISTORY_NAME_MAX_CHARS = 30
+// English letters, digits, whitespace, and common punctuation only.
+const HISTORY_NAME_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/g
 
 const props = defineProps({
   modelValue: {
@@ -55,12 +71,30 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const localName = ref('')
+const showWrongInput = ref(false)
+const historyNameMaxChars = HISTORY_NAME_MAX_CHARS
+
+const nameCharCount = computed(() => (localName.value ?? '').length)
+
+function sanitizeHistoryName(raw) {
+  const s = String(raw ?? '')
+  const cleaned = s.replace(HISTORY_NAME_DISALLOWED, '')
+  return cleaned.length > HISTORY_NAME_MAX_CHARS
+    ? cleaned.slice(0, HISTORY_NAME_MAX_CHARS)
+    : cleaned
+}
+
+function hasDisallowedChars(raw) {
+  // Use non-global test so .replace() on the same pattern does not affect later checks.
+  return /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/.test(String(raw ?? ''))
+}
 
 watch(
   () => props.modelValue,
   (open) => {
     if (open) {
-      localName.value = props.initialName ?? ''
+      localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
     }
   },
 )
@@ -69,17 +103,25 @@ watch(
   () => props.initialName,
   () => {
     if (props.modelValue) {
-      localName.value = props.initialName ?? ''
+      localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
     }
   },
 )
+
+function onNameInput(e) {
+  const raw = e?.target?.value ?? localName.value
+  showWrongInput.value = hasDisallowedChars(raw)
+  const next = sanitizeHistoryName(raw)
+  if (next !== localName.value) localName.value = next
+}
 
 function close() {
   emit('update:modelValue', false)
 }
 
 function confirm() {
-  const name = localName.value.trim()
+  const name = sanitizeHistoryName(localName.value).trim()
   if (!name) return
   emit('confirm', name)
 }
@@ -138,13 +180,46 @@ function confirm() {
   font: inherit;
   font-size: 15px;
   color: #3d2a1a;
-  margin-bottom: 22px;
+  margin-bottom: 8px;
   outline: none;
   transition: border-color 0.2s;
 }
 
 .shnm-input:focus {
   border-color: #c1714f;
+}
+
+.shnm-input-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(45, 31, 20, 0.38);
+}
+
+.shnm-wrong-input {
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: #c0392b;
+}
+
+.shnm-char-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.shnm-char-count.warn {
+  color: #c1714f;
+}
+
+.shnm-limit-msg {
+  font-weight: 600;
+  color: #c1714f;
 }
 
 .shnm-actions {
