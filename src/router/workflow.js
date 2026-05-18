@@ -742,17 +742,12 @@ export function saveOrUpdateHistory(name) {
 //     "earnedAt": 1713950000000,
 //     "sessionId": "session-2222-xxxx"
 //   }
-<<<<<<< HEAD
 // ]
 
-// REWARDS ===========================================================
-export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
-=======
-
-// REWARDS ===========================================================
 export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
 
->>>>>>> 7d11be1a817b40a98ce244b263838d1b6f18d9e6
+export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
+
 
 export function getRewards() {
   return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
