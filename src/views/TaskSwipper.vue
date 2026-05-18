@@ -13,8 +13,13 @@
 
             <!-- task card -->
             <div class="taskCardWrapper">
-                <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" @updateTaskState="updateTaskStatus"
-                    @noMoreTasks="handleNoMoreTasks" />
+                <TaskCard
+                    :tasks="tasks"
+                    :can-swipe="isTimerRunning"
+                    :user-energy-level="userEnergyLevel"
+                    @updateTaskState="updateTaskStatus"
+                    @noMoreTasks="handleNoMoreTasks"
+                />
             </div>
             <!-- status -->
             <!-- <section class="status" :class="{ compressed: isTimerRunning }">
@@ -83,12 +88,13 @@ import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TaskProgressBar from '@/components/TaskProgressBar.vue'
 import {
-    guardWorkflowStep, 
-    unlockStep, 
+    guardWorkflowStep,
+    unlockStep,
     getCurrentSession,
     updateTaskInSession,
     completeCurrentSession,
-    setFocusLockActive
+    setFocusLockActive,
+    getUserEnergyLevel,
 } from '../router/workflow'
 
 // import mockmockmock from '@/components/mockmockmock.vue'
@@ -101,9 +107,11 @@ const router = useRouter()
 const timerRef = ref(null)
 const session = ref(null)
 const tasks = ref([])
+const userEnergyLevel = ref(null)
 
 onMounted(() => {
     guardWorkflowStep(3, router)
+    userEnergyLevel.value = getUserEnergyLevel()
     loadSession()
     setFocusLockActive(false)
 })

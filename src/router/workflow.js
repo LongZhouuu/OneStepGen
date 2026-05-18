@@ -35,6 +35,7 @@ export function setMaxReachedStep(step) {
 export function resetWorkflow() {
   maxReachedStep.value = 1
   focusLockActive.value = false
+  resetWorkflowUIState()
 }
 
 export function startWorkflow() {
@@ -135,6 +136,109 @@ function generateId(prefix) {
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
 
+const WORKFLOW_UI_STATE_KEY = 'onestep-workflow-ui-state'
+
+const DEFAULT_WORKFLOW_UI_STATE = {
+  currentStep: 1,
+  AIInput: '',
+  userEnergyLevel: null,
+}
+
+const VALID_ENERGY_LEVELS = new Set(['low', 'normal', 'high'])
+
+function normalizeEnergyLevel(value) {
+  if (value == null || value === '') return null
+  if (typeof value === 'string' && VALID_ENERGY_LEVELS.has(value)) return value
+  return null
+}
+
+function clampCognitiveLoad(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 3
+  return Math.min(5, Math.max(1, Math.round(n)))
+}
+
+export function getWorkflowUIState() {
+  try {
+    const data = localStorage.getItem(WORKFLOW_UI_STATE_KEY)
+    if (!data) return { ...DEFAULT_WORKFLOW_UI_STATE }
+
+    const parsed = JSON.parse(data)
+
+    return {
+      currentStep: normalizeStep(parsed.currentStep ?? 1),
+      AIInput: parsed.AIInput ?? '',
+      userEnergyLevel: normalizeEnergyLevel(parsed.userEnergyLevel),
+    }
+  } catch {
+    return { ...DEFAULT_WORKFLOW_UI_STATE }
+  }
+}
+
+export function saveWorkflowUIState(updates = {}) {
+  const current = getWorkflowUIState()
+
+  const next = {
+    ...current,
+    ...updates,
+  }
+
+  next.currentStep = normalizeStep(next.currentStep)
+  next.AIInput = String(next.AIInput ?? '')
+  next.userEnergyLevel = normalizeEnergyLevel(next.userEnergyLevel)
+
+  localStorage.setItem(WORKFLOW_UI_STATE_KEY, JSON.stringify(next))
+
+  return next
+}
+
+export function setWorkflowCurrentStep(step) {
+  saveWorkflowUIState({
+    currentStep: normalizeStep(step),
+  })
+}
+
+export function getWorkflowCurrentStep() {
+  return getWorkflowUIState().currentStep
+}
+
+export function setWorkflowAIInput(value) {
+  saveWorkflowUIState({
+    AIInput: value ?? '',
+  })
+}
+
+export function getWorkflowAIInput() {
+  return getWorkflowUIState().AIInput
+}
+
+export function getUserEnergyLevel() {
+  return getWorkflowUIState().userEnergyLevel
+}
+
+export function setUserEnergyLevel(level) {
+  saveWorkflowUIState({
+    userEnergyLevel: normalizeEnergyLevel(level),
+  })
+}
+
+export function getSavedWorkflowRouteName() {
+  syncWorkflowFromSession()
+
+  const currentStep = getWorkflowCurrentStep()
+  const safeStep = Math.min(currentStep, maxReachedStep.value)
+
+  return getStepById(safeStep)?.routeName ?? 'AIDump'
+}
+
+export function resetWorkflowUIState() {
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: '',
+    userEnergyLevel: null,
+  })
+}
+
 function normalizeStep(step) {
   const numberStep = Number(step)
   if (!Number.isFinite(numberStep)) return 1
@@ -164,6 +268,7 @@ export function createSession({
   const timestamp = Date.now()
 
   resetWorkflow()
+  setUserEnergyLevel(null)
 
   const newSession = {
     sessionId: generateId('session'),
@@ -186,6 +291,11 @@ export function createSession({
   }
 
   saveCurrentSession(newSession)
+
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: inputType === 'text' ? rawInputText : '',
+  })
 
   return newSession
 }
@@ -243,6 +353,7 @@ export function addAITasksToSession(sessionId, aiTasks) {
     status: 'pending',
     priorityGroup: t.priorityGroup,
     order: t.order,           // use the order provided by AI
+    parent_task_cognitive_load: clampCognitiveLoad(t.parent_task_cognitive_load),
     createdAt: timestamp,
     updatedAt: timestamp,
   }))
@@ -321,6 +432,7 @@ export function addTaskToSession(sessionId, taskText, priorityGroup = null) {
     status: 'pending',
     priorityGroup,
     order: insertOrder,
+    parent_task_cognitive_load: 3,
     createdAt: timestamp,
     updatedAt: timestamp,
   }

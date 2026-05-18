@@ -145,7 +145,16 @@
 </template>
  
 <script>
-import { guardWorkflowStep, unlockStep, createSession, addAITasksToSession, getCurrentSession } from '../router/workflow'
+import {
+  guardWorkflowStep,
+  unlockStep,
+  createSession,
+  addAITasksToSession,
+  getCurrentSession,
+  getWorkflowAIInput,
+  setWorkflowAIInput,
+  setWorkflowCurrentStep,
+} from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
 import SessionHistoryModal from '@/components/SessionHistoryModal.vue'
 
@@ -187,8 +196,21 @@ export default {
       return (hasText || hasPdf) && this.view === 'input'
     },
   },
+  watch: {
+    inputText(newValue) {
+      setWorkflowAIInput(this._sanitizeDumpInput(newValue ?? ''))
+    },
+  },
   mounted() {
     guardWorkflowStep(1, this.$router)
+    setWorkflowCurrentStep(1)
+
+    const savedAIInput = getWorkflowAIInput()
+
+    if (savedAIInput) {
+      this.inputText = this._sanitizeDumpInput(savedAIInput)
+      return
+    }
 
     const session = getCurrentSession()
     if (session) {
@@ -247,6 +269,7 @@ export default {
     },
     reviewYourTasks() {
       unlockStep(2)
+      setWorkflowCurrentStep(2)
       this.$router.push({ name: 'Planner' })
     },
 
@@ -330,9 +353,10 @@ export default {
       return {
         sessionId,
         tasks: backendTasks.map(t => ({
-          text:          t.task,
+          text: t.task,
           priorityGroup: t.priorityGroup,
-          order:         t.rank,
+          order: t.rank,
+          parent_task_cognitive_load: t.parent_task_cognitive_load ?? 3,
         })),
       }
     },

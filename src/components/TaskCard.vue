@@ -34,15 +34,36 @@
         </div> -->
         <div class="task-board">
             <div class="memo-card-wrapper" id="memo-wrapper" style="max-width: 82%;">
+                <div
+                    v-if="swipeFeedbackVisible"
+                    class="swipe-feedback-chip"
+                    :class="{ 'swipe-feedback-chip--fade': swipeFeedbackFading }"
+                >
+                    <i :class="swipeFeedbackIcon"></i>
+                </div>
+
                 <div class="memo-card-shadow"></div>
-                <div class="memo-card" :class="{ disabled: !currentTaskItem || !props.canSwipe }" :style="cardStyle"
+
+                <div class="memo-card"
+                    :class="{
+                        disabled: !currentTaskItem || !props.canSwipe,
+                        [`memo-card--${currentTaskCognitiveTier}`]: showMatchBadge,
+                    }"
+                    :style="cardStyle"
                     @pointerdown="currentTaskItem && props.canSwipe && startDrag($event)"
                     @pointermove="currentTaskItem && props.canSwipe && onDrag($event)"
                     @pointerup="currentTaskItem && props.canSwipe && endDrag()"
                     @pointerleave="currentTaskItem && props.canSwipe && endDrag()"
                     @pointercancel="currentTaskItem && props.canSwipe && endDrag()"
                     :title="props.canSwipe ? '' : 'Click Check-In to begin the swipe.'">
-                    <div class="memo-task-num" id="memo-num">{{ currentTaskOrder }}</div>
+                    <div class="memo-card-top">
+                        <div class="memo-task-num" id="memo-num">{{ currentTaskOrder }}</div>
+                        <span
+                            v-if="showMatchBadge"
+                            class="cognitive-badge"
+                            :class="`cognitive-badge--${currentTaskCognitiveTier}`"
+                        >{{ currentTaskCognitiveLabel }}</span>
+                    </div>
                     <span class="task-text" id="memo-text">
                         {{ currentTaskText }}
                     </span>
@@ -72,6 +93,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import {
+    getTaskCognitiveTier,
+    getTaskCognitiveLabel,
+    taskMatchesUserEnergy,
+} from '@/utils/energyMatching'
 
 const emit = defineEmits(['updateTaskState', 'noMoreTasks'])
 
@@ -83,7 +109,11 @@ const props = defineProps({
     canSwipe: {
         type: Boolean,
         default: false
-    }
+    },
+    userEnergyLevel: {
+        type: String,
+        default: null,
+    },
 })
 
 const currentTaskId = ref(null)
@@ -155,9 +185,29 @@ const currentTaskOrder = computed(() => {
         : '🥳'
 })
 
+const currentTaskCognitiveTier = computed(() =>
+    getTaskCognitiveTier(currentTaskItem.value ?? {}),
+)
+
+const currentTaskCognitiveLabel = computed(() =>
+    getTaskCognitiveLabel(currentTaskItem.value ?? {}),
+)
+
+const showMatchBadge = computed(() =>
+    taskMatchesUserEnergy(currentTaskItem.value ?? {}, props.userEnergyLevel),
+)
+
 const isDragging = ref(false)
 const startX = ref(0)
 const offsetX = ref(0)
+const swipeFeedbackVisible = ref(false)
+const swipeFeedbackFading = ref(false)
+// const swipeFeedbackSymbol = ref('')
+const swipeFeedbackIcon = ref('')
+
+const revealY = ref(0)
+const revealScale = ref(1)
+const revealOpacity = ref(1)
 
 const rotateY = computed(() => {
     return Math.max(-28, Math.min(28, offsetX.value / 8))
@@ -172,8 +222,13 @@ const cardStyle = computed(() => ({
         translateX(${offsetX.value}px)
         rotateY(${rotateY.value}deg)
         rotateZ(${rotateZ.value}deg)
+        translateY(${revealY.value}px)
+        scale(${revealScale.value})
     `,
-    transition: isDragging.value ? 'none' : 'transform 0.28s ease',
+    opacity: revealOpacity.value,
+    transition: isDragging.value
+        ? 'none'
+        : 'transform 0.28s ease, opacity 0.22s ease',
     boxShadow: `${Math.abs(offsetX.value) / 8}px 10px 24px rgba(0, 0, 0, 0.14)`,
     cursor: !currentTaskItem.value
         ? 'default'
@@ -227,22 +282,54 @@ function getNextValidTask(afterIndex) {
     return null
 }
 
+function revealNextCard() {
+    offsetX.value = 0
+
+    revealY.value = 10
+    revealScale.value = 0.97
+    revealOpacity.value = 0
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            revealY.value = 0
+            revealScale.value = 1
+            revealOpacity.value = 1
+        })
+    })
+}
+
 function swipeOut(direction) {
     if (!currentTaskItem.value) return
 
     const leavingIndex = currentTaskRealIndex.value
-    const leavingTaskId = currentTaskItem.value.id
     const nextTask = getNextValidTask(leavingIndex)
 
+    swipeFeedbackIcon.value = direction === 'right'
+        ? 'bi bi-skip-forward'
+        : 'bi bi-check2'
+    swipeFeedbackVisible.value = true
+    swipeFeedbackFading.value = false
+
     if (direction === 'right') {
+        offsetX.value = 420
         emit('updateTaskState', leavingIndex, 'skipped')
-        offsetX.value = 400
     } else if (direction === 'left') {
+        offsetX.value = -420
         emit('updateTaskState', leavingIndex, 'completed')
-        offsetX.value = -400
     }
 
     setTimeout(() => {
+        swipeFeedbackFading.value = true
+    }, 80)
+
+    setTimeout(() => {
+        swipeFeedbackVisible.value = false
+        swipeFeedbackFading.value = false
+    }, 500)
+
+    setTimeout(() => {
+        offsetX.value = 0
+
         if (nextTask) {
             currentTaskId.value = nextTask.id
 
@@ -251,14 +338,15 @@ function swipeOut(direction) {
             if (props.canSwipe && nextTask.status === 'pending') {
                 emit('updateTaskState', nextTaskIndex, 'doing')
             }
+
+            revealNextCard()
         } else {
             currentTaskId.value = null
             emit('noMoreTasks')
         }
 
-        offsetX.value = 0
         isDragging.value = false
-    }, 220)
+    }, 260)
 }
 </script>
 
@@ -275,7 +363,7 @@ function swipeOut(direction) {
     font-family: 'Lora', serif;
     font-size: 13px;
     font-weight: 700;
-    margin-bottom: 14px;
+    /* margin-bottom: 14px; */
     box-shadow: 0 3px 10px rgba(193, 113, 79, 0.3);
 }
 
@@ -324,12 +412,110 @@ function swipeOut(direction) {
     transition: transform 0.12s;
     background-image: repeating-linear-gradient(transparent, transparent 29px, rgba(193, 113, 79, 0.07) 29px, rgba(193, 113, 79, 0.07) 30px);
     background-position: 0 44px;
+    /* animation: memoFloatIn 0.28s ease both; */
+}
+
+/* @keyframes memoFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+} */
+
+.memo-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.memo-card--low {
+    border-color: #8ecfad;
+}
+
+.memo-card--normal {
+    border-color: #e8b86d;
+}
+
+.memo-card--high {
+    border-color: #e89a88;
+}
+
+.cognitive-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 2px solid transparent;
+}
+
+.swipe-feedback-chip {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.42s ease, transform 0.42s ease;
+}
+
+.swipe-feedback-chip--fade {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+}
+
+.swipe-feedback-chip i {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.cognitive-badge--low {
+    background: #e8f5ee;
+    color: #2d6b52;
+    border-color: #8ecfad;
+}
+
+.cognitive-badge--normal {
+    background: #fff4e6;
+    color: #9a5f20;
+    border-color: #e8b86d;
+}
+
+.cognitive-badge--high {
+    background: #fdeeed;
+    color: #9b3d28;
+    border-color: #e89a88;
 }
 
 .memo-swipe-hint {
     font-size: 12px;
     color: rgba(45, 31, 20, 0.28);
-    margin-top: 14px;
+    /* margin-top: 14px; */
     letter-spacing: 0.04em;
 }
 
@@ -407,7 +593,7 @@ function swipeOut(direction) {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px 0 32px;
+    padding: 40px 0 28px;
     perspective: 1000px;
     overflow: hidden;
     min-height: 240px;
@@ -485,6 +671,8 @@ function swipeOut(direction) {
     display: flex;
     justify-content: space-between;
     gap: 0px;
+    position: relative;
+    bottom: 2vh;
 }
 
 .hintBtn {

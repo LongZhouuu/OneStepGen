@@ -4,6 +4,8 @@ import HomeView from '../views/HomeView.vue'
 import {
   getStepByRouteName,
   getHighestUnlockedRouteName,
+  getWorkflowCurrentStep,
+  getStepById,
   syncWorkflowFromSession,
 } from './workflow'
 
@@ -112,10 +114,16 @@ router.beforeEach((to, from) => {
   const highestRouteName = getHighestUnlockedRouteName()
   const maxReachedStep = session.maxReachedStep ?? 1
 
-  // if entering workspace from outside, always resume the latest reached step
+  // if entering workflow from outside, resume the last viewed step,
+  //  but use maxReachedStep only to limit/unlock available steps
   if (!fromStep) {
-    if (to.name !== highestRouteName) {
-      return { name: highestRouteName, replace: true }
+    const savedCurrentStep = getWorkflowCurrentStep()
+    const safeStepId = Math.min(savedCurrentStep, maxReachedStep)
+
+    const resumeRouteName = getStepById(safeStepId)?.routeName ?? highestRouteName
+
+    if (to.name !== resumeRouteName) {
+      return { name: resumeRouteName, replace: true }
     }
 
     return true
