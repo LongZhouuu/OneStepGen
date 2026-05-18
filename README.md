@@ -1,6 +1,6 @@
 # OneStepGen — Smart Task Support for ADHD Workers
 
-A web app for ADHD workers in Australia who need support managing day-to-day workplace tasks: dump ideas, let AI break them into small steps, plan in a priority matrix, focus one task at a time, and celebrate progress with collectible rewards.
+A web app for ADHD workers in Australia who need support managing day-to-day workplace tasks: dump ideas, let AI break them into small steps, plan in a priority matrix, match tasks to your energy, focus one task at a time, and celebrate progress with collectible rewards.
 
 ---
 
@@ -8,7 +8,7 @@ A web app for ADHD workers in Australia who need support managing day-to-day wor
 
 Our target users are ADHD workers in Australia who experience difficulties managing day-to-day workplace tasks, particularly when dealing with unclear instructions, competing priorities, distractions, and overwhelming workloads. These challenges can affect their ability to start tasks, maintain focus, stay organised, and complete work confidently, which may negatively impact both work performance and emotional well-being.
 
-OneStepGen reduces overwhelm through a **guided four-step workflow**, **AI-assisted task breakdown**, and **in-session support tools** (breathing exercises, quiet-place finder, helplines). Session data stays in the browser (`localStorage`); nothing is stored on our servers by default.
+OneStepGen reduces overwhelm through a **guided four-step workflow**, **AI-assisted task breakdown**, **energy-aware planning**, and **in-session support tools** (breathing exercises, rainbow grounding, helplines, and a Melbourne focus map in the nav). Session data stays in the browser (`localStorage`); nothing is stored on our servers by default.
 
 ---
 
@@ -18,32 +18,47 @@ OneStepGen reduces overwhelm through a **guided four-step workflow**, **AI-assis
 
 | Step | Route | What it does |
 |------|--------|----------------|
-| 1. AI dump | `/workflow/ai-dump` | Paste text or upload a PDF; backend extracts 2–5 minute actionable steps with priorities |
-| 2. Planner | `/workflow/planner` | Review, add, edit, reorder tasks in an Eisenhower-style matrix; save up to 10 named histories |
-| 3. Focus (swiper) | `/workflow/swiper` | One-task-at-a-time UI with timer; complete or skip; optional focus lock |
+| 1. AI dump | `/workflow/ai-dump` | Paste text (voice input supported), upload a PDF, or open **Session History** to restore a saved plan; backend extracts 2–5 minute actionable steps with priorities and cognitive-load scores |
+| 2. Planner | `/workflow/planner` | Review, add, edit, and reorder tasks in an Eisenhower-style matrix; set your **current energy level** to highlight matching tasks; **save or update** up to 10 named histories |
+| 3. Focus (swiper) | `/workflow/swiper` | One-task-at-a-time UI with timer; complete or skip; contextual **tips** by mood; optional **focus lock** |
 | 4. Complete | `/workflow/complete` | Session summary and random Australian animal reward |
 
-Progress is tracked in `localStorage`; the router only allows access to steps you have already unlocked (or resume from the latest step).
+**Workflow progress** is stored in `localStorage`. You can only open steps you have already unlocked (`maxReachedStep`). When returning from outside the workflow, the app resumes your **last viewed step** (within unlocked steps), not always the furthest step reached.
+
+### Energy level matching
+
+- The AI rates each sub-task with `parent_task_cognitive_load` (1–5: low → high mental effort).
+- In **Planner** and **Focus**, choose **Low / Normal / High** energy to highlight tasks that fit how you feel right now (all tasks stay visible).
+- Logic lives in `src/utils/energyMatching.js`.
+
+### Session history
+
+- Save named task plans from **Planner** (max **10** entries in `localStorage` key `taskHistory`).
+- Open **Session History** on **AI Dump** to reload a saved plan into a new session.
+- Updating an existing history overwrites that entry; deleting removes it from the list.
 
 ### AI backend (`aiTool/`)
 
-- Text and PDF input → Groq (Llama 3) task extraction → semantic urgency/importance scoring
+- Text and PDF input → Groq (Llama 3) task extraction → semantic urgency/importance scoring → cognitive-load metadata
+- Supports multiple API keys (`GROQ_API_KEY_1`, `GROQ_API_KEY_2`, …) with rotation on rate limits
 - FastAPI for local dev; `lambda_handler.py` for AWS Lambda deployment
 - See [aiTool/README.md](aiTool/README.md) and [aiTool/FRONTEND_INTEGRATION.md](aiTool/FRONTEND_INTEGRATION.md) for API details
 
 ### Support & wellbeing
 
-- Floating support menu: box breathing, quiet places map (Melbourne focus data), helplines
-- About page with employment/disability and psychological distress visualisations
+- **Floating support button** (global): box breathing, rainbow grounding, helpful resources / helplines (`SupportModal` → `SupportMenu`)
+- **Focus map** (navbar, top right): Melbourne CBD quiet places and crowd data (`NavBar` → `QuietPlacesModal` → `QuietPlacesPanel`; uses City of Melbourne open data)
+- **Focus step tips**: mood-based workplace tips via `TipsPanel` and `src/data/tips.JS`
+- **About** page: employment/disability and psychological distress visualisations
 
 ### Rewards
 
-- Collect Australian animal cards after completing a session (`/reward`)
+- Collect Australian animal cards after completing a session; view the collection at `/reward`
 
-### Privacy
+### Privacy & access
 
 - Planning data stored locally in the browser
-- Optional site password gate (client-side or server-side via API)
+- Optional **site password gate**: **server** mode (recommended — HttpOnly cookie via API) or **client** mode (phrase baked into the build)
 - Privacy and terms pages: `/privacy`, `/terms`
 
 ---
@@ -54,9 +69,10 @@ Progress is tracked in `localStorage`; the router only allows access to steps yo
 |--------|----------------|
 | Frontend | Vue 3, Vue Router 5, Vite 8, Bootstrap 5 |
 | Maps / charts | Leaflet, ECharts, D3, TopoJSON |
+| Voice input | Web Speech API (`en-AU`) |
 | State | Browser `localStorage` (sessions, task history, rewards) |
 | Backend | Python 3.10+, FastAPI, Groq API (Llama 3) |
-| Deploy (optional) | AWS Lambda + API Gateway (see `aiTool/lambda_handler.py`) |
+| Deploy (optional) | AWS Lambda + API Gateway + static hosting (e.g. S3 + CloudFront) |
 
 **Node:** `^20.19.0` or `>=22.12.0` (see `package.json` `engines`)
 
@@ -64,7 +80,7 @@ Progress is tracked in `localStorage`; the router only allows access to steps yo
 
 ## How to Run
 
-### Frontend (root)
+### Frontend (repository root)
 
 ```bash
 git clone https://github.com/LongZhouuu/OneStepGen.git
@@ -86,15 +102,17 @@ npm run format   # prettier (src/)
 
 **Environment variables (frontend)**
 
-Create `.env.local` in the project root as needed:
+Create `.env.development` or `.env.local` in the **project root** (Vite loads both in dev):
 
 | Variable | Purpose |
 |----------|---------|
-| `VITE_API_BASE_URL` | Backend base URL. Dev: `/api` (proxied to `http://127.0.0.1:8000` via `vite.config.js`) |
+| `VITE_API_BASE_URL` | Backend base URL. **Local dev:** `/api` (proxied to `http://127.0.0.1:8000` via `vite.config.js`). **Production:** absolute API Gateway URL |
 | `VITE_SITE_GATE` | `server` \| `client` — password gate mode |
-| `VITE_SITE_ACCESS_PASSWORD` | Legacy client-only gate phrase (build-time) |
+| `VITE_SITE_ACCESS_PASSWORD` | Client-only gate phrase (build-time; only when `VITE_SITE_GATE=client`) |
 | `VITE_SKIP_SITE_GATE` | `true` to skip gate in development |
-| `VITE_MELBOURNE_ODATA_BASE` | Optional proxy path for Melbourne open data (quiet places) |
+| `VITE_MELBOURNE_ODATA_BASE` | Optional proxy path for Melbourne open data (quiet places), e.g. `/melbourne-ods-api/api/explore/v2.1/catalog/datasets` |
+
+> **Local CORS tip:** Do not point `VITE_API_BASE_URL` at `http://127.0.0.1:8000` unless your backend allows your dev origin. Use `/api` and the Vite proxy instead.
 
 ### AI backend (`aiTool/`)
 
@@ -103,13 +121,24 @@ cd aiTool
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env       # add GROQ_API_KEY
+cp .env.example .env       # if present; see below
+```
+
+In **`aiTool/.env`** (not the frontend env file), set at least:
+
+```env
+GROQ_API_KEY_1=your-groq-api-key
+```
+
+Optional: `GROQ_API_KEY_2`, … for rotation when rate-limited.
+
+```bash
 uvicorn main:app --reload
 ```
 
 API docs: `http://127.0.0.1:8000/docs`
 
-With the frontend on `/api` proxy, set `VITE_API_BASE_URL=/api` in `.env.local` and run both servers together for full AI dump functionality.
+**Full local stack:** run both servers; set `VITE_API_BASE_URL=/api` in the frontend env file and restart `npm run dev` after any env change.
 
 ---
 
@@ -117,17 +146,18 @@ With the frontend on `/api` proxy, set `VITE_API_BASE_URL=/api` in `.env.local` 
 
 ```
 OneStepGen/
-├── public/                 # Static assets, focus map CSVs, chart data
+├── public/                 # Static assets, focus map CSVs, chart data, animal images
 ├── src/
 │   ├── assets/             # Images, fonts, global CSS
-│   ├── components/         # UI pieces (TaskCard, timers, support panels, modals, …)
-│   ├── data/               # Animals, templates, tips, map sources
+│   ├── components/         # TaskCard, timers, support panels, modals, …
+│   ├── data/               # Animals, tips (Focus step), map sources
 │   ├── router/
 │   │   ├── index.js        # Routes + workflow step guards
 │   │   └── workflow.js     # Step state, session & history localStorage API
-│   ├── utils/              # Site access helpers
-│   ├── views/              # Pages (Home, workflow steps, About, Reward, …)
-│   │   └── tools/          # Standalone tool views (prioritizer, support, tips)
+│   ├── utils/
+│   │   ├── siteAccess.js   # Site password gate (client / server)
+│   │   └── energyMatching.js
+│   ├── views/              # Home, workflow (4 steps), About, Reward, Privacy, Terms
 │   ├── App.vue
 │   └── main.js
 ├── aiTool/                 # FastAPI AI pipeline
@@ -141,18 +171,31 @@ OneStepGen/
 └── package.json
 ```
 
-### Main routes
+### Routes & views
 
-| Path | View |
-|------|------|
-| `/` | Landing / how it works |
-| `/workflow/ai-dump` | Step 1 — input & AI processing |
-| `/workflow/planner` | Step 2 — task matrix |
-| `/workflow/swiper` | Step 3 — focus mode |
-| `/workflow/complete` | Step 4 — completion |
-| `/reward` | Animal collection |
-| `/about` | Project info & data viz |
-| `/privacy`, `/terms` | Legal pages |
+All user-facing pages are registered in `src/router/index.js`:
+
+| Path | Component |
+|------|-----------|
+| `/` | `HomeView.vue` |
+| `/workflow/ai-dump` | `AIDump.vue` — input, voice, PDF, session history |
+| `/workflow/planner` | `PlannerView.vue` — matrix, energy matching, save history |
+| `/workflow/swiper` | `TaskSwipper.vue` — focus mode, timer, mood tips |
+| `/workflow/complete` | `CompleteView.vue` — session completion |
+| `/reward` | `RewardView.vue` — animal collection |
+| `/about` | `AboutView.vue` — data visualisations |
+| `/privacy` | `PrivacyView.vue` |
+| `/terms` | `TermsView.vue` |
+
+Global UI (not separate routes): `NavBar` (includes **Focus map**), `SitePasswordGate`, `FloatingSupportButton` / `SupportModal`, workflow `BottomNav`.
+
+### localStorage keys (reference)
+
+| Key | Purpose |
+|-----|---------|
+| `onestep-current-session` | Active workflow session |
+| `taskHistory` | Up to 10 saved named plans |
+| `onestep-animal-collection` | Earned reward animals |
 
 ---
 
@@ -181,4 +224,4 @@ These challenges can affect their ability to start tasks, maintain focus, stay o
 - Deeper emotional support integrations
 - Progress reward visualisation enhancements
 - Focus awareness check-ins
-- Expanded workplace templates and export flows
+- End-to-end user data export / backup (optional; currently client-only storage)

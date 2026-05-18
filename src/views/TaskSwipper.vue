@@ -75,7 +75,6 @@
                     <TipsPanel @close="isTipsOpen = false" />
                 </section>
             </section>
-            <!-- <mockmockmock /> -->
         </div>
     </div>
 </template>
@@ -96,8 +95,6 @@ import {
     setFocusLockActive,
     getUserEnergyLevel,
 } from '../router/workflow'
-
-// import mockmockmock from '@/components/mockmockmock.vue'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
@@ -325,7 +322,6 @@ function updateTaskStatus(index, newStatus) {
     font-size: 1rem;
     font-weight: 700;
     flex-shrink: 0;
-    /* right: -3%; */
 }
 
 
@@ -435,9 +431,6 @@ function updateTaskStatus(index, newStatus) {
     transform-origin: top center;
 }
 
-/* .taskCardWrapper.expanded {
-    transform: scale(1.08);
-} */
 
 .status {
     /* margin-top: 40px; */

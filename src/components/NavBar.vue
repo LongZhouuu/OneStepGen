@@ -51,46 +51,8 @@ function closeQuietPlaces() {
             <RouterLink class="nav-link" :to="{ name: 'Planner' }">Workspace</RouterLink>
           </li>
 
-          <!-- Tools Dropdown
-          <li class="nav-item dropdown">
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              id="toolsDropdown"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              Tools
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-              <li>
-                <RouterLink class="dropdown-item" to="/tools/planner">Planner</RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/tools/prioritizer">
-                  Prioritizer <span class="nav-status">Coming soon</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/tools/support">
-                  Support <span class="nav-status">Coming soon</span>
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink class="dropdown-item" to="/tools/tips">Tips & Templates</RouterLink>
-              </li> -->
-              <!-- <li> -->
-                <!-- <RouterLink class="dropdown-item" to="/tools/planner/swipper">Swipe</RouterLink> -->
-              <!-- </li> -->
-            <!-- </ul>
-          </li> -->
-
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/reward">
-              Reward
-              <!-- <span class="nav-status">Coming soon</span> -->
-            </RouterLink>
+            <RouterLink class="nav-link" to="/reward">Reward</RouterLink>
           </li>
 
           <li class="nav-item">
@@ -183,43 +145,6 @@ function closeQuietPlaces() {
   outline-offset: 3px;
 }
 
-/* .dropdown-menu {
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  padding: 0.5rem 0;
-} */
-
-/* .dropdown-item {
-  font-size: 1.2rem;
-  padding: 0.5rem 1.5rem;
-  color: #333;
-} */
-
-.nav-status {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 3px 8px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #b46a2d;
-  background-color: #f8dabd;
-  /* border: 1px solid rgba(180, 106, 45, 0.18); */
-  border-radius: 10px;
-  line-height: 1.2;
-  vertical-align: middle;
-}
-
-/* .dropdown-item:hover {
-  background-color: rgba(239, 150, 66, 0.683);
-  color: #333;
-} */
-
 @media (max-width: 991px) {
   .navbar .container {
     padding-left: 12px;
@@ -242,9 +167,5 @@ function closeQuietPlaces() {
     text-align: center;
     margin: 6px 0;
   }
-  /* .nav-link, */
-  /* .dropdown-item {
-    font-size: 1rem;
-  } */
 }
 </style>
