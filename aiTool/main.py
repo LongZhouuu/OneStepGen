@@ -86,6 +86,9 @@ class OriginVerifyMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+
+# Outermost: verify CloudFront origin secret before other layers
+app.add_middleware(OriginVerifyMiddleware)
 # Allow cross-origin requests from any frontend
 app.add_middleware(
     CORSMiddleware,
@@ -94,8 +97,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Outermost: verify CloudFront origin secret before other layers
-app.add_middleware(OriginVerifyMiddleware)
 
 
 # ── Request / Response models ──────────────────────────────
