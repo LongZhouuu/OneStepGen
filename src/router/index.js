@@ -66,10 +66,16 @@ const router = createRouter({
   }
 })
 
+/**
+ * Workflow route guard:
+ * - Non-workflow routes: pass through.
+ * - No session: only step 1 (AIDump).
+ * - Entering from outside workflow: resume last viewed step (capped by maxReachedStep).
+ * - Inside workflow: any step id ≤ maxReachedStep; otherwise redirect to furthest unlocked.
+ */
 router.beforeEach((to, from) => {
   const targetStep = getStepByRouteName(to.name)
 
-  // nothing happend if not to workspace route
   if (!targetStep) return true
 
   const session = syncWorkflowFromSession()

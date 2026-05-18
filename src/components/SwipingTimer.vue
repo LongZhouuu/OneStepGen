@@ -323,6 +323,7 @@ async function startTimer() {
 
     isRunning.value = true
     emit('countingState', true)
+    // Locks bottom nav to Focus until timer stops (see workflow guardWorkflowStep).
     setFocusLockActive(true)
 
     timerId = setInterval(() => {
