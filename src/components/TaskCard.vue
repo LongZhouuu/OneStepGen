@@ -33,7 +33,7 @@
             </div>
         </div> -->
         <div class="task-board">
-            <div class="memo-card-wrapper" id="memo-wrapper" style="max-width: 82%;">
+            <div class="memo-card-wrapper" id="memo-wrapper">
                 <div
                     v-if="swipeFeedbackVisible"
                     class="swipe-feedback-chip"
@@ -73,20 +73,40 @@
         </div>
 
 
-        <div class="swipe-hints">
-            <button class="hintBtn completeHintBtn" @click="swipeByClick('left')"
-                :disabled="!currentTaskItem || isDragging || !props.canSwipe"
-                :title="props.canSwipe ? '' : 'Click Check-In to begin the task.'">
-                <p style="font-weight: bold;">Complete this task</p>
-                <p style="font-size: 11px;color: #eaeaea;;">or try hold and swipe to Left⬅️</p>
-            </button>
+        <div class="swipe-actions">
+            <p class="swipe-actions-label">Mark this task</p>
+            <div class="swipe-hints" role="group" aria-label="Complete or skip task">
+                <button
+                    type="button"
+                    class="hintBtn completeHintBtn"
+                    @click="swipeByClick('left')"
+                    :disabled="!currentTaskItem || isDragging || !props.canSwipe"
+                    :title="props.canSwipe ? '' : 'Tap Check-In on the timer below to start.'"
+                >
+                    <span class="hintBtn-icon" aria-hidden="true">✓</span>
+                    <span class="hintBtn-copy">
+                        <span class="hintBtn-title">Complete task</span>
+                        <span class="hintBtn-sub hintBtn-sub--desktop">or hold &amp; swipe left</span>
+                    </span>
+                </button>
 
-            <button class="hintBtn skipHintBtn" @click="swipeByClick('right')"
-                :disabled="!currentTaskItem || isDragging || !props.canSwipe"
-                :title="props.canSwipe ? '' : 'Click Check-In to begin the task.'">
-                <p style="font-weight: bold;">Skip this task</p>
-                <p style="font-size: 11px;color: #eaeaea;;">➡️or try hold and swipe to Right</p>
-            </button>
+                <button
+                    type="button"
+                    class="hintBtn skipHintBtn"
+                    @click="swipeByClick('right')"
+                    :disabled="!currentTaskItem || isDragging || !props.canSwipe"
+                    :title="props.canSwipe ? '' : 'Tap Check-In on the timer below to start.'"
+                >
+                    <span class="hintBtn-icon" aria-hidden="true">→</span>
+                    <span class="hintBtn-copy">
+                        <span class="hintBtn-title">Skip task</span>
+                        <span class="hintBtn-sub hintBtn-sub--desktop">or hold &amp; swipe right</span>
+                    </span>
+                </button>
+            </div>
+            <p v-if="!props.canSwipe" class="swipe-actions-locked">
+                Tap <strong>Check-In</strong> on the timer below to unlock these buttons.
+            </p>
         </div>
     </section>
 </template>
@@ -369,7 +389,8 @@ function swipeOut(direction) {
 
 .memo-card-wrapper {
     width: 100%;
-    margin: 0 0 14px;
+    max-width: 82%;
+    margin: 0 auto 14px;
 }
 
 .swipe-buttons {
@@ -667,36 +688,90 @@ function swipeOut(direction) {
     border-top: 24px solid rgba(255, 255, 255, 0.72);
 }
 
+.swipe-actions {
+    position: relative;
+    bottom: 2vh;
+    padding: 0 12px;
+}
+
+.swipe-actions-label {
+    display: none;
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #8b7a6a;
+}
+
+.swipe-actions-locked {
+    margin: 10px 0 0;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #8b7a6a;
+}
+
 .swipe-hints {
     display: flex;
     justify-content: space-between;
-    gap: 0px;
-    position: relative;
-    bottom: 2vh;
+    gap: 12px;
 }
 
 .hintBtn {
     border: none;
-    background: #ffcf5a;
-    padding: 8px 8px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 12px;
     font-size: 1rem;
-    color: rgb(255, 255, 255);
+    color: #fff;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
+    gap: 10px;
     min-width: 160px;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin: 0;
+    flex: 1;
+    min-height: 52px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.hintBtn p {
-    margin: 0;
-    font-weight: normal;
+.hintBtn-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.hintBtn-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
+}
+
+.hintBtn-title {
+    font-size: 0.98rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.hintBtn-sub {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.9;
+    line-height: 1.25;
 }
 
 .skipHintBtn {
@@ -706,6 +781,10 @@ function swipeOut(direction) {
 
 .completeHintBtn {
     background: #61b99f;
+}
+
+.skipHintBtn .hintBtn-icon {
+    font-size: 1.25rem;
 }
 
 .hintBtn:hover:not(:disabled) {
@@ -725,5 +804,72 @@ function swipeOut(direction) {
 .task-note.disabled {
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+@media (max-width: 767px) {
+    .planner-card {
+        left: 0;
+    }
+
+    .memo-card-wrapper {
+        max-width: 100%;
+    }
+
+    .task-board {
+        padding: 20px 12px 16px;
+        min-height: 200px;
+    }
+
+    .memo-swipe-hint {
+        text-align: center;
+    }
+
+    .swipe-actions {
+        bottom: 0;
+        padding: 0 4px 12px;
+    }
+
+    .swipe-actions-label {
+        display: block;
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    .swipe-hints {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hintBtn {
+        width: 100%;
+        min-width: 0;
+        min-height: 54px;
+        padding: 12px 14px;
+        border-radius: 14px;
+    }
+
+    .hintBtn-sub--desktop {
+        display: none;
+    }
+
+    .hintBtn-title {
+        font-size: 1.05rem;
+    }
+
+    .hintBtn-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+
+    .swipe-actions-locked {
+        font-size: 12.5px;
+        padding: 0 4px;
+    }
+
+    .task-note {
+        width: min(230px, 100%);
+        max-width: 100%;
+    }
 }
 </style>

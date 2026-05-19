@@ -543,5 +543,23 @@ function handleContinueWithSkipped() {
     .meta-row {
         align-items: center;
     }
+
+    .two-line-buttons,
+    .three-buttons {
+        grid-template-columns: 1fr;
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .three-buttons .btn:first-child {
+        grid-column: 1;
+        width: 100%;
+        max-width: none;
+    }
+
+    .three-buttons .btn,
+    .button-row .btn {
+        width: 100%;
+    }
 }
 </style>

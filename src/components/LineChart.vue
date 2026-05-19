@@ -175,4 +175,14 @@ onBeforeUnmount(() => {
     line-height: 1;
     text-align: center;
 }
+
+@media (max-width: 767px) {
+    .chart-page {
+        padding: 4px 12px;
+    }
+
+    .chart-box {
+        height: 220px;
+    }
+}
 </style>

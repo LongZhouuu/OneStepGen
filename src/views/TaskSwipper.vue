@@ -331,6 +331,28 @@ function updateTaskStatus(index, newStatus) {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 } */
 
+@media (max-width: 767px) {
+    .page {
+        padding: 80px 12px 24px;
+    }
+
+    .phone-frame {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        max-width: 520px;
+    }
+
+    .taskCardWrapper,
+    .status {
+        max-width: 100%;
+    }
+
+    .status {
+        right: 0;
+        position: relative;
+    }
+}
+
 @media (max-width: 420px) {
     .tabs {
         gap: 22px;

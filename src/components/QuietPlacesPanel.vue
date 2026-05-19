@@ -1351,4 +1351,48 @@ h2 {
     flex-direction: column;
   }
 }
+
+@media (max-width: 767px) {
+  .location-actions {
+    align-items: stretch;
+  }
+
+  .search-row {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  h2 {
+    font-size: 22px;
+  }
+
+  .locate-btn,
+  .search-btn {
+    min-width: 0;
+  }
+
+  .locate-btn {
+    width: 100%;
+  }
+
+  .sort-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .selected-place-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .directions-btn {
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
 </style>

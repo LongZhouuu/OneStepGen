@@ -474,4 +474,18 @@ function cancelDelete() {
 .shm-btn-danger:hover {
   background: #a93226;
 }
+
+@media (max-width: 480px) {
+  .shm-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .shm-card {
+    max-width: 100%;
+    max-height: min(88dvh, 520px);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
 </style>

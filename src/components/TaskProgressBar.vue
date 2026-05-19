@@ -107,4 +107,20 @@ const progressPercent = computed(() => {
   border-radius: 999px;
   transition: width 0.35s ease;
 }
+
+@media (max-width: 767px) {
+  .progressCard {
+    width: 100%;
+    left: 0;
+  }
+
+  .progressHeader {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .progressHeader h3 {
+    font-size: 16px;
+  }
+}
 </style>

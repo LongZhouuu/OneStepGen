@@ -1,12 +1,15 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, watch, onUnmounted } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import QuietPlacesModal from './QuietPlacesModal.vue'
 
 const quietPlacesOpen = ref(false)
 const focusMapBtnRef = ref(null)
+const navOpen = ref(false)
+const route = useRoute()
 
 function openQuietPlaces() {
+  closeNav()
   quietPlacesOpen.value = true
 }
 
@@ -16,6 +19,29 @@ function closeQuietPlaces() {
     focusMapBtnRef.value?.focus()
   })
 }
+
+function toggleNav() {
+  navOpen.value = !navOpen.value
+}
+
+function closeNav() {
+  navOpen.value = false
+}
+
+watch(
+  () => route.path,
+  () => {
+    closeNav()
+  },
+)
+
+watch(navOpen, (open) => {
+  document.body.classList.toggle('navbar-menu-open', open)
+})
+
+onUnmounted(() => {
+  document.body.classList.remove('navbar-menu-open')
+})
 </script>
 
 <template>
@@ -31,32 +57,42 @@ function closeQuietPlaces() {
       <button
         class="navbar-toggler"
         type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
         aria-controls="navbarNav"
-        aria-expanded="false"
+        :aria-expanded="navOpen"
         aria-label="Toggle navigation"
+        @click="toggleNav"
       >
         <span class="navbar-toggler-icon"></span>
       </button>
 
+      <div
+        v-if="navOpen"
+        class="navbar-backdrop"
+        aria-hidden="true"
+        @click="closeNav"
+      />
+
       <!-- Nav Links -->
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <div
+        class="collapse navbar-collapse justify-content-end"
+        :class="{ show: navOpen }"
+        id="navbarNav"
+      >
         <ul class="navbar-nav align-items-center">
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/">Home</RouterLink>
+            <RouterLink class="nav-link" to="/" @click="closeNav">Home</RouterLink>
           </li>
 
           <li class="nav-item">
-            <RouterLink class="nav-link" :to="{ name: 'Planner' }">Workspace</RouterLink>
+            <RouterLink class="nav-link" :to="{ name: 'Planner' }" @click="closeNav">Workspace</RouterLink>
           </li>
 
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/reward">Reward</RouterLink>
+            <RouterLink class="nav-link" to="/reward" @click="closeNav">Reward</RouterLink>
           </li>
 
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/about">About us</RouterLink>
+            <RouterLink class="nav-link" to="/about" @click="closeNav">About us</RouterLink>
           </li>
 
           <li class="nav-item nav-item--focus-map">
@@ -145,16 +181,39 @@ function closeQuietPlaces() {
   outline-offset: 3px;
 }
 
+.navbar-backdrop {
+  display: none;
+}
+
+:global(body.navbar-menu-open) {
+  overflow: hidden;
+}
+
 @media (max-width: 991px) {
+  .navbar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 997;
+    background: rgba(30, 22, 16, 0.35);
+  }
+
   .navbar .container {
     padding-left: 12px;
     padding-right: 12px;
   }
+
   .navbar-collapse {
+    position: relative;
+    z-index: 999;
     margin-top: 10px;
     padding: 10px 12px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.9);
+  }
+
+  .navbar-collapse:not(.show) {
+    display: none;
   }
   .navbar-nav {
     width: 100%;

@@ -149,6 +149,25 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .quiet-places-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .quiet-places-modal {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: 48px 14px 20px;
+  }
+
+  .btn-close {
+    top: 12px;
+    right: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .quiet-places-overlay,
   .quiet-places-modal,
