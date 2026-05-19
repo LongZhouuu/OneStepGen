@@ -519,4 +519,38 @@ onBeforeUnmount(() => {
     width: 30px;
     height: 30px;
 }
+
+@media (max-width: 767px) {
+    .timerCard {
+        padding: 0 12px;
+    }
+
+    .timerText,
+    .timerInput {
+        font-size: 3rem;
+    }
+
+    .timerColon {
+        font-size: 2.4rem;
+    }
+
+    .timerSubLabel {
+        font-size: 0.78rem;
+        letter-spacing: 0.5px;
+        padding: 0 4px;
+        line-height: 1.4;
+    }
+
+    .timerButtonGroup {
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
+        padding: 0 4px 8px;
+    }
+
+    .timerButton {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+}
 </style>

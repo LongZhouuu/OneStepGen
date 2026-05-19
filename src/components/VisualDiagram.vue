@@ -369,6 +369,16 @@ onBeforeUnmount(() => {
     text-align: center;
 }
 
+@media (max-width: 767px) {
+    .chart-page {
+        padding: 4px 12px;
+    }
+
+    .chart-box {
+        height: 280px;
+    }
+}
+
 .custom-control {
     width: 44px;
     opacity: 1;

@@ -1634,8 +1634,66 @@ export default {
   word-break: break-word;
 }
 
+@media (max-width: 767px) {
+  .planner-page {
+    padding: 80px 12px 100px;
+  }
+
+  .panel-header-band {
+    padding: 16px;
+  }
+
+  .panel-card {
+    padding: 20px 16px 24px;
+  }
+
+  .task-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-header-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .task-empty-hint {
+    white-space: normal;
+  }
+
+  .energy-option {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .eisen-label {
+    flex-wrap: wrap;
+  }
+
+  .eisen-hint {
+    flex-basis: 100%;
+    margin-left: 16px;
+  }
+
+  .task-item {
+    flex-wrap: wrap;
+    white-space: normal;
+    row-gap: 8px;
+  }
+
+  .task-text {
+    white-space: normal;
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .task-actions {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 520px) {
-  .planner-page { padding: 90px 16px 40px; }
+  .planner-page { padding: 80px 16px 100px; }
   .panel-card   { padding: 24px 18px 24px; }
   .modal-card   { padding: 24px 18px; }
 }

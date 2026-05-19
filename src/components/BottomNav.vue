@@ -265,7 +265,7 @@ function goToStep(step) {
 
 @media (max-width: 640px) {
   .bottomNav {
-    padding: 10px 4px 12px;
+    padding: 10px 4px max(12px, env(safe-area-inset-bottom));
   }
 
   .stepItem {

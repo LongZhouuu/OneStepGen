@@ -33,7 +33,7 @@
             </div>
         </div> -->
         <div class="task-board">
-            <div class="memo-card-wrapper" id="memo-wrapper" style="max-width: 82%;">
+            <div class="memo-card-wrapper" id="memo-wrapper">
                 <div
                     v-if="swipeFeedbackVisible"
                     class="swipe-feedback-chip"
@@ -369,7 +369,8 @@ function swipeOut(direction) {
 
 .memo-card-wrapper {
     width: 100%;
-    margin: 0 0 14px;
+    max-width: 82%;
+    margin: 0 auto 14px;
 }
 
 .swipe-buttons {
@@ -725,5 +726,42 @@ function swipeOut(direction) {
 .task-note.disabled {
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+@media (max-width: 767px) {
+    .planner-card {
+        left: 0;
+    }
+
+    .memo-card-wrapper {
+        max-width: 100%;
+    }
+
+    .task-board {
+        padding: 20px 12px 16px;
+        min-height: 200px;
+    }
+
+    .swipe-hints {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        bottom: 0;
+        padding: 0 8px 8px;
+    }
+
+    .hintBtn {
+        min-width: 0;
+        flex: 1 1 calc(50% - 8px);
+        margin-left: 0;
+        margin-right: 0;
+        font-size: 0.92rem;
+        padding: 8px 6px;
+    }
+
+    .task-note {
+        width: min(230px, 100%);
+        max-width: 100%;
+    }
 }
 </style>

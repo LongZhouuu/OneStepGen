@@ -1028,7 +1028,7 @@ function enterWorkspace() {
   }
 
   .flow-timeline::before {
-    left: 28px;
+    left: 27px;
     transform: none;
   }
 
@@ -1036,17 +1036,22 @@ function enterWorkspace() {
     grid-template-columns: 56px 1fr;
     gap: 18px;
     min-height: 0;
+    align-items: start;
   }
 
   .flow-num {
     position: static;
     transform: none;
     grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    align-self: start;
   }
 
   .flow-row--left .flow-text,
   .flow-row--right .flow-text {
     grid-column: 2;
+    grid-row: 1;
     text-align: left;
     padding: 0;
     justify-self: stretch;
@@ -1056,6 +1061,12 @@ function enterWorkspace() {
   .flow-row--left .flow-pill,
   .flow-row--right .flow-pill {
     align-self: flex-start;
+  }
+
+  .flow-row:hover .flow-num,
+  .flow-row:hover .flow-text,
+  .flow-row:hover .flow-pill {
+    transform: none;
   }
 
   .privacy-card {
@@ -1192,6 +1203,14 @@ function enterWorkspace() {
 
   .pain-card span {
     font-size: 15px;
+  }
+
+  .flow-timeline::before {
+    left: 23px;
+  }
+
+  .flow-row {
+    grid-template-columns: 48px 1fr;
   }
 
   .flow-num {

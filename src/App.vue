@@ -131,4 +131,10 @@ body {
 .workflow-main {
   padding-bottom: 120px;
 }
+
+@media (max-width: 767px) {
+  .workflow-main {
+    padding-bottom: max(108px, calc(80px + env(safe-area-inset-bottom, 0px)));
+  }
+}
 </style>

@@ -262,4 +262,15 @@ function confirm() {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .shnm-overlay {
+    padding: 12px;
+  }
+
+  .shnm-card {
+    width: 100%;
+    max-width: 100%;
+  }
+}
 </style>
