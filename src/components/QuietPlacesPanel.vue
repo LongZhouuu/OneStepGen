@@ -202,6 +202,7 @@
 </template>
 
 <script setup>
+/** Interactive Melbourne CBD map of focus spots with live pedestrian crowd estimates. */
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'

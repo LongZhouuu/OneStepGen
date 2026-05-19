@@ -205,6 +205,7 @@
 </template>
 
 <script setup>
+// Marketing landing page that introduces the workflow and starts a new session.
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
 import HeroSection from '@/components/HeroSection.vue'
@@ -225,6 +226,7 @@ function scrollToTop() {
 
 let flowObserver = null
 
+// Reveals flow timeline items when they enter the viewport.
 function setupFlowReveal() {
   if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
 
@@ -263,6 +265,7 @@ onUnmounted(() => {
 
 const router = useRouter()
 
+// Smooth-scrolls to an in-page section below the fixed nav.
 function scrollToSection(id) {
   const el = document.getElementById(id)
   if (!el) return
@@ -276,6 +279,7 @@ function scrollToSection(id) {
   })
 }
 
+// Resets workflow state and opens step 1 of the workspace.
 function enterWorkspace() {
   startWorkflow()
   router.push({ name: 'AIDump' })

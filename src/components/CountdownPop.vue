@@ -15,7 +15,9 @@
     </div>
 </template>
 
-<script setup></script>
+<script setup>
+/** Full-screen overlay shown when a focus-session break timer ends. */
+</script>
 
 <style scoped>
 .overlay {

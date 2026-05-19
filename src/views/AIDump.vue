@@ -1,6 +1,8 @@
 <template>
+  <!-- Workflow step 1: idea dump and AI task generation -->
   <div class="workflow-page">
     <div class="workspace-panel active" id="panel-1">
+      <!-- Panel header -->
       <div class="panel-header-band band-1">
         <div class="phb-icon" aria-hidden="true">
           <!-- local inline icon to avoid global sprite dependency -->
@@ -15,6 +17,7 @@
         </div>
       </div>
  
+      <!-- Main panel: input or AI processing states -->
       <div class="panel-card panel-card-1">
         <!-- Input view -->
         <div v-if="view === 'input'" id="dump-input-view">
@@ -145,6 +148,7 @@
 </template>
  
 <script>
+// Workflow step 1: capture text or PDF input and request AI-generated tasks.
 import {
   guardWorkflowStep,
   unlockStep,
@@ -267,6 +271,7 @@ export default {
       this.view         = 'input'
       this.errorMessage = ''
     },
+    // Advances to the planner after tasks are ready.
     reviewYourTasks() {
       unlockStep(2)
       setWorkflowCurrentStep(2)
@@ -274,6 +279,7 @@ export default {
     },
 
     // ── Real backend call ─────────────────────────────────────────────────────
+    // Posts text or PDF to the API and maps the task list response.
     async _callBackend(inputType, sessionId) {
       if (!API_BASE) {
         throw new Error(
@@ -362,6 +368,7 @@ export default {
     },
 
     // ── Main flow ─────────────────────────────────────────────────────────────
+    // Orchestrates session creation, API call, and result or error UI.
     async createTasks() {
       const hasPdf  = this.uploadedFile !== null || this.uploadedFileMeta !== null
       const hasText = (this.inputText ?? '').trim().length > 0

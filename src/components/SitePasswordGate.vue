@@ -49,6 +49,7 @@
 </template>
 
 <script setup>
+/** Full-screen gate that verifies site access before the app loads. */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   grantSiteAccess,
@@ -76,6 +77,7 @@ onUnmounted(() => {
   document.body.classList.remove('site-gate-open')
 })
 
+/** Verifies the access phrase via server or client rules and unlocks on success. */
 async function onSubmit() {
   if (misconfigured.value) return
   showError.value = false

@@ -102,6 +102,7 @@
 </template>
 
 <script setup>
+/** Rainbow grounding exercise with color prompts and optional voice input. */
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { Popover } from 'bootstrap'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'

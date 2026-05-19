@@ -100,6 +100,7 @@
 </template>
 
 <script setup>
+/** Modal to browse, expand, delete, and restore saved task sessions. */
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTaskHistory, deleteHistoryItem, loadSessionFromHistory } from '@/router/workflow'
@@ -175,6 +176,7 @@ function useHistorySession(item) {
   router.push({ name: 'TaskSwipper' })
 }
 
+/** Permanently removes the pending history entry and refreshes the list. */
 function confirmDelete() {
   if (!pendingDelete.value) return
   const deletedId = pendingDelete.value.id

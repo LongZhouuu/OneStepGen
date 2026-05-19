@@ -63,6 +63,7 @@
 </template>
 
 <script setup>
+/** Focus-session countdown timer with check-in, pause, and completion alerts. */
 import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
 import CountdownPop from './CountdownPop.vue'
 import VoiceInputButton from './VoiceInputButton.vue'
@@ -174,6 +175,7 @@ function updateCurrentTime() {
     currentSec.value = String(sec).padStart(2, '0')
 }
 
+/** Clears the interval, ends focus lock, and notifies the parent. */
 function stopTimer() {
     if (timerId) {
         clearInterval(timerId)
@@ -289,6 +291,7 @@ function handleBlur() {
     }, 0)
 }
 
+/** Validates and persists manually edited timer minutes and seconds. */
 function finishEdit() {
     const minText = editMin.value.padStart(2, '0')
     const secText = editSec.value.padStart(2, '0')
@@ -314,6 +317,7 @@ function finishEdit() {
     isEditing.value = false
 }
 
+/** Starts the countdown, enables focus lock, and arms finish alerts. */
 async function startTimer() {
     if (isAllTasksFinished.value) return
 
@@ -367,6 +371,7 @@ function handlePopupClose() {
     startTimer()
 }
 
+/** Stops the timer from a parent and marks the session finished when requested. */
 function pauseFromParent(hasNoRemainingTasks = false) {
     stopTimer()
 

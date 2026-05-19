@@ -28,6 +28,7 @@
 </template>
 
 <script setup>
+/** Microphone control that captures speech and emits the recognized transcript. */
 import { computed, ref } from 'vue'
 
 const props = defineProps({

@@ -1,4 +1,5 @@
 <template>
+  <!-- Reward collection page: stats, map, and workspace entry -->
   <div class="reward-page">
     <div class="reward-main">
     <!-- HEADER -->
@@ -126,6 +127,7 @@
 </template>
 
 <script setup>
+// Displays unlocked animals, collection stats, and the reward map.
 import { computed, ref, onMounted, onActivated, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import RewardMap from '@/components/RewardMap.vue'
@@ -143,6 +145,7 @@ const mapRefreshKey = ref(0)
 
 const totalAnimals = ANIMALS.length
 
+// Refreshes reward data and remounts the map when storage changes.
 function syncRewardsFromStorage() {
   rewards.value = getRewards()
   mapRefreshKey.value += 1
@@ -185,6 +188,7 @@ onUnmounted(() => {
   window.removeEventListener(REWARDS_UPDATED_EVENT, syncRewardsFromStorage)
 })
 
+// Starts a new workflow session from the rewards page.
 function enterWorkspace() {
   startWorkflow()
   router.push({ name: 'AIDump' })

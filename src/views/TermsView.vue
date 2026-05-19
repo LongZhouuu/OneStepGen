@@ -1,3 +1,4 @@
+<!-- Static terms of use page for legal and usage guidelines. -->
 <template>
   <div class="page-container terms-page">
     <RouterLink :to="{ name: 'Home' }" class="back-btn">
@@ -95,6 +96,7 @@
 </template>
 
 <script setup>
+// Terms page: routing and layout only; content is defined in the template.
 import { RouterLink } from 'vue-router'
 </script>
 

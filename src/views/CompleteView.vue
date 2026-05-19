@@ -1,4 +1,5 @@
 <template>
+    <!-- Workflow step 4: session summary, reward, and next actions -->
     <div class="complete-page">
         <section class="complete-card">
             <!-- Header -->
@@ -61,6 +62,7 @@
                 </h2>
 
 
+                <!-- Post-session navigation -->
                 <div
                     class="button-row"
                     :class="{
@@ -107,6 +109,7 @@
 </template>
 
 <script setup>
+// Workflow step 4: show session results, award animals, and offer next steps.
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -235,12 +238,14 @@ function handleJumpToRewards() {
     router.push('/reward')
 }
 
+// Clears the session and restarts the workflow at step 1.
 function handleStartNewSession() {
     clearCurrentSession()
     resetWorkflow()
     router.push({ name: 'AIDump' })
 }
 
+// Returns to the planner to work through skipped tasks.
 function handleContinueWithSkipped() {
     resetWorkflow()
     unlockStep(2)

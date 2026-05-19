@@ -1,4 +1,5 @@
 <template>
+  <!-- About page: ADHD context, research data, and product rationale -->
   <main class="about-page">
     <!-- HERO -->
     <section class="hero-section section-block">
@@ -125,6 +126,40 @@
           </article>
         </div>
 
+        <!-- DEVELOPERS -->
+        <div v-if="activeTab === 'developers'" class="tab-panel">
+          <h2 class="team-heading">Meet the team</h2>
+
+          <article class="statement-card">
+            <p>
+              OneStepGen was built by five Monash University students combining AI engineering,
+              front-end development, data science, and cloud deployment.
+            </p>
+          </article>
+
+          <div class="developer-grid">
+            <article
+              v-for="developer in developers"
+              :key="developer.name"
+              class="flip-card developer-flip-card"
+            >
+              <div class="flip-card-inner">
+                <div class="flip-card-face flip-card-front developer-card-front">
+                  <h3>{{ developer.name }}</h3>
+                </div>
+
+                <div class="flip-card-face flip-card-back developer-card-back">
+                  <p class="developer-meta"><strong>Major:</strong> {{ developer.major }}</p>
+                  <p class="developer-meta"><strong>Role:</strong> {{ developer.role }}</p>
+                  <p class="developer-meta developer-responsibilities">
+                    <strong>Responsibilities:</strong> {{ developer.responsibilities }}
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
         <!-- ADHD KNOWLEDGE -->
         <div v-if="activeTab === 'knowledge'" class="tab-panel">
           <p class="section-label">ADHD KNOWLEDGE</p>
@@ -188,6 +223,7 @@
 </template>
 
 <script setup>
+// Tabbed about page with ADHD workplace research and statistics.
 import { ref } from 'vue'
 import VisualDiagram from '@/components/VisualDiagram.vue'
 import LineChart from '@/components/LineChart.vue'
@@ -210,7 +246,45 @@ const tabs = [
   {
     id: 'knowledge',
     label: 'ADHD Knowledge'
+  },
+  {
+    id: 'developers',
+    label: 'Developers'
   }
+]
+
+const developers = [
+  {
+    name: 'Arya Sreevalsan',
+    major: 'MCS',
+    role: 'Developer and Tester',
+    responsibilities:
+      'Data science (focus map), AWS deployment, cyber security analyst.',
+  },
+  {
+    name: 'Vishal Suresh',
+    major: 'MAI',
+    role: 'Developer and Tester',
+    responsibilities: 'AI engineer.',
+  },
+  {
+    name: 'Yung-En Chiang',
+    major: 'MBIS',
+    role: 'Developer and Tester',
+    responsibilities: 'Front-end UI/UX and development, AWS deployment.',
+  },
+  {
+    name: 'Tianrui Xie',
+    major: 'MIT',
+    role: 'Developer and Tester',
+    responsibilities: 'Front-end UI/UX and development.',
+  },
+  {
+    name: 'Zhou Long',
+    major: 'MIT',
+    role: 'Developer and Tester',
+    responsibilities: 'Front-end UI/UX and development, GitHub coordinator.',
+  },
 ]
 
 const challenges = [
@@ -470,6 +544,128 @@ const reasons = [
 
 .challenge-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.developer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.developer-flip-card {
+  min-height: 180px;
+}
+
+.developer-flip-card .flip-card-inner {
+  min-height: 180px;
+}
+
+.developer-card-front {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(255, 250, 244, 0.92);
+}
+
+.developer-card-front h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.developer-card-back {
+  gap: 10px;
+  padding: 1.25rem;
+}
+
+.developer-meta {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #5f3b28;
+}
+
+.developer-meta strong {
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.developer-responsibilities {
+  margin-top: 4px;
+}
+
+.team-heading {
+  margin: 0 0 28px;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  line-height: 1.15;
+}
+
+/* Laptop / desktop: balanced 3+2 team card layout */
+@media (min-width: 721px) {
+  .tab-header {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .tab-button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 14px 12px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .developer-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 28px;
+  }
+
+  .developer-flip-card {
+    grid-column: span 2;
+    min-height: 200px;
+  }
+
+  .developer-flip-card .flip-card-inner {
+    min-height: 200px;
+  }
+
+  .developer-flip-card:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+
+  .developer-flip-card:nth-child(5) {
+    grid-column: 4 / span 2;
+  }
+
+  .developer-card-front h3 {
+    font-size: 1.12rem;
+    padding: 0 12px;
+  }
+
+  .developer-card-back {
+    padding: 1.5rem 1.35rem;
+  }
+
+  .developer-meta {
+    font-size: 0.92rem;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 959px) {
+  .developer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .developer-flip-card,
+  .developer-flip-card:nth-child(4),
+  .developer-flip-card:nth-child(5) {
+    grid-column: auto;
+  }
 }
 
 .stat-grid {
@@ -788,8 +984,25 @@ const reasons = [
     font-size: 0.76rem;
   }
 
-  .challenge-grid {
+  .challenge-grid,
+  .developer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .developer-flip-card,
+  .developer-flip-card:nth-child(4),
+  .developer-flip-card:nth-child(5) {
+    grid-column: auto;
+  }
+
+  .developer-flip-card,
+  .developer-flip-card .flip-card-inner {
+    min-height: 170px;
+  }
+
+  .team-heading {
+    font-size: 1.65rem;
+    margin-bottom: 20px;
   }
 
   .flip-card,

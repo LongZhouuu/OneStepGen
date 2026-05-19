@@ -1,5 +1,7 @@
 /** @typedef {'low' | 'normal' | 'high'} CognitiveTier */
 
+// Map AI cognitive load and user energy picks to shared low/normal/high tiers.
+
 export const COGNITIVE_TIERS = [
   { id: 'low', label: 'Low energy', short: 'Low' },
   { id: 'normal', label: 'Normal', short: 'Normal' },

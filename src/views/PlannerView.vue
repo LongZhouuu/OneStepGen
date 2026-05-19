@@ -1,6 +1,8 @@
 <template>
+  <!-- Workflow step 2: review, edit, and order tasks before focus mode -->
   <div class="planner-page">
     <div class="workspace-panel" id="panel-2">
+      <!-- Panel header -->
       <div class="panel-header-band band-2">
         <div class="phb-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -43,6 +45,7 @@
           </div>
         </div>
 
+        <!-- Energy level selector for cognitive-load matching -->
         <section class="energy-panel" aria-label="Your current energy">
           <div class="energy-panel-label-row">
             <p class="energy-panel-label">How is your energy right now?</p>
@@ -338,6 +341,7 @@
 </template>
 
 <script>
+// Workflow step 2: edit, reorder, and save tasks before focus mode.
 import draggable from 'vuedraggable'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
 import SaveHistoryNameModal from '@/components/SaveHistoryNameModal.vue'
@@ -625,6 +629,7 @@ export default {
     },
 
     // ── Add ───────────────────────────────────────────────────────────────────
+    // Adds a manually entered task into the current priority group.
     addTask() {
       const text = this._sanitizeTaskText(this.newTaskText ?? '').trim()
       if (!text) return
@@ -662,6 +667,7 @@ export default {
     },
 
     // ── Drag ──────────────────────────────────────────────────────────────────
+    // Persists new order and priority group after drag-and-drop.
     onDragEnd() {
       // Rebuild ordered array from four group arrays
       // Update priorityGroup to match the group the task was dropped into
@@ -718,6 +724,7 @@ export default {
     },
 
     // ── Start Focus Mode ──────────────────────────────────────────────────────
+    // Resets doing tasks and navigates to the focus swiper step.
     startFocusMode() {
       if (this.activeTasks.length === 0) return
 
@@ -781,6 +788,7 @@ export default {
       this.showHistoryNameModal = true
     },
 
+    // Saves or updates the current session in named history.
     onConfirmHistoryName(name) {
       const trimmed = String(name ?? '').trim()
       if (!trimmed) return

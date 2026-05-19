@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+/** Fixed bottom bar for workflow step navigation and unlock rules. */
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -64,6 +65,7 @@ watch(
 
 const maxReachedStep = computed(() => workflowState.value)
 
+/** Returns whether a step is locked by progress or active focus mode. */
 function isStepLocked(step) {
   const isNotUnlockedYet = step.id > maxReachedStep.value
   // While Swiper timer runs, Dump/Plan stay disabled so users finish the focus block.
@@ -97,6 +99,7 @@ function isConnectorDone(stepId) {
   return stepId < currentStep.value?.id
 }
 
+/** Navigates to a workflow step when it is unlocked. */
 function goToStep(step) {
   if (isStepLocked(step)) return
   if (step.routeName === route.name) return

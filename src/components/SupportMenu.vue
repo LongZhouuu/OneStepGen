@@ -68,6 +68,7 @@
 </template>
 
 <script setup>
+/** Landing menu inside the support modal for choosing a wellness tool. */
 import supportIconUrl from '@/assets/support-icon.png'
 
 defineEmits(['goBox', 'goRainbow', 'goHelpline'])

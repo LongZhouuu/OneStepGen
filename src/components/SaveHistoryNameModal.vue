@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+/** Modal to name and confirm saving the current plan to session history. */
 import { computed, ref, watch } from 'vue'
 
 const HISTORY_NAME_MAX_CHARS = 30
@@ -76,6 +77,7 @@ const historyNameMaxChars = HISTORY_NAME_MAX_CHARS
 
 const nameCharCount = computed(() => (localName.value ?? '').length)
 
+/** Strips disallowed characters and enforces the maximum name length. */
 function sanitizeHistoryName(raw) {
   const s = String(raw ?? '')
   const cleaned = s.replace(HISTORY_NAME_DISALLOWED, '')
@@ -120,6 +122,7 @@ function close() {
   emit('update:modelValue', false)
 }
 
+/** Emits the sanitized, non-empty history name to the parent. */
 function confirm() {
   const name = sanitizeHistoryName(localName.value).trim()
   if (!name) return

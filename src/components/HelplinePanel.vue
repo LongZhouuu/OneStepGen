@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+/** Lists trusted ADHD and mental health support resources with contact details. */
 defineEmits(['back'])
 
 const resources = [

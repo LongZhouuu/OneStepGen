@@ -31,6 +31,7 @@
 </template>
 
 <script setup>
+/** Modal shell that routes among support tool views with focus trapping. */
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 
 import SupportMenu from './SupportMenu.vue'
@@ -73,6 +74,7 @@ const currentComponent = computed(() => {
   }
 })
 
+/** Returns visible, focusable elements inside the modal for tab management. */
 function getFocusableElements() {
   return Array.from(modalRef.value?.querySelectorAll(focusableSelector) ?? [])
     .filter((element) => !element.hasAttribute('disabled') && element.offsetParent !== null)
@@ -84,6 +86,7 @@ function focusInitialElement() {
   })
 }
 
+/** Handles Escape to close and Tab to cycle focus within the modal. */
 function handleKeydown(event) {
   if (event.key === 'Escape') {
     event.preventDefault()

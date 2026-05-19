@@ -112,6 +112,7 @@
 </template>
 
 <script setup>
+/** Swipeable task card for completing or skipping items during focus. */
 import { ref, computed, watch } from 'vue'
 import {
     getTaskCognitiveTier,
@@ -138,6 +139,7 @@ const props = defineProps({
 
 const currentTaskId = ref(null)
 
+/** Returns the first task that is pending or in progress. */
 function findFirstValidTask() {
     return props.tasks.find(task =>
         task.status === 'pending' || task.status === 'doing'
@@ -259,6 +261,7 @@ const cardStyle = computed(() => ({
                 : 'grab'
 }))
 
+/** Begins pointer capture for a horizontal swipe gesture. */
 function startDrag(e) {
     if (!currentTaskItem.value) return
     isDragging.value = true
@@ -271,6 +274,7 @@ function onDrag(e) {
     offsetX.value = e.clientX - startX.value
 }
 
+/** Ends the drag and commits a swipe when the threshold is met. */
 function endDrag() {
     if (!isDragging.value || !currentTaskItem.value) return
 
@@ -287,6 +291,7 @@ function endDrag() {
     isDragging.value = false
 }
 
+/** Completes or skips the current task via action buttons. */
 function swipeByClick(direction) {
     if (!currentTaskItem.value || isDragging.value) return
     swipeOut(direction)
@@ -318,6 +323,7 @@ function revealNextCard() {
     })
 }
 
+/** Animates the card off-screen, updates status, and advances to the next task. */
 function swipeOut(direction) {
     if (!currentTaskItem.value) return
 
