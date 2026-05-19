@@ -1,0 +1,265 @@
+<template>
+  <div
+    v-if="modelValue"
+    class="shnm-overlay"
+    role="presentation"
+    @click.self="close"
+  >
+    <div class="shnm-card" role="dialog" aria-modal="true" aria-labelledby="shnm-title">
+      <h2 id="shnm-title" class="shnm-title">Save to History</h2>
+      <p class="shnm-desc">Give this plan a name so you can open it again later.</p>
+
+      <label class="shnm-label" for="shnm-input">Name</label>
+      <input
+        id="shnm-input"
+        v-model="localName"
+        type="text"
+        class="shnm-input"
+        :maxlength="historyNameMaxChars"
+        autocomplete="off"
+        @input="onNameInput"
+        @keyup.enter="confirm"
+      />
+      <div class="shnm-input-meta">
+        <span v-if="showWrongInput" class="shnm-wrong-input" role="alert">
+          Wrong input
+        </span>
+        <span class="shnm-char-count" :class="{ warn: nameCharCount >= historyNameMaxChars }">
+          {{ nameCharCount }} / {{ historyNameMaxChars }}
+        </span>
+        <span v-if="nameCharCount >= historyNameMaxChars" class="shnm-limit-msg" role="status">
+          Maximum {{ historyNameMaxChars }} characters.
+        </span>
+      </div>
+
+      <div class="shnm-actions">
+        <button type="button" class="shnm-btn shnm-btn-close" @click="close">
+          Close
+        </button>
+        <button
+          type="button"
+          class="shnm-btn shnm-btn-confirm"
+          :disabled="!localName.trim()"
+          @click="confirm"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed, ref, watch } from 'vue'
+
+const HISTORY_NAME_MAX_CHARS = 30
+// English letters, digits, whitespace, and common punctuation only.
+const HISTORY_NAME_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/g
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+  /** Prefill from sessionSource.historyName when opening */
+  initialName: {
+    type: String,
+    default: '',
+  },
+})
+
+const emit = defineEmits(['update:modelValue', 'confirm'])
+
+const localName = ref('')
+const showWrongInput = ref(false)
+const historyNameMaxChars = HISTORY_NAME_MAX_CHARS
+
+const nameCharCount = computed(() => (localName.value ?? '').length)
+
+function sanitizeHistoryName(raw) {
+  const s = String(raw ?? '')
+  const cleaned = s.replace(HISTORY_NAME_DISALLOWED, '')
+  return cleaned.length > HISTORY_NAME_MAX_CHARS
+    ? cleaned.slice(0, HISTORY_NAME_MAX_CHARS)
+    : cleaned
+}
+
+function hasDisallowedChars(raw) {
+  // Use non-global test so .replace() on the same pattern does not affect later checks.
+  return /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/.test(String(raw ?? ''))
+}
+
+watch(
+  () => props.modelValue,
+  (open) => {
+    if (open) {
+      localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
+    }
+  },
+)
+
+watch(
+  () => props.initialName,
+  () => {
+    if (props.modelValue) {
+      localName.value = sanitizeHistoryName(props.initialName ?? '')
+      showWrongInput.value = false
+    }
+  },
+)
+
+function onNameInput(e) {
+  const raw = e?.target?.value ?? localName.value
+  showWrongInput.value = hasDisallowedChars(raw)
+  const next = sanitizeHistoryName(raw)
+  if (next !== localName.value) localName.value = next
+}
+
+function close() {
+  emit('update:modelValue', false)
+}
+
+function confirm() {
+  const name = sanitizeHistoryName(localName.value).trim()
+  if (!name) return
+  emit('confirm', name)
+}
+</script>
+
+<style scoped>
+.shnm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  background: rgba(45, 31, 20, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.shnm-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px 32px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 80px rgba(45, 31, 20, 0.25);
+}
+
+.shnm-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #2d1f14;
+}
+
+.shnm-desc {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(45, 31, 20, 0.55);
+}
+
+.shnm-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c3d28;
+  margin-bottom: 8px;
+}
+
+.shnm-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(193, 113, 79, 0.28);
+  font: inherit;
+  font-size: 15px;
+  color: #3d2a1a;
+  margin-bottom: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.shnm-input:focus {
+  border-color: #c1714f;
+}
+
+.shnm-input-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(45, 31, 20, 0.38);
+}
+
+.shnm-wrong-input {
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  color: #c0392b;
+}
+
+.shnm-char-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.shnm-char-count.warn {
+  color: #c1714f;
+}
+
+.shnm-limit-msg {
+  font-weight: 600;
+  color: #c1714f;
+}
+
+.shnm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.shnm-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.shnm-btn-close {
+  background: rgba(45, 31, 20, 0.08);
+  color: #5c3d28;
+}
+
+.shnm-btn-close:hover {
+  background: rgba(45, 31, 20, 0.12);
+}
+
+.shnm-btn-confirm {
+  background: #c1714f;
+  color: #fff;
+}
+
+.shnm-btn-confirm:hover:not(:disabled) {
+  background: #a05840;
+  transform: translateY(-1px);
+}
+
+.shnm-btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+</style>

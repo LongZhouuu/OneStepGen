@@ -80,9 +80,9 @@ pip install -r requirements.txt
    ```bash
    cp .env.example .env
    ```
-3. Open `.env` and paste your key:
+3. Open `.env` and paste your key (the code expects `GROQ_API_KEY_1`, or `GROQ_API_KEY_2`, … for rotation):
    ```
-   GROQ_API_KEY=your-actual-key-here
+   GROQ_API_KEY_1=your-actual-key-here
    ```
 
 ### 5. Run the server

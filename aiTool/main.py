@@ -86,15 +86,17 @@ class OriginVerifyMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+
+# Outermost: verify CloudFront origin secret before other layers
+app.add_middleware(OriginVerifyMiddleware)
 # Allow cross-origin requests from any frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://onestepgen.me"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Outermost: verify CloudFront origin secret before other layers
-app.add_middleware(OriginVerifyMiddleware)
 
 
 # ── Request / Response models ──────────────────────────────
@@ -168,13 +170,14 @@ class TextInput(BaseModel):
 
 
 class TaskOutput(BaseModel):
-    """A single task with its assigned priority, rank, and category rank."""
+    """A single task with its assigned priority, rank, category rank, and cognitive load."""
     task: str
     priority: str
     priorityGroup: str
     score: int = 0
     rank: int = 0
     category_rank: int = 0
+    parent_task_cognitive_load: int = 3
 
 
 # ── Helper: run the full pipeline ───────────────────────────
@@ -289,8 +292,13 @@ async def process_text(body: TextInput):
         )
 
     # Run the full AI pipeline
-    result = await run_pipeline(body.text)
-    return result
+    try:
+        result = await run_pipeline(body.text)
+        return result
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 @app.post(

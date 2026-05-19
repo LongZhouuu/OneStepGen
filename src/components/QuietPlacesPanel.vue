@@ -1,28 +1,29 @@
 <template>
   <div class="panel">
-    <button class="back-btn" type="button" @click="$emit('back')">
-      ← Back
-    </button>
     <h2>Melbourne CBD Focus Map</h2>
-    <p class="sub">Find nearby work/reset spots with opening times and distance.</p>
+    <p class="sub">
+      Find nearby coworking, library, and relax spots. Crowd levels use City of Melbourne pedestrian
+      sensors near each place.
+    </p>
 
     <div class="controls">
-      <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
-        {{ isLocating ? 'Getting location...' : 'Use my location' }}
-      </button>
-
-      <div class="search-row">
-        <input
-          v-model.trim="locationQuery"
-          type="text"
-          class="location-input"
-          placeholder="Enter Melbourne address or suburb"
-          @input="onLocationInput"
-          @focus="showSuggestions = true"
-          @keydown.enter.prevent="searchLocation"
-        />
-        <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
-          {{ isSearching ? 'Searching...' : 'Search' }}
+      <div class="location-actions">
+        <div class="search-row">
+          <input
+            v-model.trim="locationQuery"
+            type="text"
+            class="location-input"
+            placeholder="Enter Melbourne address or suburb"
+            @input="onLocationInput"
+            @focus="showSuggestions = true"
+            @keydown.enter.prevent="searchLocation"
+          />
+          <button class="search-btn" type="button" @click="searchLocation" :disabled="isSearching">
+            {{ isSearching ? 'Searching...' : 'Search' }}
+          </button>
+        </div>
+        <button class="locate-btn" type="button" @click="useBrowserLocation" :disabled="isLocating">
+          {{ isLocating ? 'Getting location...' : 'Use my location' }}
         </button>
       </div>
       <ul v-if="showSuggestions && locationSuggestions.length" class="suggestions-list">
@@ -60,31 +61,58 @@
       </button>
     </div>
 
-    <p v-if="activeTabMessage" class="category-message">
-      {{ activeTabMessage }}
-    </p>
+    <div class="crowd-toolbar">
+      <button
+        type="button"
+        class="refresh-crowd-btn"
+        :disabled="isRefreshingCrowd || isLoadingData"
+        @click="refreshCrowdData"
+      >
+        {{ isRefreshingCrowd ? 'Refreshing…' : 'Refresh Crowd Data' }}
+      </button>
+      <button type="button" class="help-link" @click="showCrowdHelp = true">What is crowd level?</button>
+      <p v-if="crowdUpdatedAtDateTimeLabel" class="crowd-updated-summary">
+        Crowd data updated: {{ crowdUpdatedAtDateTimeLabel }}
+      </p>
+    </div>
 
     <div class="content-grid">
       <div ref="mapEl" class="map"></div>
 
       <div class="results">
-        <h3>{{ nearbyHeading }}</h3>
-        <div v-if="selectedPlace" class="selected-place-row">
-          <p class="selected-place-text">
-            Selected: <strong>{{ selectedPlace.name }}</strong>
-          </p>
-          <button class="directions-btn" type="button" @click="openNavigationPopup">
-            Get directions
-          </button>
+        <div class="results-fixed">
+          <h3>{{ nearbyHeading }}</h3>
+          <div v-if="userLocation && !isLoadingData" class="sort-row">
+            <label class="sort-label" for="quiet-sort">Sort by</label>
+            <select
+              id="quiet-sort"
+              v-model="sortMode"
+              class="sort-select"
+              @change="onSortChange"
+            >
+              <option value="recommended">Recommended (crowd + distance)</option>
+              <option value="quietest">Quietest (Least Crowded)</option>
+              <option value="nearest">Nearest</option>
+            </select>
+          </div>
+          <div v-if="selectedPlace" class="selected-place-row">
+            <p class="selected-place-text">
+              Selected: <strong>{{ selectedPlace.name }}</strong>
+            </p>
+            <button class="directions-btn" type="button" @click="openNavigationPopup">
+              Get directions
+            </button>
+          </div>
         </div>
-        <p v-if="!userLocation" class="empty-text">Set your location to see nearby places.</p>
-        <p v-else-if="isLoadingData" class="empty-text">Loading places from your datasets...</p>
-        <p v-else-if="!visiblePlaces.length" class="empty-text">
-          No places loaded yet. Put CSV files in `public/focus-data` and verify paths in
-          `src/data/focusMapSources.js`.
-        </p>
+        <div class="results-scroll">
+          <p v-if="!userLocation" class="empty-text">Set your location to see nearby places.</p>
+          <p v-else-if="isLoadingData" class="empty-text">Loading places from your datasets...</p>
+          <p v-else-if="!visiblePlaces.length" class="empty-text">
+            No places loaded yet. Put CSV files in `public/focus-data` and verify paths in
+            `src/data/focusMapSources.js`.
+          </p>
 
-        <ul v-else class="places-list">
+          <ul v-else class="places-list">
           <li
             v-for="place in visiblePlaces"
             :key="place.id"
@@ -96,11 +124,28 @@
             @keydown.space.prevent="focusPlaceOnMap(place)"
           >
             <p class="place-name">{{ place.name }}</p>
+            <p v-if="place.id === recommendedQuietPlaceId" class="recommended-badge" role="status">
+              Recommended Quiet Place
+            </p>
+            <p
+              v-if="place.id === recommendedQuietPlaceId"
+              class="place-meta recommended-reason"
+            >
+              Recommended because it balances lower crowd with shorter distance.
+            </p>
             <p class="place-meta">
               <span class="place-pin" aria-hidden="true">📍</span>
               {{ place.category || 'Workspace' }}
             </p>
             <p class="place-meta">Distance from you: {{ formatDistance(place.distanceKm) }}</p>
+            <p class="place-meta crowd-line">
+              <span class="crowd-inline-label">Crowd level:</span>
+              <strong v-if="place.crowdAvailable" class="crowd-level-pill">{{ place.crowdLevelLabel }}</strong>
+              <span v-else class="crowd-na">Crowd level not available</span>
+            </p>
+            <p v-if="crowdUpdatedAtLabel" class="place-meta crowd-updated-line">
+              Crowd updated at {{ crowdUpdatedAtLabel }}
+            </p>
             <p v-if="place.website" class="place-meta">
               Website:
               <a :href="place.website" target="_blank" rel="noopener noreferrer" @click.stop>Visit site</a>
@@ -108,6 +153,7 @@
             <p v-if="place.address" class="place-meta">{{ place.address }}</p>
           </li>
         </ul>
+        </div>
       </div>
     </div>
 
@@ -135,19 +181,45 @@
         </button>
       </div>
     </div>
+
+    <div v-if="showCrowdHelp" class="nav-popup-overlay" @click.self="showCrowdHelp = false">
+      <div class="nav-popup">
+        <h3>What is crowd level?</h3>
+        <p class="nav-popup-sub">
+          Crowd level is based on City of Melbourne pedestrian count data published as open data. Each
+          place is matched to the nearest active foot-traffic sensor (within about 400 metres), using
+          that sensor’s pedestrian totals aggregated over roughly the past hour (from readings in the
+          feed). Levels <strong>Low</strong>, <strong>Medium</strong>, and <strong>High</strong> compare
+          that sensor’s volume to others at the moment. The city publishes this information on roughly
+          an hourly rhythm (with fine-grained rows as updates arrive — often about every 15 minutes);
+          use “Refresh Crowd Data” to pull the latest. The “Crowd updated at” time reflects the newest
+          reading we received for the feed after your last refresh.
+        </p>
+        <button type="button" class="nav-exit-btn" @click="showCrowdHelp = false">Close</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { focusMapSources } from '@/data/focusMapSources'
+import {
+  estimateCrowdForPoint,
+  fetchMelbourneCrowdContext,
+  footTrafficMarkerColor,
+  haversineKm,
+  volumeTertileBounds,
+} from '@/data/melbourneFootTraffic'
 
-defineEmits(['back'])
+const placeSources = focusMapSources.filter((source) => Boolean(source.url))
+
+const RECOMMEND_MAX_KM = 8
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -176,6 +248,10 @@ const placeMarkerById = ref({})
 const userMarker = ref(null)
 const userRadius = ref(null)
 const allPlaces = ref([])
+const crowdContext = ref({ sensors: [], updatedAt: null, ok: false })
+const isRefreshingCrowd = ref(false)
+const sortMode = ref('recommended')
+const showCrowdHelp = ref(false)
 
 const tabs = computed(() => focusMapSources.map((source) => ({ id: source.id, label: source.label })))
 const nearbyHeading = computed(() => {
@@ -183,50 +259,162 @@ const nearbyHeading = computed(() => {
   return activeSource ? `Nearby ${activeSource.label}` : 'Nearby Places'
 })
 
-const activeTabMessage = computed(() => {
-  if (activeTab.value === 'libraries') {
-    return 'Blue = quiet structure. Great for low-distraction deep work.'
+const crowdUpdatedAtLabel = computed(() => {
+  const d = crowdContext.value.updatedAt
+  if (!d) return ''
+  try {
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  } catch {
+    return ''
   }
-  if (activeTab.value === 'coworking') {
-    return 'Red = social focus. Good for body-doubling and momentum.'
-  }
-  if (activeTab.value === 'relax') {
-    return 'Green = sensory reset. Ideal for short breathing and regulation breaks.'
-  }
-  return ''
 })
 
-const placesWithDistance = computed(() => {
-  if (!userLocation.value) return []
+const crowdUpdatedAtDateTimeLabel = computed(() => {
+  const d = crowdContext.value.updatedAt
+  if (!d) return ''
+  try {
+    return d.toLocaleString(undefined, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+})
 
-  return allPlaces.value
+const volumeBounds = computed(() => {
+  const vols = crowdContext.value.sensors
+    .filter((s) => s.status === 'A')
+    .map((s) => s.volume)
+  return volumeTertileBounds(vols)
+})
+
+const placesWithCrowd = computed(() => {
+  const ctx = crowdContext.value
+  const sensors = ctx.sensors || []
+  const bounds = volumeBounds.value
+  const ok = ctx.ok
+
+  return allPlaces.value.map((place) => {
+    if (!ok || !sensors.length) {
+      return {
+        ...place,
+        crowdAvailable: false,
+        crowdLevelLabel: null,
+        crowdVolume: null,
+        sensorDistanceKm: null,
+      }
+    }
+    return { ...place, ...estimateCrowdForPoint(place.lat, place.lng, sensors, bounds) }
+  })
+})
+
+const categoryPlacesWithDistance = computed(() => {
+  if (!userLocation.value) return []
+  const u = userLocation.value
+  return placesWithCrowd.value
+    .filter((place) => place.sourceId === activeTab.value)
     .map((place) => ({
       ...place,
-      distanceKm: haversineKm(
-        userLocation.value.lat,
-        userLocation.value.lng,
-        place.lat,
-        place.lng
-      ),
+      distanceKm: haversineKm(u.lat, u.lng, place.lat, place.lng),
     }))
-    .sort((a, b) => a.distanceKm - b.distanceKm)
 })
 
+const recommendedQuietPlaceId = computed(() => {
+  const withData = categoryPlacesWithDistance.value.filter((p) => p.crowdAvailable)
+  if (!withData.length) return null
+  const maxV = Math.max(1, ...withData.map((p) => p.crowdVolume))
+  let best = withData[0]
+  let bestScore = recommendScore(best, maxV, RECOMMEND_MAX_KM)
+  for (const p of withData.slice(1)) {
+    const score = recommendScore(p, maxV, RECOMMEND_MAX_KM)
+    if (score < bestScore) {
+      best = p
+      bestScore = score
+    } else if (score === bestScore && p.distanceKm < best.distanceKm) {
+      best = p
+      bestScore = score
+    }
+  }
+  return best.id
+})
+
+function recommendScore(place, maxV, maxD) {
+  if (!place.crowdAvailable) return 9999
+  const cv = place.crowdVolume / maxV
+  const cd = Math.min(place.distanceKm, maxD) / maxD
+  return 0.6 * cv + 0.4 * cd
+}
+
 const visiblePlaces = computed(() => {
-  if (!activeTab.value) return []
-  return placesWithDistance.value
-    .filter((place) => place.sourceId === activeTab.value)
-    .slice(0, 20)
+  if (!userLocation.value || !activeTab.value) return []
+  const list = categoryPlacesWithDistance.value.map((p) => ({ ...p }))
+
+  if (sortMode.value === 'nearest') {
+    list.sort((a, b) => a.distanceKm - b.distanceKm)
+  } else if (sortMode.value === 'quietest') {
+    list.sort((a, b) => {
+      if (a.crowdAvailable !== b.crowdAvailable) {
+        return a.crowdAvailable ? -1 : 1
+      }
+      if (!a.crowdAvailable) return 0
+      if (a.crowdVolume !== b.crowdVolume) return a.crowdVolume - b.crowdVolume
+      return a.distanceKm - b.distanceKm
+    })
+  } else {
+    const withCrowd = list.filter((p) => p.crowdAvailable)
+    const maxV = Math.max(1, ...withCrowd.map((p) => p.crowdVolume))
+    list.sort((a, b) => {
+      const sa = recommendScore(a, maxV, RECOMMEND_MAX_KM)
+      const sb = recommendScore(b, maxV, RECOMMEND_MAX_KM)
+      if (sa !== sb) return sa - sb
+      return a.distanceKm - b.distanceKm
+    })
+  }
+  return list.slice(0, 20)
+})
+
+watch(visiblePlaces, () => {
+  nextTick(() => renderMarkers())
 })
 
 async function loadAllPlaces() {
   isLoadingData.value = true
   statusMessage.value = ''
 
-  const loaded = await Promise.all(focusMapSources.map(loadSource))
+  const loaded = await Promise.all(placeSources.map(loadSource))
   allPlaces.value = loaded.flat()
   isLoadingData.value = false
-  statusMessage.value = `Loaded ${allPlaces.value.length} places.`
+}
+
+async function loadCrowdData() {
+  crowdContext.value = await fetchMelbourneCrowdContext()
+}
+
+function crowdErrorSuffix() {
+  const detail = crowdContext.value.errorMessage
+  return detail ? ` — ${detail}` : ''
+}
+
+async function refreshCrowdData() {
+  isRefreshingCrowd.value = true
+  statusMessage.value = ''
+  try {
+    crowdContext.value = await fetchMelbourneCrowdContext()
+    statusMessage.value = crowdContext.value.ok
+      ? 'Crowd data updated.'
+      : `Could not refresh crowd data${crowdErrorSuffix()} Crowd labels may stay unavailable until the request succeeds — check your connection, or use a proxy (VITE_MELBOURNE_ODATA_BASE → /melbourne-ods-api ; see melbourneFootTraffic.js).`
+  } finally {
+    isRefreshingCrowd.value = false
+  }
+  renderMarkers()
+}
+
+function onSortChange() {
+  renderMarkers()
 }
 
 async function loadSource(source) {
@@ -536,6 +724,13 @@ function renderMarkers() {
       iconAnchor: [8, 8],
     })
 
+    const crowdLevelText = place.crowdAvailable
+      ? `<br/>Crowd level: ${escapeHtml(place.crowdLevelLabel || '')}`
+      : '<br/>Crowd level not available'
+    const crowdUpdatedLine =
+      crowdUpdatedAtLabel.value !== ''
+        ? `<br/>Crowd updated at ${escapeHtml(crowdUpdatedAtLabel.value)}`
+        : ''
     const marker = L.marker([place.lat, place.lng])
       .setIcon(placeIcon)
       .addTo(map.value)
@@ -544,7 +739,7 @@ function renderMarkers() {
           place.website
             ? `<br/>Website: <a href="${escapeHtml(place.website)}" target="_blank" rel="noopener noreferrer">Visit site</a>`
             : ''
-        }<br/>Distance from you: ${formatDistance(place.distanceKm)}`
+        }${crowdLevelText}${crowdUpdatedLine}<br/>Distance from you: ${formatDistance(place.distanceKm)}`
       )
     marker.on('click', () => {
       selectedPlace.value = place
@@ -592,6 +787,9 @@ function openDirections(mode) {
 }
 
 function getCategoryMarkerColor(place) {
+  if (place.crowdAvailable) {
+    return footTrafficMarkerColor(place.crowdVolume ?? 0, 'A')
+  }
   if (place.sourceId === 'libraries') return '#2f80ed'
   if (place.sourceId === 'coworking') return '#e74c3c'
   if (place.sourceId === 'relax') return '#27ae60'
@@ -624,19 +822,6 @@ function formatDistance(km) {
   return `${km.toFixed(2)} km`
 }
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (value) => (value * Math.PI) / 180
-  const earthRadius = 6371
-
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return earthRadius * c
-}
-
 function escapeHtml(text) {
   return String(text)
     .replace(/&/g, '&amp;')
@@ -660,7 +845,10 @@ onMounted(async () => {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map.value)
 
-  await loadAllPlaces()
+  await Promise.all([loadAllPlaces(), loadCrowdData()])
+  statusMessage.value = crowdContext.value.ok
+    ? `Loaded ${allPlaces.value.length} places with live crowd estimates.`
+    : `Loaded ${allPlaces.value.length} places. Crowd data was not available${crowdErrorSuffix()} Levels will stay unavailable until a refresh succeeds.`
   renderMarkers()
 })
 
@@ -678,15 +866,8 @@ onUnmounted(() => {
 
 <style scoped>
 .panel {
-  padding-top: 8px;
-}
-
-.back-btn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  margin-bottom: 18px;
-  font-size: 15px;
+  padding-top: 0;
+  padding-bottom: 10px;
 }
 
 h2 {
@@ -697,7 +878,7 @@ h2 {
 
 .sub {
   color: #7b6a5c;
-  margin: 10px 0 16px;
+  margin: 8px 0 12px;
 }
 
 .controls {
@@ -706,9 +887,19 @@ h2 {
   gap: 10px;
 }
 
+.location-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .search-row {
   display: flex;
-  gap: 8px;
+  flex: 1;
+  border: 1px solid #d8c7ba;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
 }
 
 .suggestions-list {
@@ -742,21 +933,40 @@ h2 {
 
 .location-input {
   flex: 1;
-  border: 1px solid #d8c7ba;
-  border-radius: 10px;
+  border: none;
   padding: 10px 12px;
   font-family: inherit;
+  min-width: 0;
+}
+
+.location-input:focus {
+  outline: none;
 }
 
 .locate-btn,
 .search-btn {
-  border: 1px solid #b66a48;
+  border: 1px solid #d0bfb3;
   background: #fff7f2;
   color: #6d422d;
   border-radius: 10px;
-  padding: 9px 12px;
+  padding: 9px 14px;
   cursor: pointer;
   font-family: inherit;
+  font-size: 13px;
+}
+
+.locate-btn {
+  white-space: nowrap;
+  background: #ffffff;
+  min-width: 138px;
+}
+
+.search-btn {
+  border: none;
+  border-left: 1px solid #e2d5cc;
+  border-radius: 0;
+  background: #fff7f2;
+  min-width: 84px;
 }
 
 .locate-btn:disabled,
@@ -781,14 +991,114 @@ h2 {
   padding: 8px 10px;
 }
 
-.category-message {
-  margin: 10px 0 0;
-  font-size: 13.5px;
-  color: #6f5a4b;
-  background: #f9f1eb;
-  border: 1px solid #e9ddd4;
+.crowd-toolbar {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.refresh-crowd-btn {
+  border: 1px solid #5c4a8a;
+  background: #f4f0ff;
+  color: #4b3a74;
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.refresh-crowd-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.help-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #6d422d;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.crowd-updated-summary {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6d5b8d;
+}
+
+.sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  font-size: 13px;
+  color: #614c3d;
+}
+
+.sort-select {
+  flex: 1;
+  min-width: 160px;
+  border: 1px solid #d8c7ba;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #38281f;
+  background: #fff;
+}
+
+.recommended-badge {
+  margin: 0 0 6px;
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1c6840;
+  background: #dcf5e8;
+  border: 1px solid #8fd4b8;
+}
+
+.recommended-reason {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #2d6e4e;
+}
+
+.crowd-line {
+  margin-top: 2px;
+}
+
+.crowd-inline-label {
+  margin-right: 6px;
+}
+
+.crowd-level-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: #f0eae4;
+  color: #3d2e24;
+}
+
+.crowd-na {
+  color: #8a7668;
+}
+
+.crowd-updated-line {
+  font-size: 12.5px;
+  color: #7b6a5c;
 }
 
 .tabs {
@@ -818,11 +1128,11 @@ h2 {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .map {
-  min-height: 420px;
+  height: clamp(300px, 52vh, 520px);
   width: 100%;
   border-radius: 14px;
   border: 1px solid #e8ddd4;
@@ -833,13 +1143,28 @@ h2 {
   border: 1px solid #eadfd7;
   border-radius: 14px;
   padding: 12px;
-  min-height: 420px;
-  max-height: 420px;
-  overflow: auto;
+  height: clamp(300px, 52vh, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
 }
 
-.results h3 {
-  margin: 0 0 10px;
+.results-fixed {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.results-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.results-fixed h3 {
+  margin: 0;
   font-size: 17px;
   color: #38281f;
 }
@@ -853,7 +1178,7 @@ h2 {
   border: 1px solid #eedbcf;
   border-radius: 10px;
   padding: 8px 10px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .selected-place-text {
@@ -1015,6 +1340,15 @@ h2 {
 @media (max-width: 960px) {
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .map,
+  .results {
+    height: clamp(260px, 44vh, 460px);
+  }
+
+  .location-actions {
+    flex-direction: column;
   }
 }
 </style>

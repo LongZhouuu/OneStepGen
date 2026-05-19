@@ -43,6 +43,45 @@
           </div>
         </div>
 
+        <section class="energy-panel" aria-label="Your current energy">
+          <div class="energy-panel-label-row">
+            <p class="energy-panel-label">How is your energy right now?</p>
+            <button
+              type="button"
+              class="btn-info btn-info--energy"
+              aria-label="About energy matching"
+              @click="toggleEnergyInfoPopover"
+              ref="energyInfoBtn"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.5 9.2a2.6 2.6 0 0 1 5 1c0 1.7-1.9 2.2-2.4 2.8-.4.5-.4 1-.4 1.8" />
+                <path d="M12 17.1h.01" />
+              </svg>
+            </button>
+          </div>
+          <div class="energy-options" role="group" aria-label="Energy level">
+            <button
+              v-for="level in energyLevels"
+              :key="level.id"
+              type="button"
+              class="energy-option"
+              :class="{ active: userEnergyLevel === level.id }"
+              :aria-pressed="userEnergyLevel === level.id"
+              @click="setEnergyLevel(level.id)"
+            >
+              {{ level.short }}
+            </button>
+          </div>
+          <p v-if="!userEnergyLevel" class="energy-hint" role="status">
+            Choose an option to highlight tasks that match your energy. All tasks stay visible.
+          </p>
+          <p v-else class="energy-hint" role="status">
+            <span class="cognitive-badge" :class="`cognitive-badge--${userEnergyLevel}`">{{ activeEnergyLabel }}</span>
+            tasks are labeled below ({{ matchingTaskCount }} match{{ matchingTaskCount === 1 ? '' : 'es' }}).
+          </p>
+        </section>
+
         <div id="task-list-container">
           <!-- Active tasks grouped by priority -->
           <div class="eisen-category" v-for="group in groupDefs" :key="group.key">
@@ -62,9 +101,20 @@
               @end="onDragEnd"
             >
               <template #item="{ element: task }">
-                <div class="task-item">
+                <div
+                  class="task-item"
+                  :class="{
+                    [`task-item--${getTaskCognitiveTier(task)}`]: isTaskMatchForUserEnergy(task),
+                  }"
+                >
                   <span class="drag-handle" aria-hidden="true">⋮⋮</span>
                   <span class="task-num">{{ task.order }}</span>
+                  <span
+                    v-if="isTaskMatchForUserEnergy(task)"
+                    class="cognitive-badge"
+                    :class="`cognitive-badge--${getTaskCognitiveTier(task)}`"
+                    :title="`Matches your energy: ${getTaskCognitiveLabel(task)}`"
+                  >{{ getTaskCognitiveLabel(task) }}</span>
 
                   <template v-if="editingId === task.id">
                     <div class="task-edit-field">
@@ -146,11 +196,30 @@
           </div>
         </div>
 
+        <p v-if="historyFullError" class="history-full-msg" role="alert">
+          {{ historyFullError }}
+        </p>
+
+        <button
+          type="button"
+          class="btn-save-history"
+          :disabled="!!saveHistoryFeedback"
+          @click="onClickSaveOrUpdateHistory"
+        >
+          {{ saveHistoryButtonText }}
+        </button>
+
         <button class="btn-start-swipe" type="button" :disabled="activeTasks.length === 0" @click="startFocusMode">
           Start Focus Mode →
         </button>
       </div>
     </div>
+
+    <SaveHistoryNameModal
+      v-model="showHistoryNameModal"
+      :initial-name="historyNameModalInitial"
+      @confirm="onConfirmHistoryName"
+    />
 
     <!-- Add Task Modal -->
     <div class="modal-overlay" v-if="showModal" @click.self="showModal = false">
@@ -213,7 +282,37 @@
       </div>
     </div>
 
-    <!-- Info popover (no backdrop blur) -->
+    <!-- Energy matching info popover -->
+    <div v-if="showEnergyInfoPopover" class="info-popover-overlay" @click.self="showEnergyInfoPopover = false">
+      <div
+        class="info-popover-card"
+        role="dialog"
+        aria-modal="false"
+        aria-label="Energy matching info"
+        :style="energyInfoPopoverStyle"
+        ref="energyInfoPopoverCard"
+      >
+        <div class="info-popover-title">Energy matching</div>
+        <div class="info-popover-body">
+          <p>
+            Pick how you feel <strong>right now</strong> (Low, Normal, or High). Our AI has already rated how much
+            mental effort each task needs. Tasks that <strong>match</strong> your choice get a colored label.
+          </p>
+          <p>
+            Nothing is hidden: every task stays on your list. Labels only appear after you choose, so you can see
+            what fits your energy today without feeling overwhelmed.
+          </p>
+          <ul class="energy-info-list">
+            <li><span class="cognitive-badge cognitive-badge--low">Low</span> Light steps (quick, easy to start)</li>
+            <li><span class="cognitive-badge cognitive-badge--normal">Normal</span> Moderate focus</li>
+            <li><span class="cognitive-badge cognitive-badge--high">High</span> Deep focus required</li>
+          </ul>
+          <p class="energy-info-tip">Tap the same option again to clear your choice and remove labels.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eisenhower info popover (no backdrop blur) -->
     <div v-if="showInfoPopover" class="info-popover-overlay" @click.self="showInfoPopover = false">
       <div
         class="info-popover-card"
@@ -241,6 +340,7 @@
 <script>
 import draggable from 'vuedraggable'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
+import SaveHistoryNameModal from '@/components/SaveHistoryNameModal.vue'
 import {
   guardWorkflowStep,
   unlockStep,
@@ -249,6 +349,18 @@ import {
   deleteTaskFromSession,
   updateTaskInSession,
   reorderTasksInSession,
+  saveOrUpdateHistory,
+  isHistoryFull,
+} from '../router/workflow'
+import {
+  getTaskCognitiveTier as resolveTaskCognitiveTier,
+  getTaskCognitiveLabel as resolveTaskCognitiveLabel,
+  taskMatchesUserEnergy,
+  COGNITIVE_TIERS,
+} from '@/utils/energyMatching'
+import {
+  getUserEnergyLevel,
+  setUserEnergyLevel,
 } from '../router/workflow'
 
 const GROUP_ORDER = [
@@ -263,23 +375,38 @@ const TASK_TEXT_DISALLOWED = /[^A-Za-z0-9\s.,;:'"!?\-()[\]{}@#&*%+=<>/\\|`~^_$]/
 
 export default {
   name: 'PlannerView',
-  components: { draggable, VoiceInputButton },
+  components: { draggable, VoiceInputButton, SaveHistoryNameModal },
   data() {
     return {
       sessionId: null,
       tasks: [],
+      sessionHistoryId: null,
       showModal: false,
       showInfoPopover: false,
       infoPopoverStyle: {},
+      showEnergyInfoPopover: false,
+      energyInfoPopoverStyle: {},
       newTaskText: '',
       taskTextMaxChars: TASK_TEXT_MAX_CHARS,
       newTaskImportant: true,
       newTaskUrgent: true,
       editingId: null,
       editingText: '',
+      showHistoryNameModal: false,
+      historyNameModalInitial: '',
+      historyFullError: '',
+      saveHistoryFeedback: null,
+      saveFeedbackTimer: null,
+      userEnergyLevel: null,
+      energyLevels: COGNITIVE_TIERS,
     }
   },
   computed: {
+    saveHistoryButtonText() {
+      if (this.saveHistoryFeedback === 'saved') return '✓ Saved'
+      if (this.saveHistoryFeedback === 'updated') return '✓ Updated'
+      return this.sessionHistoryId == null ? 'Save to History' : 'Update History'
+    },
     newTaskCharCount() {
       return (this.newTaskText ?? '').length
     },
@@ -311,6 +438,16 @@ export default {
       }
       return grouped
     },
+    activeEnergyLabel() {
+      const found = COGNITIVE_TIERS.find(l => l.id === this.userEnergyLevel)
+      return found?.short ?? ''
+    },
+    matchingTaskCount() {
+      if (!this.userEnergyLevel) return 0
+      return this.activeTasks.filter(t =>
+        taskMatchesUserEnergy(t, this.userEnergyLevel),
+      ).length
+    },
     groupDefs() {
       return [
         { key: 'urgent-important',         title: 'DO FIRST',    hint: 'Important & Urgent',      labelClass: 'eisen-do'       },
@@ -322,35 +459,52 @@ export default {
   },
   mounted() {
     guardWorkflowStep(2, this.$router)
+    this.userEnergyLevel = getUserEnergyLevel()
     this._loadFromSession()
     window.addEventListener('keydown', this._onKeydown)
-    window.addEventListener('resize', this._updateInfoPopoverPosition)
+    window.addEventListener('resize', this._onPopoverResize)
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this._onKeydown)
-    window.removeEventListener('resize', this._updateInfoPopoverPosition)
+    window.removeEventListener('resize', this._onPopoverResize)
+    this._clearSaveFeedbackTimer()
   },
   methods: {
+    setEnergyLevel(level) {
+      const next = this.userEnergyLevel === level ? null : level
+      this.userEnergyLevel = next
+      setUserEnergyLevel(next)
+    },
+    getTaskCognitiveTier(task) {
+      return resolveTaskCognitiveTier(task)
+    },
+    getTaskCognitiveLabel(task) {
+      return resolveTaskCognitiveLabel(task)
+    },
+    isTaskMatchForUserEnergy(task) {
+      return taskMatchesUserEnergy(task, this.userEnergyLevel)
+    },
     _onKeydown(e) {
-      if (e.key === 'Escape') this.showInfoPopover = false
+      if (e.key !== 'Escape') return
+      this.showInfoPopover = false
+      this.showEnergyInfoPopover = false
+      if (this.showHistoryNameModal) this.showHistoryNameModal = false
     },
-    toggleInfoPopover() {
-      this.showInfoPopover = !this.showInfoPopover
-      if (this.showInfoPopover) this.$nextTick(this._updateInfoPopoverPosition)
+    _onPopoverResize() {
+      this._updateInfoPopoverPosition()
+      this._updateEnergyInfoPopoverPosition()
     },
-    _updateInfoPopoverPosition() {
-      if (!this.showInfoPopover) return
-      const btn = this.$refs.infoBtn
+    _positionPopover(btnRef, cardRef, styleKey, visible) {
+      if (!visible) return
+      const btn = this.$refs[btnRef]
       if (!btn || !btn.getBoundingClientRect) return
 
       const r = btn.getBoundingClientRect()
-      const card = this.$refs.infoPopoverCard
+      const card = this.$refs[cardRef]
       const cardW = card?.offsetWidth ?? 520
-      const cardH = card?.offsetHeight ?? 260
+      const cardH = card?.offsetHeight ?? 280
 
       const gap = 10
-      // Place the card below the button, horizontally aligned to the button center,
-      // and clamp within viewport to avoid getting hidden by nav bars.
       let top = r.bottom + gap
       const maxTop = window.innerHeight - 12 - cardH
       top = Math.round(Math.min(Math.max(top, 12), maxTop))
@@ -359,11 +513,33 @@ export default {
       const left = Math.round(Math.min(Math.max(desiredLeft, 12), window.innerWidth - 12 - cardW))
 
       const arrowX = Math.round((r.left + r.width / 2) - left)
-      this.infoPopoverStyle = {
+      this[styleKey] = {
         top: `${top}px`,
         left: `${left}px`,
         '--arrow-x': `${arrowX}px`,
       }
+    },
+    toggleInfoPopover() {
+      const next = !this.showInfoPopover
+      this.showInfoPopover = next
+      if (next) {
+        this.showEnergyInfoPopover = false
+        this.$nextTick(() => this._updateInfoPopoverPosition())
+      }
+    },
+    toggleEnergyInfoPopover() {
+      const next = !this.showEnergyInfoPopover
+      this.showEnergyInfoPopover = next
+      if (next) {
+        this.showInfoPopover = false
+        this.$nextTick(() => this._updateEnergyInfoPopoverPosition())
+      }
+    },
+    _updateInfoPopoverPosition() {
+      this._positionPopover('infoBtn', 'infoPopoverCard', 'infoPopoverStyle', this.showInfoPopover)
+    },
+    _updateEnergyInfoPopoverPosition() {
+      this._positionPopover('energyInfoBtn', 'energyInfoPopoverCard', 'energyInfoPopoverStyle', this.showEnergyInfoPopover)
     },
     // ── Load ─────────────────────────────────────────────────────────────────
     _loadFromSession() {
@@ -385,6 +561,9 @@ export default {
       // Read normalized data back from localStorage
       const updated = getCurrentSession()
       this.tasks = updated?.tasks ?? []
+
+      const src = updated?.sessionSource
+      this.sessionHistoryId = src?.historyId ?? null
 
       const active  = this.activeTasks.length
       const skipped = this.skippedTasks.length
@@ -436,6 +615,11 @@ export default {
     // ── Delete ────────────────────────────────────────────────────────────────
     deleteTask(taskId) {
       deleteTaskFromSession(this.sessionId, taskId)
+
+      const session = getCurrentSession()
+      const skippedCount = (session?.tasks ?? []).filter(t => t.status === 'skipped').length
+      this._syncSkippedCountToSession(skippedCount)
+
       console.log(`[Planner] Task deleted → reordered: ${this.activeTasks.length - 1} active tasks`)
       this._loadFromSession()
     },
@@ -525,6 +709,10 @@ export default {
       )
 
       reorderTasksInSession(this.sessionId, [...reorderedActive, ...remainingSkipped])
+
+      // synchronize skippedCount to current number of skipped task
+      this._syncSkippedCountToSession(remainingSkipped.length)
+
       console.log(`[Planner] Move back: "${task.text}" → ${task.priorityGroup}`)
       this._loadFromSession()
     },
@@ -543,6 +731,95 @@ export default {
       console.log(`[Planner] Start Focus Mode: ${this.activeTasks.length} active tasks`)
       unlockStep(3)
       this.$router.push({ name: 'TaskSwipper' })
+    },
+
+    _clearSaveFeedbackTimer() {
+      if (this.saveFeedbackTimer != null) {
+        clearTimeout(this.saveFeedbackTimer)
+        this.saveFeedbackTimer = null
+      }
+    },
+
+    _syncSkippedCountToSession(count = null) {
+      const session = getCurrentSession()
+      if (!session) return
+
+      const nextSkippedCount =
+        count ?? (session.tasks ?? []).filter(t => t.status === 'skipped').length
+
+      localStorage.setItem(
+        'onestep-current-session',
+        JSON.stringify({
+          ...session,
+          skippedCount: nextSkippedCount,
+        })
+      )
+    },
+
+    // ── Save / Update History ─────────────────────────────────────────────────
+    onClickSaveOrUpdateHistory() {
+      if (this.saveHistoryFeedback) return
+
+      const session = getCurrentSession()
+      if (!session) return
+
+      session.sessionSource ??= {
+        type: 'new',
+        historyId: null,
+        historyName: null,
+      }
+
+      const src = session.sessionSource
+      if (!src.historyId && isHistoryFull()) {
+        this.historyFullError =
+          'History is full (10/10). Please delete some records in History before saving.'
+        return
+      }
+
+      this.historyFullError = ''
+      this.historyNameModalInitial = src.historyName ?? ''
+      this.showHistoryNameModal = true
+    },
+
+    onConfirmHistoryName(name) {
+      const trimmed = String(name ?? '').trim()
+      if (!trimmed) return
+
+      const session = getCurrentSession()
+      if (!session) return
+
+      session.sessionSource ??= {
+        type: 'new',
+        historyId: null,
+        historyName: null,
+      }
+
+      const hadHistoryIdBefore = !!session.sessionSource.historyId
+
+      try {
+        saveOrUpdateHistory(trimmed)
+      } catch (err) {
+        const msg = err?.message || ''
+        this.showHistoryNameModal = false
+        if (msg === 'History is full') {
+          this.historyFullError =
+            'History is full (10/10). Please delete some records in History before saving.'
+        } else {
+          this.historyFullError = 'Something went wrong. Please try again.'
+        }
+        return
+      }
+
+      this.showHistoryNameModal = false
+      this.historyFullError = ''
+      this._loadFromSession()
+
+      this._clearSaveFeedbackTimer()
+      this.saveHistoryFeedback = hadHistoryIdBefore ? 'updated' : 'saved'
+      this.saveFeedbackTimer = setTimeout(() => {
+        this.saveHistoryFeedback = null
+        this.saveFeedbackTimer = null
+      }, 1500)
     },
   },
 }
@@ -723,6 +1000,162 @@ export default {
 
 .btn-add-task:hover { background: rgba(193, 113, 79, 0.07); }
 
+/* ── User energy + matching labels ─────────────────────────────────────────── */
+.energy-panel {
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 1px solid rgba(193, 113, 79, 0.16);
+}
+
+.energy-panel-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.energy-panel-label {
+  margin: 0;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brown-mid);
+  letter-spacing: 0.02em;
+}
+
+.btn-info--energy {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(97, 75, 52, 0.1);
+}
+
+.energy-info-list {
+  margin: 12px 0 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.energy-info-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.energy-info-tip {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: rgba(45, 31, 20, 0.55);
+  font-style: italic;
+}
+
+.info-popover-body p {
+  margin: 0 0 10px;
+}
+
+.info-popover-body p:last-child {
+  margin-bottom: 0;
+}
+
+.energy-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.energy-option {
+  flex: 1;
+  min-width: 72px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(193, 113, 79, 0.22);
+  background: #fff;
+  color: var(--brown-text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.energy-option:hover {
+  border-color: rgba(193, 113, 79, 0.45);
+  background: rgba(193, 113, 79, 0.06);
+}
+
+.energy-option.active {
+  background: var(--terracotta);
+  border-color: var(--terracotta);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(193, 113, 79, 0.28);
+}
+
+.energy-hint {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--brown-mid);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── AI cognitive labels (Low / Normal / High) ─────────────────────────────── */
+.cognitive-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.95);
+  border: 1px solid rgba(193, 113, 79, 0.14);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brown-mid);
+  line-height: 1.5;
+}
+
+.cognitive-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 2px solid transparent;
+}
+
+.cognitive-badge--low {
+  background: #e8f5ee;
+  color: #2d6b52;
+  border-color: #8ecfad;
+}
+
+.cognitive-badge--normal {
+  background: #fff4e6;
+  color: #9a5f20;
+  border-color: #e8b86d;
+}
+
+.cognitive-badge--high {
+  background: #fdeeed;
+  color: #9b3d28;
+  border-color: #e89a88;
+}
+
 /* ── Eisenhower groups ───────────────────────────────────────────────────── */
 .eisen-category { margin-bottom: 20px; }
 
@@ -763,6 +1196,7 @@ export default {
   flex-direction: column;
   gap: 10px;
   min-height: 36px;
+  min-width: 0;
 }
 
 /* ── Task item ───────────────────────────────────────────────────────────── */
@@ -774,6 +1208,34 @@ export default {
   border-radius: 12px;
   padding: 14px 16px;
   border: 1.5px solid rgba(193, 113, 79, 0.18);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.task-item--low {
+  border-left: 4px solid #8ecfad;
+}
+
+.task-item--normal {
+  border-left: 4px solid #e8b86d;
+}
+
+.task-item--high {
+  border-left: 4px solid #e89a88;
+}
+
+.task-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .drag-handle {
@@ -961,6 +1423,43 @@ export default {
   border-color: var(--terracotta);
 }
 
+.history-full-msg {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.22);
+  color: #a93226;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.btn-save-history {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-btn);
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--terracotta);
+  border: 2px solid rgba(193, 113, 79, 0.45);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s;
+  font: inherit;
+}
+
+.btn-save-history:hover:not(:disabled) {
+  background: rgba(193, 113, 79, 0.08);
+  border-color: var(--terracotta);
+}
+
+.btn-save-history:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
 /* ── Start Focus Mode ────────────────────────────────────────────────────── */
 .btn-start-swipe {
   width: 100%;
@@ -974,7 +1473,7 @@ export default {
   cursor: pointer;
   transition: all 0.25s;
   font: inherit;
-  margin-top: 24px;
+  margin-top: 12px;
 }
 
 .btn-start-swipe:hover:not(:disabled) {

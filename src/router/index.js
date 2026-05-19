@@ -4,6 +4,8 @@ import HomeView from '../views/HomeView.vue'
 import {
   getStepByRouteName,
   getHighestUnlockedRouteName,
+  getWorkflowCurrentStep,
+  getStepById,
   syncWorkflowFromSession,
 } from './workflow'
 
@@ -13,12 +15,8 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
 import RewardView from '../views/RewardView.vue'
 import AboutView from '../views/AboutView.vue'
 import PlannerView from '../views/PlannerView.vue'
-// import PrioritizerView from '../views/tools/PrioritizerView.vue'
-// import SupportView from '../views/tools/SupportView.vue'
-// import TipsView from '../views/tools/TipsAndTemplatesView.vue'
 import TaskSwipper from '../views/TaskSwipper.vue'
 import AIDump from '../views/AIDump.vue'
-// import PlanView from '../views/PlanView.vue'
 import PrivacyView from '../views/PrivacyView.vue'
 import TermsView from '../views/TermsView.vue'
 import CompleteView from '@/views/CompleteView.vue'
@@ -30,7 +28,6 @@ const routes = [
     component: HomeView
   },
   { path: '/workflow/ai-dump', name: 'AIDump', component: AIDump },
-  // { path: '/workflow/plan', name: 'Plan', component: PlanView },
   { path: '/workflow/planner', name: 'Planner', component: PlannerView },
   { path: '/workflow/swiper', name: 'TaskSwipper', component: TaskSwipper },
   { path: '/workflow/complete', name: 'Complete', component: CompleteView },
@@ -39,31 +36,6 @@ const routes = [
     name: 'About',
     component: AboutView
   },
-  // {
-  //   path: '/tools/planner',
-  //   name: 'Planner',
-  //   component: PlannerView
-  // },
-  // {
-  //   path: '/tools/planner/swipper',
-  //   name: 'TaskSwipper',
-  //   component: TaskSwipper
-  // },
-  // {
-  //   path: '/tools/prioritizer',
-  //   name: 'Prioritizer',
-  //   component: PrioritizerView
-  // },
-  // {
-  //   path: '/tools/support',
-  //   name: 'Support',
-  //   component: SupportView
-  // },
-  // {
-  //   path: '/tools/tips',
-  //   name: 'Tips',
-  //   component: TipsView
-  // },
   {
     path: '/reward',
     name: 'Reward',
@@ -94,10 +66,16 @@ const router = createRouter({
   }
 })
 
+/**
+ * Workflow route guard:
+ * - Non-workflow routes: pass through.
+ * - No session: only step 1 (AIDump).
+ * - Entering from outside workflow: resume last viewed step (capped by maxReachedStep).
+ * - Inside workflow: any step id ≤ maxReachedStep; otherwise redirect to furthest unlocked.
+ */
 router.beforeEach((to, from) => {
   const targetStep = getStepByRouteName(to.name)
 
-  // nothing happend if not to workspace route
   if (!targetStep) return true
 
   const session = syncWorkflowFromSession()
@@ -112,10 +90,16 @@ router.beforeEach((to, from) => {
   const highestRouteName = getHighestUnlockedRouteName()
   const maxReachedStep = session.maxReachedStep ?? 1
 
-  // if entering workspace from outside, always resume the latest reached step
+  // if entering workflow from outside, resume the last viewed step,
+  //  but use maxReachedStep only to limit/unlock available steps
   if (!fromStep) {
-    if (to.name !== highestRouteName) {
-      return { name: highestRouteName, replace: true }
+    const savedCurrentStep = getWorkflowCurrentStep()
+    const safeStepId = Math.min(savedCurrentStep, maxReachedStep)
+
+    const resumeRouteName = getStepById(safeStepId)?.routeName ?? highestRouteName
+
+    if (to.name !== resumeRouteName) {
+      return { name: resumeRouteName, replace: true }
     }
 
     return true

@@ -31,7 +31,7 @@ from pathlib import Path
 from groq import AsyncGroq
 from dotenv import load_dotenv
 
-# Load the .env file so we can read GROQ_API_KEY
+# Load the .env file so we can read GROQ_API_KEY_1, GROQ_API_KEY_2, …
 # Use explicit path so it works from any working directory
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_ENV_PATH)
@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 # 3 = neutral middle of the 1–5 scale.
 _DEFAULT_URGENCY: int = 3
 _DEFAULT_IMPORTANCE: int = 3
+_DEFAULT_COGNITIVE_LOAD: int = 3
 
 
 # ── Rate limit / retry configuration ──────────────────────
@@ -69,17 +70,24 @@ Given the text below, do the following:
 4. For EACH step, rate its urgency and importance on a 1–5 integer scale:
    - urgency:    1 = no rush at all, 5 = must be done immediately
    - importance: 1 = trivial / nice-to-have, 5 = critical / high-impact
-5. Return ONLY a valid JSON object containing a "tasks" array. No markdown, no explanation.
-6. If the text does NOT contain any genuine tasks, to-dos, or action items,
+5. For EACH step, also rate the cognitive load of its PARENT TASK (not the
+   individual step) on a 1–5 integer scale:
+   - parent_task_cognitive_load: 1 = mindless / easy (e.g. sign a form),
+     5 = requires deep focus (e.g. write an essay)
+   Steps that belong to the same parent task should share the same
+   parent_task_cognitive_load value.
+6. Return ONLY a valid JSON object containing a "tasks" array. No markdown, no explanation.
+7. If the text does NOT contain any genuine tasks, to-dos, or action items,
    return {"tasks": []} — do NOT invent or hallucinate tasks from general
    narrative, news, or informational content.
 
 Example output:
 {
   "tasks": [
-    {"task": "Open the assignment document", "urgency": 4, "importance": 5},
-    {"task": "Write the introduction paragraph", "urgency": 3, "importance": 4},
-    {"task": "Save the file", "urgency": 2, "importance": 3}
+    {"task": "Open the assignment document", "urgency": 4, "importance": 5, "parent_task_cognitive_load": 5},
+    {"task": "Write the introduction paragraph", "urgency": 3, "importance": 4, "parent_task_cognitive_load": 5},
+    {"task": "Sign for pizza delivery right now", "urgency": 5, "importance": 1, "parent_task_cognitive_load": 1},
+    {"task": "Read a casual magazine next month", "urgency": 1, "importance": 1, "parent_task_cognitive_load": 1}
   ]
 }"""
 
@@ -98,7 +106,9 @@ def _clamp(value, lo: int = 1, hi: int = 5) -> int:
 def _normalise_task(item) -> dict:
     """
     Convert whatever the LLM returned for a single task into our
-    standard dict format: {"task": str, "urgency": int, "importance": int}.
+    standard dict format:
+        {"task": str, "urgency": int, "importance": int,
+         "parent_task_cognitive_load": int}
 
     Handles both the new object format and the legacy plain-string format.
     """
@@ -108,6 +118,7 @@ def _normalise_task(item) -> dict:
             "task": item,
             "urgency": _DEFAULT_URGENCY,
             "importance": _DEFAULT_IMPORTANCE,
+            "parent_task_cognitive_load": _DEFAULT_COGNITIVE_LOAD,
         }
 
     if isinstance(item, dict):
@@ -115,6 +126,9 @@ def _normalise_task(item) -> dict:
             "task": str(item.get("task", "")),
             "urgency": _clamp(item.get("urgency", _DEFAULT_URGENCY)),
             "importance": _clamp(item.get("importance", _DEFAULT_IMPORTANCE)),
+            "parent_task_cognitive_load": _clamp(
+                item.get("parent_task_cognitive_load", _DEFAULT_COGNITIVE_LOAD)
+            ),
         }
 
     # Unknown shape — skip it
@@ -158,16 +172,23 @@ def _chunk_text(text: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> list[str]:
     return [c for c in chunks if c]
 
 
-async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None:
+async def _call_groq_with_retry(api_keys: list[str], user_text: str) -> str | None:
     """
     Call the Groq API with automatic retry on rate-limit (429) errors.
 
-    Uses exponential backoff: 2s → 4s → 8s (capped at MAX_BACKOFF_SECS).
-    Returns the raw response text, or None if all retries fail.
+    Rotates through *api_keys* (GROQ_API_KEY_1, GROQ_API_KEY_2, …) when a
+    key hits the rate limit.  Uses exponential backoff: 2s → 4s → 8s
+    (capped at MAX_BACKOFF_SECS).  Returns the raw response text, or None
+    if all retries fail.
     """
+    # Round-robin index into api_keys; advances on each rate-limit retry.
+    key_index = 0
     backoff = INITIAL_BACKOFF_SECS
 
     for attempt in range(1, MAX_RETRIES + 1):
+        # Fresh client per attempt so we can switch keys after a 429.
+        current_key = api_keys[key_index % len(api_keys)]
+        client = AsyncGroq(api_key=current_key)
         try:
             chat_completion = await client.chat.completions.create(
                 model="llama-3.3-70b-versatile",      # fast & accurate
@@ -206,6 +227,13 @@ async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None
             )
 
             if is_rate_limit and attempt < MAX_RETRIES:
+                # Try the next key on the next attempt (wraps with modulo).
+                key_index += 1
+                logger.warning(
+                    f"Rate limit on key {(key_index - 1) % len(api_keys) + 1}, "
+                    f"switching to key {key_index % len(api_keys) + 1} "
+                    f"of {len(api_keys)}"
+                )
                 # Parse retry-after header if available
                 retry_after = None
                 if hasattr(error, 'response') and error.response is not None:
@@ -233,13 +261,13 @@ async def _call_groq_with_retry(client: AsyncGroq, user_text: str) -> str | None
                     f"Groq free tier allows 30 req/min and 1,000 req/day. "
                     f"Please wait a moment and try again."
                 )
-                raise RuntimeError("Groq API rate limit exceeded after maximum retries.")
+                raise RuntimeError("AI service is currently busy. Please try again in a moment.")
             else:
                 # Non-rate-limit error — don't retry
                 logger.error(f"LLM call failed: {error}")
                 raise
 
-    raise RuntimeError("Groq API rate limit exceeded after maximum retries.")
+    raise RuntimeError("AI service is currently busy. Please try again in a moment.")
 
 
 def _parse_response(raw_text: str) -> list[dict]:
@@ -287,13 +315,8 @@ def _parse_response(raw_text: str) -> list[dict]:
         if normalised and normalised["task"]:
             tasks.append(normalised)
 
-    # Filter out likely-hallucinated noise: if the LLM rated a task as
-    # both minimal urgency (1) AND minimal importance (1), it's almost
-    # certainly not a genuine action item — strip it.
-    tasks = [
-        t for t in tasks
-        if not (t["urgency"] == 1 and t["importance"] == 1)
-    ]
+    # We no longer filter out urgency=1 and importance=1 tasks,
+    # as they are needed to populate the "Maybe/Later" (Score 0) bucket.
 
     return tasks
 
@@ -316,21 +339,22 @@ async def extract_tasks_from_text(user_text: str) -> list[dict]:
     Returns
     -------
     list[dict]
-        Each dict has three keys:
-            • "task"       – the actionable step (str)
-            • "urgency"    – 1–5 scale (int)
-            • "importance" – 1–5 scale (int)
+        Each dict has four keys:
+            • "task"                      – the actionable step (str)
+            • "urgency"                   – 1–5 scale (int)
+            • "importance"                – 1–5 scale (int)
+            • "parent_task_cognitive_load" – 1–5 scale (int)
         Returns an empty list if anything goes wrong.
     """
 
-    # ── 1. Read the API key from the environment ────────────
-    api_key = os.getenv("GROQ_API_KEY")
-
-    if not api_key or api_key == "your-groq-api-key-here":
-        raise ValueError("GROQ_API_KEY is not set in the environment.")
-
-    # ── 2. Create the Groq client ──────────────────────
-    client = AsyncGroq(api_key=api_key)
+    # ── 1. Load all Groq API keys from the environment ───────
+    # Expects GROQ_API_KEY_1, GROQ_API_KEY_2, … (works with one or many).
+    api_keys = [
+        v for k, v in os.environ.items()
+        if k.startswith("GROQ_API_KEY_")
+    ]
+    if not api_keys:
+        raise ValueError("No GROQ_API_KEY_ environment variables found. Please check your environment configuration.")
 
     # ── 3. Chunk the text if it's too large ────────────
     chunks = _chunk_text(user_text)
@@ -348,7 +372,8 @@ async def extract_tasks_from_text(user_text: str) -> list[dict]:
         if len(chunks) > 1:
             logger.info(f"🔄 Processing chunk {i}/{len(chunks)} ({len(chunk):,} chars)...")
 
-        raw_response = await _call_groq_with_retry(client, chunk)
+        # Pass the full key list; _call_groq_with_retry rotates on rate limits.
+        raw_response = await _call_groq_with_retry(api_keys, chunk)
 
         if raw_response is None:
             logger.warning(f"Chunk {i}/{len(chunks)} returned no results.")

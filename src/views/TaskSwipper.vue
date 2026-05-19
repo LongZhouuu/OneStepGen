@@ -2,56 +2,19 @@
     <div class="page">
 
         <div class="phone-frame">
-            <!-- back button -->
-            <!-- <button class="back-btn" @click="goBackToPlanner">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
-                </svg>
-                Back to Task Planner
-            </button> -->
+        <TaskProgressBar :tasks="tasks" />
 
             <!-- task card -->
-            <div class="taskCardWrapper" :class="{ expanded: isTimerRunning }">
-                <TaskCard :tasks="tasks" :can-swipe="isTimerRunning" @updateTaskState="updateTaskStatus"
-                    @noMoreTasks="handleNoMoreTasks" />
+            <div class="taskCardWrapper">
+                <TaskCard
+                    :tasks="tasks"
+                    :can-swipe="isTimerRunning"
+                    :user-energy-level="userEnergyLevel"
+                    @updateTaskState="updateTaskStatus"
+                    @noMoreTasks="handleNoMoreTasks"
+                />
             </div>
-            <!-- status -->
-            <!-- <section class="status" :class="{ compressed: isTimerRunning }">
-                <nav class="tabs">
-                    <button class="tab" :class="{ active: activeTab === 'checkin' }" @click="activeTab = 'checkin'">
-                        Check In
-                    </button>
-                    <button class="tab" :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">
-                        View All Tasks
-                    </button>
-                </nav>
-
-                <section v-show="activeTab === 'tasks'" class="taskList">
-                    <TransitionGroup name="task-slide" tag="div" class="taskItemContainer">
-                        <div v-for="task in tasks" :key="task.id" class="taskItem"
-                            :class="{ skipped: task.status === 'skipped' }">
-                            <span class="taskText">
-                                <span style="font-weight: bold;">
-                                    {{ task.order == null ? '' : task.order + 1 + '. ' }}
-                                </span>
-                                {{ task.text }}
-                            </span>
-
-                            <span class="taskStatus" :class="task.status">
-                                {{ task.status }}
-                            </span>
-                        </div>
-                    </TransitionGroup>
-                    <button class="clearBtn" @click="clear">
-                        Clear All Completed
-                    </button>
-                </section>
-
-                <section v-show="activeTab === 'checkin'" class="checkIn">
-                    <SwipingTimer ref="timerRef" @countingState="isTimerRunning = $event" />
-                </section>
-            </section> -->
-            <!-- timer -->
+          
             <section class="status" :class="{ compressed: isTimerRunning, tipsOpen: isTipsOpen }">
                 <div class="timerArea">
                     <SwipingTimer ref="timerRef" :collapsed="isTipsOpen" @countingState="isTimerRunning = $event" />
@@ -69,7 +32,6 @@
                     <TipsPanel @close="isTipsOpen = false" />
                 </section>
             </section>
-            <!-- <mockmockmock /> -->
         </div>
     </div>
 </template>
@@ -80,14 +42,16 @@ import SwipingTimer from '@/components/SwipingTimer.vue'
 import TipsPanel from '@/components/TipsPanel.vue'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import TaskProgressBar from '@/components/TaskProgressBar.vue'
 import {
-    guardWorkflowStep, 
-    unlockStep, 
+    guardWorkflowStep,
+    unlockStep,
     getCurrentSession,
     updateTaskInSession,
-    completeCurrentSession
+    completeCurrentSession,
+    setFocusLockActive,
+    getUserEnergyLevel,
 } from '../router/workflow'
-// import mockmockmock from '@/components/mockmockmock.vue'
 
 const activeTab = ref('checkin')
 const isTimerRunning = ref(false)
@@ -97,11 +61,16 @@ const router = useRouter()
 const timerRef = ref(null)
 const session = ref(null)
 const tasks = ref([])
+const userEnergyLevel = ref(null)
 
 onMounted(() => {
     guardWorkflowStep(3, router)
+    userEnergyLevel.value = getUserEnergyLevel()
     loadSession()
+    setFocusLockActive(false)
 })
+
+
 
 function loadSession() {
     const currentSession = getCurrentSession()
@@ -123,6 +92,7 @@ const hasRemainingTasks = computed(() => {
     )
 })
 
+/** Emitted when queue empty or last card resolved — completes session and unlocks step 4. */
 function handleNoMoreTasks() {
     activeTab.value = 'checkin'
     timerRef.value?.pauseFromParent(!hasRemainingTasks.value)
@@ -170,7 +140,7 @@ function updateTaskStatus(index, newStatus) {
     /* min-height: 100vh; */
     display: flex;
     justify-content: center;
-    padding: 132px 24px 0px;
+    padding: 10.8vh 24px 0px;
     font-family: inherit;
     color: #2d2d2d;
 }
@@ -185,8 +155,8 @@ function updateTaskStatus(index, newStatus) {
     max-width: 980px;
     display: grid;
     grid-template-columns: minmax(0, 460px) minmax(0, 460px);
-    grid-template-rows: minmax(0, 420px);
-    gap: 34px;
+    grid-template-rows: auto minmax(0, 420px);
+    /* gap: 34px; */
     align-items: stretch;
     justify-content: center;
     /* align-items: center; */
@@ -419,9 +389,6 @@ function updateTaskStatus(index, newStatus) {
     transform-origin: top center;
 }
 
-.taskCardWrapper.expanded {
-    transform: scale(1.08);
-}
 
 .status {
     /* margin-top: 40px; */
@@ -440,14 +407,16 @@ function updateTaskStatus(index, newStatus) {
     transform-origin: top center;
 }
 
-.status.compressed {
+/* .status.compressed {
     transform: scale(0.92);
     opacity: 0.92;
     margin-top: 30px;
-}
+} */
 
 .status {
     overflow: hidden;
+    right: -1.6%;
+    position: relative;
 }
 
 .status.tipsOpen {

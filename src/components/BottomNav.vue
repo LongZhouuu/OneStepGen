@@ -23,12 +23,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   WORKFLOW_STEPS,
   workflowState,
+  focusLockState,
   getStepByRouteName,
+  setWorkflowCurrentStep,
 } from '../router/workflow'
 
 const route = useRoute()
@@ -41,6 +43,8 @@ const STEP_META = {
   4: { label: 'Complete', sublabel: 'Done' },
 }
 
+const isFocusLocked = computed(() => focusLockState.value)
+
 const steps = WORKFLOW_STEPS.map((step) => ({
   ...step,
   label: STEP_META[step.id]?.label ?? step.label ?? `Step ${step.id}`,
@@ -48,10 +52,24 @@ const steps = WORKFLOW_STEPS.map((step) => ({
 }))
 
 const currentStep = computed(() => getStepByRouteName(route.name))
+
+watch(
+  currentStep,
+  (step) => {
+    if (!step) return
+    setWorkflowCurrentStep(step.id)
+  },
+  { immediate: true }
+)
+
 const maxReachedStep = computed(() => workflowState.value)
 
 function isStepLocked(step) {
-  return step.id > maxReachedStep.value
+  const isNotUnlockedYet = step.id > maxReachedStep.value
+  // While Swiper timer runs, Dump/Plan stay disabled so users finish the focus block.
+  const isPreviousStepDuringFocus = isFocusLocked.value && step.id < 3
+
+  return isNotUnlockedYet || isPreviousStepDuringFocus
 }
 
 function isStepDone(step) {
@@ -82,6 +100,8 @@ function isConnectorDone(stepId) {
 function goToStep(step) {
   if (isStepLocked(step)) return
   if (step.routeName === route.name) return
+
+  setWorkflowCurrentStep(step.id)
   router.push({ name: step.routeName })
 }
 </script>

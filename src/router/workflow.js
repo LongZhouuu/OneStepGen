@@ -1,4 +1,5 @@
 import { ref, readonly } from 'vue'
+import { ANIMALS } from '../data/animals'
 
 export const WORKFLOW_STEPS = [
   { id: 1, label: 'AI dump', routeName: 'AIDump' },
@@ -8,8 +9,10 @@ export const WORKFLOW_STEPS = [
 ]
 
 const maxReachedStep = ref(1)
+const focusLockActive = ref(false)
 
 export const workflowState = readonly(maxReachedStep)
+export const focusLockState = readonly(focusLockActive)
 
 export function getMaxReachedStep() {
   return maxReachedStep.value
@@ -31,6 +34,8 @@ export function setMaxReachedStep(step) {
 
 export function resetWorkflow() {
   maxReachedStep.value = 1
+  focusLockActive.value = false
+  resetWorkflowUIState()
 }
 
 export function startWorkflow() {
@@ -64,10 +69,29 @@ export function getHighestUnlockedRouteName() {
 export function guardWorkflowStep(stepId, router) {
   syncWorkflowFromSession()
 
+  if (focusLockActive.value && stepId < 3) {
+    router.replace({ name: 'TaskSwipper' })
+    return false
+  }
+
   if (canAccessStep(stepId)) return true
 
   router.replace({ name: getHighestUnlockedRouteName() })
   return false
+}
+
+export function setFocusLockActive(value) {
+  focusLockActive.value = Boolean(value)
+
+  const session = getCurrentSession()
+  if (session) {
+    session.focusLockActive = focusLockActive.value
+    saveCurrentSession(session)
+  }
+}
+
+export function isFocusLockActive() {
+  return focusLockActive.value
 }
 
 // ----------------------------------------------------------------------
@@ -112,6 +136,109 @@ function generateId(prefix) {
 
 const CURRENT_SESSION_KEY = 'onestep-current-session'
 
+const WORKFLOW_UI_STATE_KEY = 'onestep-workflow-ui-state'
+
+const DEFAULT_WORKFLOW_UI_STATE = {
+  currentStep: 1,
+  AIInput: '',
+  userEnergyLevel: null,
+}
+
+const VALID_ENERGY_LEVELS = new Set(['low', 'normal', 'high'])
+
+function normalizeEnergyLevel(value) {
+  if (value == null || value === '') return null
+  if (typeof value === 'string' && VALID_ENERGY_LEVELS.has(value)) return value
+  return null
+}
+
+function clampCognitiveLoad(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 3
+  return Math.min(5, Math.max(1, Math.round(n)))
+}
+
+export function getWorkflowUIState() {
+  try {
+    const data = localStorage.getItem(WORKFLOW_UI_STATE_KEY)
+    if (!data) return { ...DEFAULT_WORKFLOW_UI_STATE }
+
+    const parsed = JSON.parse(data)
+
+    return {
+      currentStep: normalizeStep(parsed.currentStep ?? 1),
+      AIInput: parsed.AIInput ?? '',
+      userEnergyLevel: normalizeEnergyLevel(parsed.userEnergyLevel),
+    }
+  } catch {
+    return { ...DEFAULT_WORKFLOW_UI_STATE }
+  }
+}
+
+export function saveWorkflowUIState(updates = {}) {
+  const current = getWorkflowUIState()
+
+  const next = {
+    ...current,
+    ...updates,
+  }
+
+  next.currentStep = normalizeStep(next.currentStep)
+  next.AIInput = String(next.AIInput ?? '')
+  next.userEnergyLevel = normalizeEnergyLevel(next.userEnergyLevel)
+
+  localStorage.setItem(WORKFLOW_UI_STATE_KEY, JSON.stringify(next))
+
+  return next
+}
+
+export function setWorkflowCurrentStep(step) {
+  saveWorkflowUIState({
+    currentStep: normalizeStep(step),
+  })
+}
+
+export function getWorkflowCurrentStep() {
+  return getWorkflowUIState().currentStep
+}
+
+export function setWorkflowAIInput(value) {
+  saveWorkflowUIState({
+    AIInput: value ?? '',
+  })
+}
+
+export function getWorkflowAIInput() {
+  return getWorkflowUIState().AIInput
+}
+
+export function getUserEnergyLevel() {
+  return getWorkflowUIState().userEnergyLevel
+}
+
+export function setUserEnergyLevel(level) {
+  saveWorkflowUIState({
+    userEnergyLevel: normalizeEnergyLevel(level),
+  })
+}
+
+export function getSavedWorkflowRouteName() {
+  syncWorkflowFromSession()
+
+  const currentStep = getWorkflowCurrentStep()
+  const safeStep = Math.min(currentStep, maxReachedStep.value)
+
+  return getStepById(safeStep)?.routeName ?? 'AIDump'
+}
+
+export function resetWorkflowUIState() {
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: '',
+    userEnergyLevel: null,
+  })
+}
+
 function normalizeStep(step) {
   const numberStep = Number(step)
   if (!Number.isFinite(numberStep)) return 1
@@ -141,20 +268,34 @@ export function createSession({
   const timestamp = Date.now()
 
   resetWorkflow()
+  setUserEnergyLevel(null)
 
   const newSession = {
     sessionId: generateId('session'),
+    focusLockActive: false,
     inputType,
     rawInputText,
     uploadedFileMeta,
     tasks: [],
+    completedCount: 0,
+    skippedCount: 0,
     reward,
     startedAt: timestamp,
     completedAt: null,
     maxReachedStep: 1,
+    sessionSource: {
+      type: 'new',
+      historyId: null,
+      historyName: null,
+    },
   }
 
   saveCurrentSession(newSession)
+
+  saveWorkflowUIState({
+    currentStep: 1,
+    AIInput: inputType === 'text' ? rawInputText : '',
+  })
 
   return newSession
 }
@@ -168,6 +309,12 @@ export function syncWorkflowFromSession() {
     return null
   }
 
+  session.sessionSource ??= {
+    type: 'new',
+    historyId: null,
+    historyName: null,
+  }
+
   const storedStep = session.maxReachedStep ?? session.reachedStep ?? 1
   const safeStep = normalizeStep(storedStep)
 
@@ -175,6 +322,8 @@ export function syncWorkflowFromSession() {
   delete session.reachedStep
 
   maxReachedStep.value = safeStep
+  focusLockActive.value = Boolean(session.focusLockActive)
+
   saveCurrentSession(session)
 
   return session
@@ -204,6 +353,7 @@ export function addAITasksToSession(sessionId, aiTasks) {
     status: 'pending',
     priorityGroup: t.priorityGroup,
     order: t.order,           // use the order provided by AI
+    parent_task_cognitive_load: clampCognitiveLoad(t.parent_task_cognitive_load),
     createdAt: timestamp,
     updatedAt: timestamp,
   }))
@@ -282,6 +432,7 @@ export function addTaskToSession(sessionId, taskText, priorityGroup = null) {
     status: 'pending',
     priorityGroup,
     order: insertOrder,
+    parent_task_cognitive_load: 3,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -326,10 +477,24 @@ export function updateTaskInSession(sessionId, taskId, updates) {
 
   if (!task) return null
 
+  const wasCompleted = task.status === 'completed'
+  const wasSkipped = task.status == 'skipped'
+
   Object.assign(task, {
     ...updates,
     updatedAt: Date.now(),
   })
+
+  const isNowCompleted = task.status === 'completed'
+  const isNowSkipped = task.status == 'skipped'
+
+  if (!wasCompleted && isNowCompleted) {
+    session.completedCount += 1
+  }
+
+  if (!wasSkipped && isNowSkipped) {
+    session.skippedCount += 1
+  }
 
   saveCurrentSession(session)
 
@@ -390,6 +555,179 @@ export function completeCurrentSession(sessionId) {
   return session
 }
 
+
+// ----------------------------------------------------------------------
+// Task history (localStorage key separate from current session)
+
+/** Saved task lists from Plan / Dump workflow (separate from current session). Max 10 entries, no auto-eviction. */
+const TASK_HISTORY_KEY = 'taskHistory'
+const MAX_TASK_HISTORY_ITEMS = 10
+
+/** Deep clone plain JSON-serializable values (e.g. task arrays). */
+function deepCloneJson(value) {
+  return JSON.parse(JSON.stringify(value))
+}
+
+function saveTaskHistory(items) {
+  localStorage.setItem(TASK_HISTORY_KEY, JSON.stringify(items))
+}
+
+/** Return all saved history entries (newest appended last). */
+export function getTaskHistory() {
+  try {
+    const data = localStorage.getItem(TASK_HISTORY_KEY)
+    if (!data) return []
+    const parsed = JSON.parse(data)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+/** True when history already holds MAX_TASK_HISTORY_ITEMS entries. */
+export function isHistoryFull() {
+  return getTaskHistory().length >= MAX_TASK_HISTORY_ITEMS
+}
+
+/**
+ * Append one history row. Tasks are deep-cloned so later session edits do not mutate stored data.
+ * @returns {string} New history row id
+ */
+export function addHistoryItem({ label, inputType, input, pdfFileName, tasks }) {
+  if (isHistoryFull()) {
+    throw new Error('History is full')
+  }
+
+  const list = getTaskHistory()
+  const id = generateId('history')
+  const row = {
+    id,
+    label,
+    createdAt: new Date().toISOString(),
+    inputType,
+    input: input ?? '',
+    pdfFileName: pdfFileName ?? null,
+    tasks: deepCloneJson(tasks ?? []),
+  }
+  list.push(row)
+  saveTaskHistory(list)
+  return id
+}
+
+/**
+ * Replace fields on an existing history row (preserves id and createdAt).
+ */
+export function updateHistoryItem(historyId, { label, tasks, inputType, input, pdfFileName }) {
+  const list = getTaskHistory()
+  const idx = list.findIndex(h => h.id === historyId)
+  if (idx === -1) {
+    throw new Error('History item not found')
+  }
+
+  const prev = list[idx]
+  list[idx] = {
+    ...prev,
+    label,
+    inputType,
+    input: input ?? '',
+    pdfFileName: pdfFileName ?? null,
+    tasks: deepCloneJson(tasks ?? []),
+  }
+  saveTaskHistory(list)
+}
+
+/** Remove one history row by id. */
+export function deleteHistoryItem(historyId) {
+  const list = getTaskHistory().filter(h => h.id !== historyId)
+  saveTaskHistory(list)
+}
+
+/**
+ * Replace current session from a history snapshot (does not use createSession — avoids resetting workflow progress).
+ * Aligns startedAt with createSession (Unix ms), not ISO string.
+ */
+export function loadSessionFromHistory(historyItem) {
+  if (!historyItem?.id) {
+    throw new Error('Invalid history item')
+  }
+
+  const tasks = deepCloneJson(historyItem.tasks ?? [])
+  const completedCount = tasks.filter(t => t.status === 'completed').length
+  const skippedCount = tasks.filter(t => t.status === 'skipped').length
+  const pdfName = historyItem.pdfFileName ?? null
+  const timestamp = Date.now()
+
+  const newSession = {
+    sessionId: generateId('session'),
+    focusLockActive: false,
+    inputType: historyItem.inputType === 'pdf' ? 'pdf' : 'text',
+    rawInputText: historyItem.input ?? '',
+    uploadedFileMeta: pdfName ? { name: pdfName } : null,
+    tasks,
+    completedCount,
+    skippedCount,
+    reward: null,
+    startedAt: timestamp,
+    completedAt: null,
+    maxReachedStep: 3,
+    sessionSource: {
+      type: 'history',
+      historyId: historyItem.id,
+      historyName: historyItem.label,
+    },
+  }
+
+  saveCurrentSession(newSession)
+  syncWorkflowFromSession()
+  return getCurrentSession()
+}
+
+/**
+ * Persist current tasks + input metadata into taskHistory (append or overwrite by sessionSource.historyId).
+ * UI should catch errors for full history on first save.
+ */
+export function saveOrUpdateHistory(name) {
+  const session = getCurrentSession()
+  if (!session) {
+    throw new Error('No active session')
+  }
+
+  session.sessionSource ??= {
+    type: 'new',
+    historyId: null,
+    historyName: null,
+  }
+
+  const source = session.sessionSource
+  const currentTasks = session.tasks ?? []
+
+  if (!source.historyId && isHistoryFull()) {
+    throw new Error('History is full')
+  }
+
+  if (source.historyId) {
+    updateHistoryItem(source.historyId, {
+      label: name,
+      tasks: deepCloneJson(currentTasks),
+      inputType: session.inputType,
+      input: session.rawInputText ?? null,
+      pdfFileName: session.uploadedFileMeta?.name ?? null,
+    })
+  } else {
+    const newId = addHistoryItem({
+      label: name,
+      inputType: session.inputType,
+      input: session.rawInputText ?? null,
+      pdfFileName: session.uploadedFileMeta?.name ?? null,
+      tasks: deepCloneJson(currentTasks),
+    })
+    session.sessionSource.historyId = newId
+  }
+
+  session.sessionSource.historyName = name
+  saveCurrentSession(session)
+}
+
 // REWARDS
 // var example = [
 //   {
@@ -404,39 +742,65 @@ export function completeCurrentSession(sessionId) {
 //     "earnedAt": 1713950000000,
 //     "sessionId": "session-2222-xxxx"
 //   }
-// ]
 
-export const REWARD_COLLECTION_KEY = 'onestep-reward-collection'
+// REWARDS ===========================================================
+export const ANIMAL_COLLECTION_KEY = 'onestep-animal-collection'
 
-function getRewards() {
-  return JSON.parse(localStorage.getItem(REWARD_COLLECTION_KEY)) || []
+
+export function getRewards() {
+  return JSON.parse(localStorage.getItem(ANIMAL_COLLECTION_KEY)) || []
 }
 
-function saveRewards(rewards) {
-  localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify(rewards))
-}
+export const REWARDS_UPDATED_EVENT = 'rewards-updated'
 
-// initialize new reward array(if not exist)
-export function initRewardCollection() {
-  if (!localStorage.getItem(REWARD_COLLECTION_KEY)) {
-    localStorage.setItem(REWARD_COLLECTION_KEY, JSON.stringify([]))
+function saveRewards(animals) {
+  localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify(animals))
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REWARDS_UPDATED_EVENT))
   }
 }
 
-// add reward item
-// input: animal name, session uid
-export function addReward(name, sessionId) {
-  const rewards = getRewards()
+// initialize new animal array if it does not exist
+export function initRewardCollection() {
+  if (!localStorage.getItem(ANIMAL_COLLECTION_KEY)) {
+    localStorage.setItem(ANIMAL_COLLECTION_KEY, JSON.stringify([]))
+  }
+}
 
-  const newReward = {
-    id: generateId('reward'),
-    name,
+// get one random animal from animals.js
+export function getRandomAnimal() {
+  const randomIndex = Math.floor(Math.random() * ANIMALS.length)
+  return ANIMALS[randomIndex]
+}
+
+// add one random animal to localStorage collection
+// each collected animal item contains at least:
+// name, image, region, earnedAt, sessionId
+export function addRandomAnimal(sessionId) {
+  const current_animals_list = getRewards()
+  const randomAnimal = getRandomAnimal()
+
+  const newAnimalItem = {
+    id: generateId(randomAnimal.id),
+    name: randomAnimal.name,
+    image: randomAnimal.image,
+    region: randomAnimal.region,
     earnedAt: Date.now(),
+    // The sessionID is used to make sure that a user can only get 
+    //  one animal within the same session.
+    // See getAnimalBySessionId()
     sessionId,
   }
 
-  rewards.push(newReward)
-  saveRewards(rewards)
+  current_animals_list.push(newAnimalItem)
+  saveRewards(current_animals_list)
 
-  return newReward
+  return newAnimalItem
+}
+
+// find animal item by sessionId
+export function getAnimalBySessionId(sessionId) {
+  const animals = getRewards()
+
+  return animals.find(animal => animal.sessionId === sessionId) || null
 }
