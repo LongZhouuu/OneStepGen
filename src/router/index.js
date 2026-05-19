@@ -9,6 +9,7 @@ import {
   syncWorkflowFromSession,
 } from './workflow'
 
+// Let scrollBehavior control position; disable the browser's automatic restore.
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
@@ -20,6 +21,8 @@ import AIDump from '../views/AIDump.vue'
 import PrivacyView from '../views/PrivacyView.vue'
 import TermsView from '../views/TermsView.vue'
 import CompleteView from '@/views/CompleteView.vue'
+
+// Vue Router setup: app routes, scroll behavior, and workflow step access guards.
 
 const routes = [
   {
@@ -56,6 +59,7 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  // Scroll to top on navigation unless restoring history or following a hash.
   scrollBehavior(to, from, savedPosition) {
     if (!from || from === to || from.fullPath === to.fullPath) {
       return { top: 0, left: 0 }

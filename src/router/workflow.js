@@ -1,6 +1,8 @@
 import { ref, readonly } from 'vue'
 import { ANIMALS } from '../data/animals'
 
+// Workflow progress, session persistence, task history, and reward collection helpers.
+
 export const WORKFLOW_STEPS = [
   { id: 1, label: 'AI dump', routeName: 'AIDump' },
   { id: 2, label: 'Planner', routeName: 'Planner' },
@@ -9,6 +11,7 @@ export const WORKFLOW_STEPS = [
 ]
 
 const maxReachedStep = ref(1)
+// When active, navigation below the swiper step is blocked until focus mode ends.
 const focusLockActive = ref(false)
 
 export const workflowState = readonly(maxReachedStep)
@@ -66,6 +69,7 @@ export function getHighestUnlockedRouteName() {
   return getStepById(maxReachedStep.value)?.routeName ?? 'AIDump'
 }
 
+// Redirects to swiper or the highest unlocked step when access rules fail.
 export function guardWorkflowStep(stepId, router) {
   syncWorkflowFromSession()
 
@@ -222,6 +226,7 @@ export function setUserEnergyLevel(level) {
   })
 }
 
+// Resume route uses the saved UI step capped by how far the session has unlocked.
 export function getSavedWorkflowRouteName() {
   syncWorkflowFromSession()
 
@@ -301,6 +306,7 @@ export function createSession({
 }
 
 
+// Hydrate in-memory step and focus-lock flags from the current localStorage session.
 export function syncWorkflowFromSession() {
   const session = getCurrentSession()
 

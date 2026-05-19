@@ -24,6 +24,7 @@
 </template>
 
 <script setup>
+/** Displays completed-task count and progress percentage for the current list. */
 import { computed } from 'vue'
 
 const props = defineProps({

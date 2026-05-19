@@ -1,3 +1,5 @@
+// Site password gate: client phrase, server cookie verify, and dev skip rules.
+
 const STORAGE_KEY = 'onestepgen-site-access-v1'
 
 /** Same-origin API base as AI calls (no trailing slash). */
@@ -77,6 +79,7 @@ export function grantSiteAccess() {
   }
 }
 
+// Compare strings in fixed time to reduce timing side channels on password checks.
 function constantTimeEqual(a, b) {
   if (a.length !== b.length) return false
   let diff = 0

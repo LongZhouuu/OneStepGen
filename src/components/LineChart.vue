@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+/** ECharts line chart of ABS psychological distress percentages by year. */
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 

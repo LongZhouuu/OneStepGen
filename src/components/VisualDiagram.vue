@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+/** Carousel of ECharts bar and pie charts for labour force data by age group. */
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
 

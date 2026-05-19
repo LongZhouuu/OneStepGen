@@ -88,6 +88,7 @@
 </template>
 
 <script setup>
+/** Quick-tactics panel for blocker states with optional support handoff. */
 import { ref, computed, nextTick } from 'vue'
 import { tipsData } from '@/data/tips.js'
 
@@ -122,6 +123,7 @@ const currentStateIconClass = computed(() => {
   return states.find((s) => s.key === selectedState.value)?.icon ?? ''
 })
 
+/** Selects a blocker state and shows a random tactic for it. */
 function selectState(key) {
   selectedState.value = key
   const tips = tipsData[key]?.tips ?? []
@@ -129,6 +131,7 @@ function selectState(key) {
   focusTipTitle()
 }
 
+/** Cycles to a different tactic within the current blocker state. */
 function tryAnother() {
   const total = currentTips.value.length
   if (total <= 1) return

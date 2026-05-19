@@ -1,3 +1,4 @@
+<!-- Static privacy policy page describing how user data is handled. -->
 <template>
   <div class="page-container privacy-page">
     <RouterLink :to="{ name: 'Home' }" class="back-btn">
@@ -95,6 +96,7 @@
 </template>
 
 <script setup>
+// Privacy page: routing and layout only; content is defined in the template.
 import { RouterLink } from 'vue-router'
 </script>
 

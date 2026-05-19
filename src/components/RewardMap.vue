@@ -131,6 +131,7 @@
 </template>
  
 <script setup>
+/** D3-rendered map of Australia showing unlockable wildlife reward locations. */
 import { ref, onMounted, nextTick } from 'vue'
 import * as d3 from 'd3'
 import { mesh } from 'topojson-client'

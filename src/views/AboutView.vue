@@ -1,4 +1,5 @@
 <template>
+  <!-- About page: ADHD context, research data, and product rationale -->
   <main class="about-page">
     <!-- HERO -->
     <section class="hero-section section-block">
@@ -188,6 +189,7 @@
 </template>
 
 <script setup>
+// Tabbed about page with ADHD workplace research and statistics.
 import { ref } from 'vue'
 import VisualDiagram from '@/components/VisualDiagram.vue'
 import LineChart from '@/components/LineChart.vue'

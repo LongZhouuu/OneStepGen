@@ -178,6 +178,7 @@
 </template>
 
 <script setup>
+/** Site footer with brand copy, legal links, and animated particle background. */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 

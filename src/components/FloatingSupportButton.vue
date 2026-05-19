@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+/** Fixed floating control that emits an event to open support tools. */
 import { ref } from 'vue'
 import supportIconUrl from '@/assets/support-icon.png'
 

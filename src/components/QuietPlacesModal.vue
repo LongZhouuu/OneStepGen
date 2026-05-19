@@ -27,6 +27,7 @@
 </template>
 
 <script setup>
+/** Accessible modal dialog that presents the Melbourne CBD focus map. */
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import QuietPlacesPanel from './QuietPlacesPanel.vue'
 

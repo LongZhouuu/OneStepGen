@@ -1,3 +1,4 @@
+// Vite build and dev-server settings, including API proxies for local development.
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'

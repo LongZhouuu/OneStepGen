@@ -1,4 +1,5 @@
 <template>
+    <!-- Workflow step 3: timed focus mode with swipeable task cards -->
     <div class="page">
 
         <div class="phone-frame">
@@ -15,6 +16,7 @@
                 />
             </div>
           
+            <!-- Timer and optional tactics panel -->
             <section class="status" :class="{ compressed: isTimerRunning, tipsOpen: isTipsOpen }">
                 <div class="timerArea">
                     <SwipingTimer ref="timerRef" :collapsed="isTipsOpen" @countingState="isTimerRunning = $event" />
@@ -37,6 +39,7 @@
 </template>
 
 <script setup>
+// Workflow step 3: run focus timer and update task status via swipe actions.
 import TaskCard from '@/components/TaskCard.vue'
 import SwipingTimer from '@/components/SwipingTimer.vue'
 import TipsPanel from '@/components/TipsPanel.vue'
@@ -72,6 +75,7 @@ onMounted(() => {
 
 
 
+// Loads the active session and task queue from workflow storage.
 function loadSession() {
     const currentSession = getCurrentSession()
 
@@ -113,6 +117,7 @@ watch(isTimerRunning, (newVal) => {
     }
 })
 
+// Persists a swipe outcome for the task at the given index.
 function updateTaskStatus(index, newStatus) {
     if (!session.value) return
     if (!tasks.value[index]) return

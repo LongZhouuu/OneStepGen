@@ -1,4 +1,5 @@
 <script setup>
+/** Primary site navigation with mobile menu and Focus map entry. */
 import { ref, watch, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import QuietPlacesModal from './QuietPlacesModal.vue'
@@ -8,11 +9,13 @@ const focusMapBtnRef = ref(null)
 const navOpen = ref(false)
 const route = useRoute()
 
+/** Opens the quiet-places modal and closes the mobile nav. */
 function openQuietPlaces() {
   closeNav()
   quietPlacesOpen.value = true
 }
 
+/** Closes the quiet-places modal and restores focus to the map button. */
 function closeQuietPlaces() {
   quietPlacesOpen.value = false
   requestAnimationFrame(() => {
@@ -20,10 +23,12 @@ function closeQuietPlaces() {
   })
 }
 
+/** Toggles the mobile navigation drawer open or closed. */
 function toggleNav() {
   navOpen.value = !navOpen.value
 }
 
+/** Closes the mobile navigation drawer. */
 function closeNav() {
   navOpen.value = false
 }

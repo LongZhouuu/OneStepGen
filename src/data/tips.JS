@@ -1,3 +1,4 @@
+/** Mood-based workplace tips shown during the focus step. */
 export const tipsData = {
   cantStart: {
     label: "Can't Start",

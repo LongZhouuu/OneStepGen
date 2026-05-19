@@ -72,6 +72,7 @@
 </template>
 
 <script setup>
+/** Guided box-breathing exercise with animated phase timing and controls. */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 defineEmits(['back'])

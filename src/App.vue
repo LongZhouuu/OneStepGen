@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+// Root shell: site access gate, shared chrome, routed views, and global support UI.
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 
@@ -45,6 +46,7 @@ import SupportModal from './components/SupportModal.vue'
 
 const route = useRoute()
 
+// Client gate uses sessionStorage; server gate may unlock after cookie check on mount.
 const siteUnlocked = ref(
   isGateSkippedInDev() || (!usesServerSiteGate() && isSiteAccessGranted()),
 )
@@ -53,6 +55,7 @@ function onSiteUnlocked() {
   siteUnlocked.value = true
 }
 
+// Workflow routes use bottom nav and extra main padding instead of the site footer.
 const isWorkflowPage = computed(() => route.path.startsWith('/workflow/'))
 
 /* ---------- Support Modal ---------- */
@@ -93,6 +96,7 @@ function handleOpenSupportEvent(e) {
 // to avoid leaking listeners (especially relevant in dev with HMR).
 onMounted(() => {
   window.addEventListener('open-support', handleOpenSupportEvent)
+  // Server gate: unlock without re-entering password when a valid HttpOnly cookie exists.
   if (!isGateSkippedInDev() && usesServerSiteGate()) {
     checkServerSiteGateFromCookie().then((ok) => {
       if (ok) siteUnlocked.value = true

@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+/** Landing hero section with calls to action for onboarding and quick start. */
 import { useRouter } from 'vue-router'
 import { startWorkflow } from '@/router/workflow'
 

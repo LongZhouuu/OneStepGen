@@ -1,3 +1,5 @@
+/** Configuration of CSV data sources for Melbourne CBD focus-map points of interest. */
+
 export const focusMapSources = [
   {
     id: 'coworking',
