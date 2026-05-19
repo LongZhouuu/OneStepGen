@@ -31,12 +31,17 @@
             <div class="timerLabel">
                 {{ isAllTasksFinished ? 'REMAINING TIME' : 'SESSION TIMER' }}
             </div>
-            <div class="timerSubLabel" style="white-space: pre-line;">
-                {{
-                    isRunning ?
-                        'Please record your task progress on the left. \nIf you need to adjust the task list, please click pause to exit focus mode.' :
-                        'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
-                }}
+            <div class="timerSubLabel">
+                <span class="timer-sub timer-sub--desk" style="white-space: pre-line;">{{
+                    isRunning
+                        ? 'Please record your task progress on the left.\nIf you need to adjust the task list, please click pause to exit focus mode.'
+                        : 'Modify Timer by Double-Click, a bell will ring when the countdown ends.'
+                }}</span>
+                <span class="timer-sub timer-sub--mob">{{
+                    isRunning
+                        ? 'Use the Complete or Skip buttons above for each task. Tap Pause below if you need to change your plan.'
+                        : 'When you are ready, tap Check-In below. Then use the buttons above to complete or skip each task.'
+                }}</span>
             </div>
         </div>
 
@@ -461,6 +466,14 @@ onBeforeUnmount(() => {
     color: #8a8a8a;
 }
 
+.timer-sub--mob {
+    display: none;
+    white-space: pre-line;
+    line-height: 1.45;
+    letter-spacing: 0.2px;
+    font-weight: 600;
+}
+
 .timerButtonGroup {
     display: flex;
     justify-content: center;
@@ -522,7 +535,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 767px) {
     .timerCard {
-        padding: 0 12px;
+        padding: 0 12px 16px;
     }
 
     .timerText,
@@ -535,22 +548,40 @@ onBeforeUnmount(() => {
     }
 
     .timerSubLabel {
-        font-size: 0.78rem;
-        letter-spacing: 0.5px;
-        padding: 0 4px;
-        line-height: 1.4;
+        font-size: 0.82rem;
+        letter-spacing: 0.2px;
+        padding: 0 6px;
+        line-height: 1.45;
+    }
+
+    .timer-sub--desk {
+        display: none;
+    }
+
+    .timer-sub--mob {
+        display: block;
     }
 
     .timerButtonGroup {
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 10px;
         width: 100%;
-        padding: 0 4px 8px;
+        padding: 0 4px 4px;
     }
 
     .timerButton {
-        flex: 1 1 auto;
-        min-width: 120px;
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        margin-top: 0;
+        font-size: 15px;
+        padding: 12px 20px;
+    }
+
+    .timerButtonGroup .timerButton:first-child {
+        background: #5a9fb8;
+        font-size: 16px;
+        font-weight: 700;
     }
 }
 </style>
