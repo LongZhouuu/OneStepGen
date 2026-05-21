@@ -10,6 +10,7 @@
 
     <!-- if not workflow page, show bottom navigation -->
     <BottomNav v-if="isWorkflowPage" />
+    <BottomNavHint v-if="isWorkflowPage" />
     <SiteFooter v-else />
 
     <!-- Global Floating Support Button -->
@@ -40,6 +41,7 @@ import SitePasswordGate from './components/SitePasswordGate.vue'
 import NavBar from './components/NavBar.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import BottomNav from './components/BottomNav.vue'
+import BottomNavHint from './components/BottomNavHint.vue'
 
 import FloatingSupportButton from './components/FloatingSupportButton.vue'
 import SupportModal from './components/SupportModal.vue'
