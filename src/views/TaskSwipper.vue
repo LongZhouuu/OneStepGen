@@ -26,7 +26,7 @@
 
                 <button v-if="!isTipsOpen" class="tipsExpand" @click="isTipsOpen = true">
                     <i class="bi bi-lightbulb"></i>
-                    Stuck on this step? Try a tactic
+                    Stuck on this step? See why
                 </button>
 
                 <!-- tips panel -->
@@ -213,26 +213,48 @@ function updateTaskStatus(index, newStatus) {
 .tipsExpand {
     width: 90%;
     padding: 12px 16px;
-    background: white;
-    border: 1.5px solid rgba(91, 127, 138, 0.28);
+    background: linear-gradient(90deg, #9ecede 0%, #7fb3c9 52%, #5899b3 100%);
+    border: none;
     border-radius: 14px;
     font-size: 14.8px;
     font-weight: 700;
-    color: #7fb3c9;
+    color: #fff;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     flex-shrink: 0;
+    box-shadow:
+        0 4px 14px rgba(91, 127, 138, 0.28),
+        0 0 16px rgba(127, 179, 201, 0.26);
+    animation: tipsExpandGlow 2.6s ease-in-out infinite;
 }
 
 .tipsExpand:hover {
-    border-color: #7fb3c9;
-    color: #3f5f69;
-    background: #f4f9ff;
+    background: linear-gradient(90deg, #a8d8ea 0%, #8fc0d4 52%, #6ba9c0 100%);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow:
+        0 6px 18px rgba(91, 127, 138, 0.32),
+        0 0 20px rgba(127, 179, 201, 0.3);
+}
+
+@keyframes tipsExpandGlow {
+    0%,
+    100% {
+        box-shadow:
+            0 4px 14px rgba(91, 127, 138, 0.28),
+            0 0 14px rgba(127, 179, 201, 0.22);
+    }
+
+    50% {
+        box-shadow:
+            0 4px 16px rgba(91, 127, 138, 0.32),
+            0 0 18px rgba(127, 179, 201, 0.28);
+    }
 }
 
 .taskItemContainer {

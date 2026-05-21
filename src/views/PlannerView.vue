@@ -950,7 +950,8 @@ export default {
 
 .panel-sub {
   font-size: 13.5px;
-  color: rgba(45, 31, 20, 0.5);
+  color: rgba(45, 31, 20, 0.65);
+  font-weight: 500;
   margin-bottom: 0;
 }
 
