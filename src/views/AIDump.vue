@@ -55,9 +55,23 @@
             >
               Session History
             </button>
+            <button
+              type="button"
+              class="btn-quiet-places"
+              aria-haspopup="dialog"
+              :aria-expanded="quietPlacesOpen"
+              @click="openQuietPlaces"
+            >
+              <svg class="btn-quiet-places-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              Looking for a quieter space to work?
+            </button>
           </div>
 
           <SessionHistoryModal v-model="showSessionHistory" />
+          <QuietPlacesModal v-if="quietPlacesOpen" @close="closeQuietPlaces" />
  
           <div class="input-tools">
             <label class="upload-btn" :class="{ 'has-file': uploadedFile || uploadedFileMeta }">
@@ -161,6 +175,7 @@ import {
 } from '../router/workflow'
 import VoiceInputButton from '@/components/VoiceInputButton.vue'
 import SessionHistoryModal from '@/components/SessionHistoryModal.vue'
+import QuietPlacesModal from '@/components/QuietPlacesModal.vue'
 
 // Strip trailing slash so paths like /process-text never become //process-text
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
@@ -175,7 +190,7 @@ const DEMO_SAMPLE_TEXT =
 
 export default {
   name: 'AIDump',
-  components: { VoiceInputButton, SessionHistoryModal },
+  components: { VoiceInputButton, SessionHistoryModal, QuietPlacesModal },
   data() {
     return {
       view: 'input',
@@ -185,6 +200,7 @@ export default {
       taskCount: 0,
       errorMessage: '',
       showSessionHistory: false,
+      quietPlacesOpen: false,
     }
   },
   computed: {
@@ -264,6 +280,13 @@ export default {
     // DEMO: pairs with the "Use sample text" button in the template; delete when removing the button.
     fillDemoSampleText() {
       this.inputText = this._sanitizeDumpInput(DEMO_SAMPLE_TEXT)
+    },
+
+    openQuietPlaces() {
+      this.quietPlacesOpen = true
+    },
+    closeQuietPlaces() {
+      this.quietPlacesOpen = false
     },
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -578,6 +601,39 @@ export default {
   border-color: var(--terracotta);
   color: var(--terracotta);
   background: rgba(193, 113, 79, 0.06);
+}
+
+.btn-quiet-places {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ce752d 0%, #b45a20 100%);
+  box-shadow: 0 2px 10px rgba(206, 117, 45, 0.35);
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn-quiet-places:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 14px rgba(206, 117, 45, 0.45);
+}
+
+.btn-quiet-places:focus-visible {
+  outline: 3px solid #4d2a1d;
+  outline-offset: 3px;
+}
+
+.btn-quiet-places-ic {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
  
 .input-tools {
