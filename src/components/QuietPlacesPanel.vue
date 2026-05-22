@@ -13,7 +13,7 @@
             v-model.trim="locationQuery"
             type="text"
             class="location-input"
-            placeholder="Enter Melbourne address or suburb"
+            placeholder="Address or suburb in Greater Melbourne"
             @input="onLocationInput"
             @focus="showSuggestions = true"
             @keydown.enter.prevent="searchLocation"
@@ -217,6 +217,12 @@ import {
   haversineKm,
   volumeTertileBounds,
 } from '@/data/melbourneFootTraffic'
+import {
+  MELBOURNE_LOCATION_ERROR,
+  buildMelbourneNominatimSearchUrl,
+  filterMelbourneNominatimResults,
+  isWithinGreaterMelbourne,
+} from '@/utils/melbourneLocation'
 
 const placeSources = focusMapSources.filter((source) => Boolean(source.url))
 
@@ -575,7 +581,12 @@ async function useBrowserLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      setUserLocation(position.coords.latitude, position.coords.longitude)
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      if (!setUserLocation(lat, lng)) {
+        isLocating.value = false
+        return
+      }
       isLocating.value = false
       statusMessage.value = 'Location updated.'
     },
@@ -594,19 +605,21 @@ async function searchLocation() {
   statusMessage.value = ''
 
   try {
-    const encoded = encodeURIComponent(`${locationQuery.value}, Melbourne`)
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encoded}`)
-    const results = await res.json()
-    const first = Array.isArray(results) ? results[0] : null
+    const url = buildMelbourneNominatimSearchUrl(locationQuery.value, 5)
+    if (!url) return
+    const res = await fetch(url)
+    const results = filterMelbourneNominatimResults(await res.json())
+    const first = results[0] ?? null
 
     if (!first) {
-      statusMessage.value = 'Location not found. Try a more specific address.'
+      statusMessage.value =
+        'No Melbourne location found. Try a street or suburb in Greater Melbourne (e.g. Carlton, Southbank).'
       return
     }
 
     selectedAddress.value = first.display_name || locationQuery.value
     showSuggestions.value = false
-    setUserLocation(Number(first.lat), Number(first.lon))
+    if (!setUserLocation(Number(first.lat), Number(first.lon))) return
     statusMessage.value = 'Location set from search.'
   } catch {
     statusMessage.value = 'Search failed. Please try again.'
@@ -632,13 +645,11 @@ async function fetchLocationSuggestions() {
   }
 
   try {
-    const encoded = encodeURIComponent(`${locationQuery.value}, Melbourne`)
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encoded}`
-    )
+    const url = buildMelbourneNominatimSearchUrl(locationQuery.value, 6)
+    if (!url) return
+    const res = await fetch(url)
     if (!res.ok) return
-    const results = await res.json()
-    locationSuggestions.value = Array.isArray(results) ? results : []
+    locationSuggestions.value = filterMelbourneNominatimResults(await res.json())
   } catch {
     locationSuggestions.value = []
   }
@@ -650,17 +661,23 @@ function selectSuggestion(item) {
   selectedAddress.value = item.display_name || ''
   showSuggestions.value = false
   locationSuggestions.value = []
-  setUserLocation(Number(item.lat), Number(item.lon))
+  if (!setUserLocation(Number(item.lat), Number(item.lon))) return
   statusMessage.value = 'Location set from suggestion.'
 }
 
+/** Sets user pin when inside Greater Melbourne; returns false if rejected. */
 function setUserLocation(lat, lng) {
+  if (!isWithinGreaterMelbourne(lat, lng)) {
+    statusMessage.value = MELBOURNE_LOCATION_ERROR
+    return false
+  }
   userLocation.value = { lat, lng }
   void updateSelectedAddress(lat, lng)
   renderMarkers()
   if (map.value) {
     map.value.setView([lat, lng], 14)
   }
+  return true
 }
 
 async function updateSelectedAddress(lat, lng) {

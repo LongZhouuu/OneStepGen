@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>Page not found — OneStepGen</title>
+  <style>
+    @font-face {
+      font-family: 'Baloo 2';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/Baloo2-400.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Baloo 2';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/Baloo2-600.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Baloo 2';
+      font-style: normal;
+      font-weight: 800;
+      font-display: swap;
+      src: url('/fonts/Baloo2-800.ttf') format('truetype');
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+      color: #2d1f14;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(97, 185, 159, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 82% 78%, rgba(193, 113, 79, 0.2) 0%, transparent 42%),
+        linear-gradient(165deg, #f7efe6 0%, #ede4d8 50%, #e8dccf 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+
+    .error-page {
+      width: min(100%, 28rem);
+      text-align: center;
+      padding: clamp(1.5rem, 5vw, 2.25rem);
+      border-radius: clamp(16px, 3vw, 24px);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow:
+        0 20px 50px rgba(45, 31, 20, 0.12),
+        0 0 0 1px rgba(97, 185, 159, 0.18);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: inline-block;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #ce752d;
+      text-decoration: none;
+    }
+
+    .code {
+      margin: 0;
+      font-size: clamp(4rem, 18vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1;
+      color: #61b99f;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      margin: 0.35rem 0 0;
+      font-size: clamp(1.35rem, 4.5vw, 1.75rem);
+      font-weight: 800;
+      color: #2d1f14;
+    }
+
+    .lead {
+      margin: 0.75rem 0 0;
+      font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+      line-height: 1.55;
+      color: rgba(45, 31, 20, 0.7);
+    }
+
+    .actions {
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0.65rem 1.25rem;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid #4d2a1d;
+      outline-offset: 2px;
+    }
+
+    .btn--primary {
+      color: #fff;
+      background: linear-gradient(135deg, #ce752d 0%, #b45a20 100%);
+      box-shadow: 0 2px 10px rgba(206, 117, 45, 0.35);
+    }
+
+    .btn--primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(206, 117, 45, 0.45);
+    }
+
+    .btn--ghost {
+      color: #2d1f14;
+      background: transparent;
+      border: 1.5px solid rgba(193, 113, 79, 0.35);
+    }
+
+    .btn--ghost:hover {
+      background: rgba(193, 113, 79, 0.08);
+    }
+
+    .hint {
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: rgba(45, 31, 20, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <main class="error-page" role="main">
+    <a class="brand" href="/">OneStepGen</a>
+    <p class="code" aria-hidden="true">404</p>
+    <h1>This page isn’t here</h1>
+    <p class="lead">
+      The link may be broken, or the page may have moved. Let’s get you back on track —
+      one step at a time.
+    </p>
+    <div class="actions">
+      <a class="btn btn--primary" href="/">Go to home</a>
+      <button type="button" class="btn btn--ghost" onclick="history.back()">Go back</button>
+    </div>
+    <p class="hint">Error 404 — Page not found</p>
+  </main>
+</body>
+</html>
