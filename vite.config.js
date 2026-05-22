@@ -24,6 +24,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/melbourne-ods-api/, ''),
       },
+      '/osrm-api': {
+        target: 'https://router.project-osrm.org',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/osrm-api/, ''),
+      },
     },
   },
   resolve: {

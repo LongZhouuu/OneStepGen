@@ -11,6 +11,9 @@ const COUNTS_DATASET = 'pedestrian-counting-system-past-hour-counts-per-minute'
 /** Max distance (km) to accept a sensor as representative of a POI’s foot traffic */
 export const NEAREST_SENSOR_MAX_KM = 0.4
 
+/** City feed publishes new minute rows on roughly this cadence — used for walk routing freshness. */
+export const CROWD_FEED_UPDATE_MINUTES = 15
+
 /** Melbourne Explore API v2.1 enforces -1 ≤ limit ≤ 100 for many datasets */
 const PAGE_SIZE = 100
 
@@ -98,8 +101,8 @@ async function fetchJsonDataset(pathAndQuery, { retries = 2 } = {}) {
   throw new Error(lastMessage || 'Melbourne Open Data request failed')
 }
 
-function hourAgoIsoUtcForWhere() {
-  const d = new Date(Date.now() - 60 * 60 * 1000)
+function minutesAgoIsoUtcForWhere(minutes) {
+  const d = new Date(Date.now() - minutes * 60 * 1000)
   return d.toISOString().slice(0, 19)
 }
 
@@ -211,10 +214,12 @@ export function footTrafficMarkerColor(volume, sensorStatus) {
 }
 
 /**
- * @returns {{ sensors: Array<{ lat: number, lng: number, locationId: number, volume: number, status: string }>, updatedAt: Date | null, ok: boolean, errorMessage?: string }}
+ * @param {{ windowMinutes?: number }} [options] — how far back to sum minute-level counts (default 60 for place labels).
+ * @returns {{ sensors: Array<{ lat: number, lng: number, locationId: number, volume: number, status: string }>, updatedAt: Date | null, ok: boolean, errorMessage?: string, windowMinutes: number }}
  */
-export async function fetchMelbourneCrowdContext() {
-  const cutoff = hourAgoIsoUtcForWhere()
+export async function fetchMelbourneCrowdContext(options = {}) {
+  const windowMinutes = options.windowMinutes ?? 60
+  const cutoff = minutesAgoIsoUtcForWhere(windowMinutes)
 
   const [countsResult, sensorsResult, updatedProbeResult] = await Promise.allSettled([
     fetchCountsVolumeMap(cutoff),
@@ -243,6 +248,7 @@ export async function fetchMelbourneCrowdContext() {
       updatedAt: null,
       ok: false,
       errorMessage: errorParts.join(' · '),
+      windowMinutes,
     }
   }
 
@@ -271,6 +277,7 @@ export async function fetchMelbourneCrowdContext() {
     sensors,
     updatedAt: updatedAtProbe ?? new Date(),
     ok: true,
+    windowMinutes,
   }
 }
 

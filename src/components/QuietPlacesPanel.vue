@@ -76,8 +76,111 @@
       </p>
     </div>
 
-    <div class="content-grid">
-      <div ref="mapEl" class="map"></div>
+    <div class="content-grid" :class="{ 'content-grid--nav': navigationPhase }">
+      <div class="map-wrap" :class="{ 'map-wrap--nav-active': navigationActive }">
+        <div ref="mapEl" class="map"></div>
+
+        <div
+          v-if="navigationPhase && selectedPlace"
+          class="nav-sheet"
+          role="region"
+          :aria-label="navigationActive ? 'Active navigation' : 'Route options'"
+        >
+          <div class="nav-sheet-grab" aria-hidden="true"></div>
+          <div class="nav-sheet-header">
+            <div>
+              <p v-if="navigationActive" class="nav-sheet-status">Navigating</p>
+              <h3 class="nav-sheet-title">
+                {{ navigationActive ? 'To' : 'Navigate to' }} {{ selectedPlace.name }}
+              </h3>
+            </div>
+            <button
+              type="button"
+              class="nav-sheet-close"
+              :aria-label="navigationActive ? 'Stop navigation' : 'Close directions'"
+              @click="navigationActive ? stopNavigation() : closeNavigationSheet()"
+            >
+              ×
+            </button>
+          </div>
+
+          <template v-if="navigationPhase === 'choose'">
+            <p class="nav-sheet-sub">
+              Pick how you want to travel. The route will appear on the map.
+            </p>
+            <div class="nav-mode-actions">
+              <button
+                type="button"
+                class="nav-mode-btn"
+                :disabled="isLoadingRoute"
+                @click="previewRoute('walk')"
+              >
+                Walk
+              </button>
+              <button
+                type="button"
+                class="nav-mode-btn"
+                :disabled="isLoadingRoute"
+                @click="previewRoute('car')"
+              >
+                Drive
+              </button>
+              <button
+                type="button"
+                class="nav-mode-btn"
+                :disabled="isLoadingRoute"
+                @click="openExternalDirections('transit')"
+              >
+                Public transport
+              </button>
+            </div>
+            <p v-if="isLoadingRoute" class="nav-route-status" role="status">Loading route…</p>
+          </template>
+
+          <template v-else>
+            <p v-if="isLoadingRoute" class="nav-route-status" role="status">Loading route…</p>
+            <p v-else-if="routeError" class="nav-route-error" role="alert">{{ routeError }}</p>
+            <p v-else-if="routeSummary" class="nav-route-summary" role="status">
+              {{ routeSummary.distance }} · about {{ routeSummary.duration }}
+              <span v-if="routeSummary.crowdNote" class="nav-route-crowd-note">{{ routeSummary.crowdNote }}</span>
+            </p>
+
+            <div v-if="routeSummary && !isLoadingRoute" class="nav-sheet-actions">
+              <button
+                v-if="!navigationActive"
+                type="button"
+                class="nav-start-btn"
+                @click="startNavigation"
+              >
+                Start navigation
+              </button>
+              <button v-else type="button" class="nav-stop-btn" @click="stopNavigation">
+                Stop navigation
+              </button>
+              <button
+                v-if="!navigationActive"
+                type="button"
+                class="nav-secondary-btn"
+                @click="navigationPhase = 'choose'"
+              >
+                Change mode
+              </button>
+              <button
+                v-if="activeRouteMode"
+                type="button"
+                class="nav-secondary-btn"
+                @click="openExternalDirections(activeRouteMode)"
+              >
+                Open in Google Maps
+              </button>
+            </div>
+
+            <p v-if="navigationActive" class="nav-live-hint" role="status">
+              Following your location on the map. Tap Stop navigation when you arrive.
+            </p>
+          </template>
+        </div>
+      </div>
 
       <div class="results">
         <div class="results-fixed">
@@ -99,8 +202,8 @@
             <p class="selected-place-text">
               Selected: <strong>{{ selectedPlace.name }}</strong>
             </p>
-            <button class="directions-btn" type="button" @click="openNavigationPopup">
-              Get directions
+            <button class="directions-btn" type="button" @click="openNavigationSheet">
+              {{ navigationActive ? 'Navigating…' : 'Get directions' }}
             </button>
           </div>
         </div>
@@ -157,35 +260,10 @@
       </div>
     </div>
 
-    <div v-if="showNavigationPopup && selectedPlace" class="nav-popup-overlay" @click.self="closeNavigationPopup">
-      <div class="nav-popup">
-        <h3>Navigate to {{ selectedPlace.name }}</h3>
-        <p class="nav-popup-sub">Choose how you want to travel:</p>
-
-        <div class="nav-mode-actions">
-          <button type="button" class="nav-mode-btn" @click="openDirections('walk')">
-            Walk
-          </button>
-          <button type="button" class="nav-mode-btn" @click="openDirections('car')">
-            Drive
-          </button>
-          <button type="button" class="nav-mode-btn" @click="openDirections('transit')">
-            Public transport
-          </button>
-        </div>
-
-        <p class="nav-google-note">This will take you to Google Maps for turn-by-turn directions.</p>
-
-        <button type="button" class="nav-exit-btn" @click="closeNavigationPopup">
-          Exit navigation mode
-        </button>
-      </div>
-    </div>
-
-    <div v-if="showCrowdHelp" class="nav-popup-overlay" @click.self="showCrowdHelp = false">
-      <div class="nav-popup">
+    <div v-if="showCrowdHelp" class="help-popup-overlay" @click.self="showCrowdHelp = false">
+      <div class="help-popup">
         <h3>What is crowd level?</h3>
-        <p class="nav-popup-sub">
+        <p class="help-popup-sub">
           Crowd level is based on City of Melbourne pedestrian count data published as open data. Each
           place is matched to the nearest active foot-traffic sensor (within about 400 metres), using
           that sensor’s pedestrian totals aggregated over roughly the past hour (from readings in the
@@ -195,7 +273,7 @@
           use “Refresh Crowd Data” to pull the latest. The “Crowd updated at” time reflects the newest
           reading we received for the feed after your last refresh.
         </p>
-        <button type="button" class="nav-exit-btn" @click="showCrowdHelp = false">Close</button>
+        <button type="button" class="help-popup-close-btn" @click="showCrowdHelp = false">Close</button>
       </div>
     </div>
   </div>
@@ -211,6 +289,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { focusMapSources } from '@/data/focusMapSources'
 import {
+  CROWD_FEED_UPDATE_MINUTES,
   estimateCrowdForPoint,
   fetchMelbourneCrowdContext,
   footTrafficMarkerColor,
@@ -223,6 +302,13 @@ import {
   filterMelbourneNominatimResults,
   isWithinGreaterMelbourne,
 } from '@/utils/melbourneLocation'
+import {
+  buildGoogleMapsDirectionsUrl,
+  fetchOsrmRoute,
+  fetchWalkRoutePreferringLowCrowd,
+  formatRouteDistance,
+  formatRouteDuration,
+} from '@/utils/quietPlaceRouting'
 
 const placeSources = focusMapSources.filter((source) => Boolean(source.url))
 
@@ -244,7 +330,16 @@ const isSearching = ref(false)
 const isLoadingData = ref(false)
 const activeTab = ref(focusMapSources[0]?.id || '')
 const selectedPlace = ref(null)
-const showNavigationPopup = ref(false)
+/** null | 'choose' | 'preview' | 'active' */
+const navigationPhase = ref(null)
+const navigationActive = ref(false)
+const activeRouteMode = ref(null)
+const routeSummary = ref(null)
+const routeError = ref('')
+const isLoadingRoute = ref(false)
+let routeLayer = null
+let destinationMarker = null
+let navigationWatchId = null
 const selectedAddress = ref('')
 const locationSuggestions = ref([])
 const showSuggestions = ref(false)
@@ -255,7 +350,9 @@ const placeMarkerById = ref({})
 const userMarker = ref(null)
 const userRadius = ref(null)
 const allPlaces = ref([])
-const crowdContext = ref({ sensors: [], updatedAt: null, ok: false })
+const crowdContext = ref({ sensors: [], updatedAt: null, ok: false, windowMinutes: 60 })
+/** Fresh ~15 min snapshot used only for quieter-walk routing (matches City feed cadence). */
+const routingCrowdContext = ref(null)
 const isRefreshingCrowd = ref(false)
 const sortMode = ref('recommended')
 const showCrowdHelp = ref(false)
@@ -388,6 +485,12 @@ watch(visiblePlaces, () => {
   nextTick(() => renderMarkers())
 })
 
+watch(navigationPhase, () => {
+  nextTick(() => {
+    map.value?.invalidateSize()
+  })
+})
+
 async function loadAllPlaces() {
   isLoadingData.value = true
   statusMessage.value = ''
@@ -406,9 +509,29 @@ function crowdErrorSuffix() {
   return detail ? ` — ${detail}` : ''
 }
 
+/** Loads or reuses pedestrian totals from the last ~15 minutes for walk routing. */
+async function ensureWalkRoutingCrowdContext() {
+  const ctx = routingCrowdContext.value
+  const staleMs = CROWD_FEED_UPDATE_MINUTES * 60 * 1000
+  if (ctx?.ok && ctx.updatedAt && Date.now() - ctx.updatedAt.getTime() <= staleMs) {
+    return ctx
+  }
+  const fresh = await fetchMelbourneCrowdContext({ windowMinutes: CROWD_FEED_UPDATE_MINUTES })
+  if (fresh.ok) {
+    routingCrowdContext.value = fresh
+    return fresh
+  }
+  if (crowdContext.value?.ok && crowdContext.value.sensors?.length) {
+    return crowdContext.value
+  }
+  routingCrowdContext.value = fresh
+  return fresh
+}
+
 async function refreshCrowdData() {
   isRefreshingCrowd.value = true
   statusMessage.value = ''
+  routingCrowdContext.value = null
   try {
     crowdContext.value = await fetchMelbourneCrowdContext()
     statusMessage.value = crowdContext.value.ok
@@ -672,6 +795,12 @@ function setUserLocation(lat, lng) {
     return false
   }
   userLocation.value = { lat, lng }
+  if (!navigationActive.value) {
+    clearActiveRoute()
+    if (navigationPhase.value) {
+      navigationPhase.value = 'choose'
+    }
+  }
   void updateSelectedAddress(lat, lng)
   renderMarkers()
   if (map.value) {
@@ -694,14 +823,74 @@ async function updateSelectedAddress(lat, lng) {
   }
 }
 
+function clearRouteLayer() {
+  if (routeLayer) {
+    routeLayer.remove()
+    routeLayer = null
+  }
+}
+
+function clearDestinationMarker() {
+  if (destinationMarker) {
+    destinationMarker.remove()
+    destinationMarker = null
+  }
+}
+
+function clearActiveRoute() {
+  activeRouteMode.value = null
+  routeSummary.value = null
+  routeError.value = ''
+  clearRouteLayer()
+  clearDestinationMarker()
+}
+
+function stopNavigationWatch() {
+  if (navigationWatchId != null) {
+    navigator.geolocation.clearWatch(navigationWatchId)
+    navigationWatchId = null
+  }
+}
+
+function showDestinationMarker(place) {
+  if (!map.value || !place) return
+  clearDestinationMarker()
+  const destIcon = L.divIcon({
+    className: 'dest-marker-icon-wrapper',
+    html: '<span class="dest-marker-flag"></span>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  })
+  destinationMarker = L.marker([place.lat, place.lng], { icon: destIcon })
+    .addTo(map.value)
+    .bindPopup(`<strong>${escapeHtml(place.name)}</strong><br/>Destination`)
+}
+
+function fitMapToRoute() {
+  if (!map.value || !routeLayer) return
+  const bounds = routeLayer.getBounds()
+  if (userLocation.value) {
+    bounds.extend([userLocation.value.lat, userLocation.value.lng])
+  }
+  if (selectedPlace.value) {
+    bounds.extend([selectedPlace.value.lat, selectedPlace.value.lng])
+  }
+  const sheetPad = navigationPhase.value ? 200 : 48
+  map.value.fitBounds(bounds, {
+    paddingTopLeft: L.point(44, 44),
+    paddingBottomRight: L.point(sheetPad, 44),
+    maxZoom: 16,
+  })
+}
+
 function renderMarkers() {
   if (!map.value) return
+
+  const prevSelectedId = selectedPlace.value?.id
 
   placeMarkers.value.forEach((marker) => marker.remove())
   placeMarkers.value = []
   placeMarkerById.value = {}
-  selectedPlace.value = null
-  showNavigationPopup.value = false
 
   if (userMarker.value) {
     userMarker.value.remove()
@@ -765,6 +954,13 @@ function renderMarkers() {
     placeMarkers.value.push(marker)
     placeMarkerById.value[place.id] = marker
   })
+
+  if (prevSelectedId) {
+    const stillVisible = visiblePlaces.value.find((p) => p.id === prevSelectedId)
+    if (stillVisible) {
+      selectedPlace.value = stillVisible
+    }
+  }
 }
 
 function setActiveTab(tabId) {
@@ -773,6 +969,10 @@ function setActiveTab(tabId) {
 }
 
 function focusPlaceOnMap(place) {
+  if (navigationActive.value) return
+  if (selectedPlace.value?.id !== place.id) {
+    stopNavigation()
+  }
   selectedPlace.value = place
   if (!map.value) return
   const marker = placeMarkerById.value[place.id]
@@ -782,26 +982,117 @@ function focusPlaceOnMap(place) {
   }
 }
 
-function openNavigationPopup() {
+function openNavigationSheet() {
   if (!selectedPlace.value || !userLocation.value) return
-  showNavigationPopup.value = true
+  routeError.value = ''
+  if (navigationActive.value && routeSummary.value) {
+    navigationPhase.value = 'active'
+  } else if (routeSummary.value && activeRouteMode.value) {
+    navigationPhase.value = 'preview'
+  } else {
+    navigationPhase.value = 'choose'
+  }
 }
 
-function closeNavigationPopup() {
-  showNavigationPopup.value = false
+function closeNavigationSheet() {
+  stopNavigation()
 }
 
-function openDirections(mode) {
+function stopNavigation() {
+  navigationActive.value = false
+  navigationPhase.value = null
+  stopNavigationWatch()
+  clearActiveRoute()
+}
+
+function startNavigation() {
+  if (!routeSummary.value || !selectedPlace.value || !map.value) return
+  navigationActive.value = true
+  navigationPhase.value = 'active'
+  showDestinationMarker(selectedPlace.value)
+  fitMapToRoute()
+
+  if (!navigator.geolocation) return
+  stopNavigationWatch()
+  navigationWatchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      if (!isWithinGreaterMelbourne(lat, lng)) return
+      userLocation.value = { lat, lng }
+      renderMarkers()
+      if (routeLayer) {
+        routeLayer.addTo(map.value)
+        showDestinationMarker(selectedPlace.value)
+      }
+      map.value?.panTo([lat, lng], { animate: true, duration: 0.8 })
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 8000, timeout: 12000 }
+  )
+}
+
+function openExternalDirections(mode) {
   if (!selectedPlace.value || !userLocation.value) return
-
-  let travelMode = 'driving'
-  if (mode === 'walk') travelMode = 'walking'
-  if (mode === 'transit') travelMode = 'transit'
-
-  const from = `${userLocation.value.lat},${userLocation.value.lng}`
-  const to = `${selectedPlace.value.lat},${selectedPlace.value.lng}`
-  const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=${travelMode}`
+  const mapsUrl = buildGoogleMapsDirectionsUrl(userLocation.value, selectedPlace.value, mode)
   window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+}
+
+async function previewRoute(mode) {
+  if (!selectedPlace.value || !userLocation.value || !map.value) return
+
+  activeRouteMode.value = mode
+  routeError.value = ''
+  routeSummary.value = null
+  navigationPhase.value = 'preview'
+  isLoadingRoute.value = true
+  clearRouteLayer()
+  clearDestinationMarker()
+
+  const from = userLocation.value
+  const to = { lat: selectedPlace.value.lat, lng: selectedPlace.value.lng }
+  const walkCrowd = mode === 'walk' ? await ensureWalkRoutingCrowdContext() : null
+  const result =
+    mode === 'walk'
+      ? await fetchWalkRoutePreferringLowCrowd(from, to, walkCrowd)
+      : await fetchOsrmRoute(from, to, mode)
+  isLoadingRoute.value = false
+
+  if (!result.ok) {
+    routeError.value = result.error
+    return
+  }
+
+  let crowdNote = ''
+  if (mode === 'walk' && walkCrowd?.ok) {
+    const sensorWindow = `last ~${CROWD_FEED_UPDATE_MINUTES} min of sensor data`
+    if (result.usedSensorPathfinding && result.crowdOptimized) {
+      const levelPart = result.routeCrowdLabel ? ` (${result.routeCrowdLabel} along route)` : ''
+      crowdNote = ` · Sensor-guided quieter path${levelPart} · ${sensorWindow}`
+    } else if (result.crowdOptimized) {
+      const levelPart = result.routeCrowdLabel ? ` (${result.routeCrowdLabel} along route)` : ''
+      crowdNote = ` · Quieter walk${levelPart} · ${sensorWindow}`
+    }
+  }
+
+  routeSummary.value = {
+    distance: formatRouteDistance(result.distanceM),
+    duration: formatRouteDuration(result.durationS),
+    crowdNote,
+  }
+
+  const routeColor = mode === 'walk' ? '#1c6840' : '#2f80ed'
+  routeLayer = L.polyline(result.latLngs, {
+    color: routeColor,
+    weight: 6,
+    opacity: 0.92,
+    lineJoin: 'round',
+  }).addTo(map.value)
+
+  showDestinationMarker(selectedPlace.value)
+  navigationPhase.value = 'preview'
+  await nextTick()
+  fitMapToRoute()
 }
 
 function getCategoryMarkerColor(place) {
@@ -875,6 +1166,9 @@ onUnmounted(() => {
     clearTimeout(suggestionTimer)
     suggestionTimer = null
   }
+  stopNavigationWatch()
+  clearRouteLayer()
+  clearDestinationMarker()
   if (map.value) {
     map.value.remove()
     map.value = null
@@ -1149,11 +1443,197 @@ h2 {
   align-items: stretch;
 }
 
-.map {
-  height: clamp(300px, 52vh, 520px);
-  width: 100%;
+.content-grid--nav .map-wrap {
+  min-height: clamp(340px, 58vh, 560px);
+}
+
+.map-wrap {
+  position: relative;
+  min-height: clamp(300px, 52vh, 520px);
   border-radius: 14px;
   border: 1px solid #e8ddd4;
+  overflow: hidden;
+  background: #f5f0eb;
+}
+
+.map-wrap--nav-active {
+  border-color: rgba(28, 104, 64, 0.45);
+  box-shadow: 0 0 0 2px rgba(28, 104, 64, 0.2);
+}
+
+.map-wrap:has(.nav-sheet) :deep(.leaflet-control-attribution) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.map {
+  height: 100%;
+  min-height: inherit;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.nav-sheet {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1100;
+  max-height: min(48%, 260px);
+  overflow-y: auto;
+  padding: 10px 14px 14px;
+  border-radius: 12px;
+  background: #fffaf7;
+  border: 1px solid #e0d0c4;
+  box-shadow: 0 6px 22px rgba(55, 38, 26, 0.16);
+  box-sizing: border-box;
+}
+
+.nav-sheet-grab {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: #d7c7bb;
+}
+
+.nav-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.nav-sheet-status {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1c6840;
+}
+
+.nav-sheet-title {
+  margin: 0;
+  font-size: 16px;
+  color: #2f261f;
+  line-height: 1.25;
+}
+
+.nav-sheet-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7c7bb;
+  border-radius: 50%;
+  background: #fff;
+  color: #5f351f;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-sheet-close:focus-visible {
+  outline: 2px solid #b66a48;
+  outline-offset: 2px;
+}
+
+.nav-sheet-sub {
+  margin: 0 0 12px;
+  color: #6e5a4a;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.nav-sheet .nav-mode-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nav-sheet .nav-mode-btn {
+  flex: none;
+  width: 100%;
+  min-height: 40px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.nav-sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.nav-start-btn,
+.nav-stop-btn {
+  grid-column: 1 / -1;
+  border-radius: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 42px;
+}
+
+.nav-start-btn {
+  border: 1px solid #1c6840;
+  background: #1c6840;
+  color: #fff;
+}
+
+.nav-stop-btn {
+  border: 1px solid #a33b2c;
+  background: #fff2ef;
+  color: #8b2e22;
+}
+
+.nav-secondary-btn {
+  border: 1px solid #d7c7bb;
+  background: #fff;
+  color: #5f351f;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  min-height: 38px;
+  text-align: center;
+}
+
+.nav-sheet .nav-route-status,
+.nav-sheet .nav-route-error {
+  margin: 8px 0 0;
+}
+
+.nav-sheet .nav-route-summary {
+  margin: 8px 0 0;
+}
+
+.nav-live-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6e5a4a;
+}
+
+:deep(.dest-marker-flag) {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c0392b;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .results {
@@ -1287,7 +1767,7 @@ h2 {
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.28);
 }
 
-.nav-popup-overlay {
+.help-popup-overlay {
   position: fixed;
   inset: 0;
   background: rgba(40, 28, 18, 0.25);
@@ -1299,7 +1779,7 @@ h2 {
   padding: 16px;
 }
 
-.nav-popup {
+.help-popup {
   width: min(380px, 100%);
   background: #fffaf7;
   border: 1px solid #eadfd7;
@@ -1308,13 +1788,13 @@ h2 {
   box-shadow: 0 10px 28px rgba(70, 48, 31, 0.2);
 }
 
-.nav-popup h3 {
+.help-popup h3 {
   margin: 0;
   font-size: 18px;
   color: #2f261f;
 }
 
-.nav-popup-sub {
+.help-popup-sub {
   margin: 8px 0 12px;
   color: #6e5a4a;
   font-size: 14px;
@@ -1337,13 +1817,48 @@ h2 {
   font-family: inherit;
 }
 
-.nav-google-note {
-  margin: 10px 0 0;
-  color: #735f50;
-  font-size: 13px;
+.nav-mode-btn--active {
+  border-color: #b66a48;
+  background: #fff2e9;
+  font-weight: 600;
 }
 
-.nav-exit-btn {
+.nav-mode-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.nav-route-status {
+  margin: 10px 0 0;
+  color: #6d422d;
+  font-size: 13.5px;
+}
+
+.nav-route-error {
+  margin: 10px 0 0;
+  color: #a33b2c;
+  font-size: 13.5px;
+}
+
+.nav-route-summary {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ecf9ef;
+  border: 1px solid #8fd4b8;
+  color: #1c6840;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.nav-route-crowd-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.help-popup-close-btn {
   margin-top: 12px;
   width: 100%;
   border: 1px solid #b66a48;
@@ -1360,7 +1875,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  .map,
+  .map-wrap {
+    min-height: clamp(280px, 46vh, 480px);
+  }
+
   .results {
     height: clamp(260px, 44vh, 460px);
   }
@@ -1406,6 +1924,21 @@ h2 {
 
   .directions-btn {
     width: 100%;
+  }
+
+  .nav-sheet {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    max-height: min(55%, 300px);
+  }
+
+  .nav-sheet .nav-mode-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-sheet-actions {
+    grid-template-columns: 1fr;
   }
 
   .tab-btn {
